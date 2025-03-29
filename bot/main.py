@@ -9,6 +9,10 @@ from bot.handlers.commands import router as commands_router
 from bot.telegram_api.client import bot, dp
 from bot.utils.db import init_db
 
+from bot.handlers.download import download_router
+
+
+
 
 async def startup() -> None:
     """Perform startup tasks."""
@@ -29,6 +33,7 @@ async def main() -> None:
     """Start the bot."""
     # Register routers
     dp.include_router(commands_router)
+    dp.include_router(download_router)
 
     # Make sure database is initialized
     await startup()
