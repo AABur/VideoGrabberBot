@@ -52,6 +52,16 @@ async def init_db() -> None:
             """
         )
 
+        # Add admin user if not exists
+        from bot.config import ADMIN_USER_ID
+        await db.execute(
+            """
+            INSERT OR IGNORE INTO users (id, username, added_by, is_active)
+            VALUES (?, ?, ?, TRUE)
+            """,
+            (ADMIN_USER_ID, "admin", 0)  # 0 means system added
+        )
+
         await db.commit()
         logger.info("Database initialized")
 
