@@ -3,7 +3,7 @@ name = "VideoGrabberBot"
 version = "0.1.0"
 description = "Telegram bot for downloading videos and audio from YouTube and Instagram"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 license = { text = "MIT" }
 dependencies = [
     "aiogram>=3.19.0",
@@ -20,7 +20,3 @@ dev = [
     "pytest-asyncio>=0.26.0",
     "ruff>=0.11.2",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
