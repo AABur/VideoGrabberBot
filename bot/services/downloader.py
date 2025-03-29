@@ -4,7 +4,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import yt_dlp
 from aiogram import Bot
@@ -52,11 +52,11 @@ async def download_youtube_video(
 
         # Options for yt-dlp
         ydl_opts = {
-            'format': 'best',  # Best quality format
-            'outtmpl': str(temp_download_path / '%(title)s.%(ext)s'),
-            'noplaylist': True,
-            'quiet': True,
-            'no_warnings': True,
+            "format": "best",  # Best quality format
+            "outtmpl": str(temp_download_path / "%(title)s.%(ext)s"),
+            "noplaylist": True,
+            "quiet": True,
+            "no_warnings": True,
         }
 
         # Download video
@@ -68,7 +68,7 @@ async def download_youtube_video(
             ydl.download([url])
 
             # Get downloaded file path - should be only one file in the temp dir
-            downloaded_files = list(temp_download_path.glob('*'))
+            downloaded_files = list(temp_download_path.glob("*"))
             if not downloaded_files:
                 raise DownloadError("Download completed but no files found")
 
@@ -81,7 +81,7 @@ async def download_youtube_video(
             await bot.edit_message_text(
                 f"✅ <b>Download completed</b>\n\nNow sending file: {file_path.name}",
                 chat_id=chat_id,
-                message_id=status_message.message_id
+                message_id=status_message.message_id,
             )
 
             # Send file as document (supports files up to 2GB)
@@ -89,14 +89,14 @@ async def download_youtube_video(
             await bot.send_document(
                 chat_id,
                 document=FSInputFile(file_path),
-                caption=f"📥 <b>{info.get('title', 'Video')}</b>\n\nDownloaded from YouTube"
+                caption=f"📥 <b>{info.get('title', 'Video')}</b>\n\nDownloaded from YouTube",
             )
 
             # Update status message
             await bot.edit_message_text(
-                f"✅ <b>Download completed</b>\n\nFile sent successfully!",
+                "✅ <b>Download completed</b>\n\nFile sent successfully!",
                 chat_id=chat_id,
-                message_id=status_message.message_id
+                message_id=status_message.message_id,
             )
 
             logger.info(f"File sent successfully to chat_id: {chat_id}")
@@ -106,9 +106,7 @@ async def download_youtube_video(
         logger.error(error_message, exc_info=True)
 
         # Notify user of the error
-        await bot.send_message(
-            chat_id, f"❌ <b>Download failed</b>\n\n{error_message}"
-        )
+        await bot.send_message(chat_id, f"❌ <b>Download failed</b>\n\n{error_message}")
 
         # Notify admin
         await notify_admin(bot, f"Download failed: {url}\nError: {str(e)}")
@@ -135,9 +133,12 @@ def is_youtube_url(url: str) -> bool:
     Returns:
         True if URL is from YouTube, False otherwise
     """
-    return any(domain in url.lower() for domain in [
-        'youtube.com',
-        'youtu.be',
-        'm.youtube.com',
-        'youtube-nocookie.com'
-    ])
+    return any(
+        domain in url.lower()
+        for domain in [
+            "youtube.com",
+            "youtu.be",
+            "m.youtube.com",
+            "youtube-nocookie.com",
+        ]
+    )

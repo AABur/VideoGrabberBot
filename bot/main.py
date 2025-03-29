@@ -12,19 +12,19 @@ from bot.utils.db import init_db
 from bot.handlers.download import download_router
 
 
-
-
 async def startup() -> None:
     """Perform startup tasks."""
     # Initialize database
     await init_db()
 
     # Set bot commands for menu display
-    await bot.set_my_commands([
-        types.BotCommand(command="start", description="Start the bot"),
-        types.BotCommand(command="help", description="Show help information"),
-        types.BotCommand(command="invite", description="Generate invite link"),
-    ])
+    await bot.set_my_commands(
+        [
+            types.BotCommand(command="start", description="Start the bot"),
+            types.BotCommand(command="help", description="Show help information"),
+            types.BotCommand(command="invite", description="Generate invite link"),
+        ]
+    )
 
     logger.info("Bot has been started successfully")
 

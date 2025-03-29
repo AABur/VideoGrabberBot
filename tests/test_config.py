@@ -1,11 +1,5 @@
 """Tests for the configuration module."""
 
-import os
-import importlib
-from pathlib import Path
-
-import pytest
-
 
 def test_config_paths():
     """Test that configuration paths are correctly setup."""

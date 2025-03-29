@@ -26,6 +26,7 @@ async def temp_db(monkeypatch):
 
         # Patch DB_PATH in the db module
         import bot.utils.db
+
         monkeypatch.setattr(bot.utils.db, "DB_PATH", temp_db_path)
 
         # Initialize database
@@ -101,7 +102,6 @@ async def test_invite_system(temp_db):
     await add_user(123456789, None, 0)
 
     # Mark invite as used
-    import bot.utils.db
     import aiosqlite
     from datetime import datetime
 
@@ -109,7 +109,7 @@ async def test_invite_system(temp_db):
         now = datetime.now().isoformat()
         await db.execute(
             "UPDATE invites SET used_by = ?, used_at = ?, is_active = FALSE WHERE id = ?",
-            (123456789, now, invite_id)
+            (123456789, now, invite_id),
         )
         await db.commit()
 

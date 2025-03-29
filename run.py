@@ -18,6 +18,7 @@ async def start_bot():
     """Start the bot."""
     # Import here to avoid circular imports
     from bot.main import main
+
     await main()
 
 

@@ -1,6 +1,6 @@
 """Command handlers for VideoGrabberBot."""
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
 
@@ -57,8 +57,7 @@ async def command_help(message: Message) -> None:
     # Check if user is authorized
     if not await is_user_authorized(user_id):
         await message.answer(
-            "⚠️ <b>Access Restricted</b>\n\n"
-            "You are not authorized to use this bot."
+            "⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot."
         )
         return
 
@@ -91,8 +90,7 @@ async def command_invite(message: Message) -> None:
     # Check if user is authorized
     if not await is_user_authorized(user_id):
         await message.answer(
-            "⚠️ <b>Access Restricted</b>\n\n"
-            "You are not authorized to use this bot."
+            "⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot."
         )
         return
 
@@ -113,8 +111,7 @@ async def command_invite(message: Message) -> None:
         logger.info(f"Invite created by user: {user_id}, code: {invite_code}")
     else:
         await message.answer(
-            "❌ <b>Error</b>\n\n"
-            "Could not generate invite link. Please try again later."
+            "❌ <b>Error</b>\n\nCould not generate invite link. Please try again later."
         )
         logger.error(f"Failed to create invite for user: {user_id}")
 
@@ -168,7 +165,7 @@ async def command_adduser(message: Message) -> None:
             )
     else:
         # Target is a username (handle both with and without @ prefix)
-        username = target.lstrip('@')
+        username = target.lstrip("@")
 
         await message.answer(
             "ℹ️ <b>User Cannot Be Added Directly by Username</b>\n\n"

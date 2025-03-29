@@ -4,7 +4,11 @@ from aiogram import F, Router
 from aiogram.types import Message
 from loguru import logger
 
-from bot.services.downloader import DownloadError, download_youtube_video, is_youtube_url
+from bot.services.downloader import (
+    DownloadError,
+    download_youtube_video,
+    is_youtube_url,
+)
 from bot.telegram_api.client import get_bot
 from bot.utils.db import is_user_authorized
 
@@ -38,8 +42,7 @@ async def process_url(message: Message) -> None:
     if is_youtube_url(url):
         try:
             await message.answer(
-                "🔍 <b>URL Recognized</b>\n\n"
-                "Starting download of YouTube video..."
+                "🔍 <b>URL Recognized</b>\n\nStarting download of YouTube video..."
             )
 
             bot = get_bot()
@@ -50,6 +53,5 @@ async def process_url(message: Message) -> None:
 
     else:
         await message.answer(
-            "⚠️ <b>Unsupported URL</b>\n\n"
-            "Currently only YouTube links are supported."
+            "⚠️ <b>Unsupported URL</b>\n\nCurrently only YouTube links are supported."
         )

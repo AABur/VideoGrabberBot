@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from aiogram import Bot
 from loguru import logger

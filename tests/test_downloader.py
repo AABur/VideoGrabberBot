@@ -1,14 +1,16 @@
 """Tests for downloader module."""
 
-import os
 import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from aiogram.types import Message
 
-from bot.services.downloader import DownloadError, download_youtube_video, is_youtube_url
+from bot.services.downloader import (
+    DownloadError,
+    download_youtube_video,
+    is_youtube_url,
+)
 
 
 @pytest.mark.asyncio
@@ -55,12 +57,15 @@ async def test_download_youtube_video_success():
         mock_ydl_context.__exit__.return_value = None
 
         # Mock tempfile.mkdtemp to return our controlled temporary directory
-        with patch("tempfile.mkdtemp", return_value=str(temp_dir_path)), \
-             patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context), \
-             patch("pathlib.Path.glob", return_value=[dummy_file]):
-
+        with (
+            patch("tempfile.mkdtemp", return_value=str(temp_dir_path)),
+            patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context),
+            patch("pathlib.Path.glob", return_value=[dummy_file]),
+        ):
             # Call the function
-            await download_youtube_video(bot, 12345, "https://www.youtube.com/watch?v=test")
+            await download_youtube_video(
+                bot, 12345, "https://www.youtube.com/watch?v=test"
+            )
 
             # Verify the calls
             bot.send_message.assert_called_once()
@@ -87,13 +92,16 @@ async def test_download_youtube_video_failure():
     # Create a temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
         # Mock tempfile.mkdtemp
-        with patch("tempfile.mkdtemp", return_value=temp_dir), \
-             patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context), \
-             patch("bot.utils.logging.notify_admin", AsyncMock()):
-
+        with (
+            patch("tempfile.mkdtemp", return_value=temp_dir),
+            patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context),
+            patch("bot.utils.logging.notify_admin", AsyncMock()),
+        ):
             # Call the function and verify it raises the expected exception
             with pytest.raises(DownloadError):
-                await download_youtube_video(bot, 12345, "https://www.youtube.com/watch?v=test")
+                await download_youtube_video(
+                    bot, 12345, "https://www.youtube.com/watch?v=test"
+                )
 
             # Verify error message was sent to user
             # We expect 2 calls to send_message from our function:
@@ -103,4 +111,7 @@ async def test_download_youtube_video_failure():
 
             # Check that the last call includes error message
             args, kwargs = bot.send_message.call_args_list[-1]
-            assert "Download failed" in kwargs.get("text", "") or "Download failed" in args[1]
+            assert (
+                "Download failed" in kwargs.get("text", "")
+                or "Download failed" in args[1]
+            )

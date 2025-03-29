@@ -1,9 +1,8 @@
 """Database module for VideoGrabberBot."""
 
-import sqlite3
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 import aiosqlite
 
@@ -54,12 +53,13 @@ async def init_db() -> None:
 
         # Add admin user if not exists
         from bot.config import ADMIN_USER_ID
+
         await db.execute(
             """
             INSERT OR IGNORE INTO users (id, username, added_by, is_active)
             VALUES (?, ?, ?, TRUE)
             """,
-            (ADMIN_USER_ID, "admin", 0)  # 0 means system added
+            (ADMIN_USER_ID, "admin", 0),  # 0 means system added
         )
 
         await db.commit()

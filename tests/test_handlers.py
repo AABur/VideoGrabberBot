@@ -1,12 +1,11 @@
 """Tests for command handlers."""
 
-import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from aiogram.types import Message, User
 
-from bot.handlers.commands import command_start, command_help, command_invite, command_adduser
+from bot.handlers.commands import command_start, command_invite, command_adduser
 from bot.config import ADMIN_USER_ID
 
 
@@ -24,7 +23,9 @@ async def test_start_command_authorized():
     mock_message.from_user = mock_user
 
     # Mock is_user_authorized to return True
-    with patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)):
+    with patch(
+        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)
+    ):
         await command_start(mock_message)
 
         # Check that answer was called once with welcome message
@@ -47,7 +48,9 @@ async def test_start_command_unauthorized():
     mock_message.from_user = mock_user
 
     # Mock is_user_authorized to return False
-    with patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)):
+    with patch(
+        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)
+    ):
         await command_start(mock_message)
 
         # Check that answer was called once with access restricted message
@@ -75,9 +78,14 @@ async def test_invite_command():
     mock_message.bot = mock_bot
 
     # Mock is_user_authorized to return True
-    with patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)):
+    with patch(
+        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)
+    ):
         # Mock create_invite to return a code
-        with patch("bot.handlers.commands.create_invite", AsyncMock(return_value="test_invite_code")):
+        with patch(
+            "bot.handlers.commands.create_invite",
+            AsyncMock(return_value="test_invite_code"),
+        ):
             await command_invite(mock_message)
 
             # Check that answer was called with invite link
