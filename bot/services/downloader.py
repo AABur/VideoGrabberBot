@@ -22,7 +22,11 @@ class DownloadError(Exception):
 
 
 async def download_youtube_video(
-    bot: Bot, chat_id: int, url: str, temp_dir: Optional[Path] = None
+    bot: Bot,
+    chat_id: int,
+    url: str,
+    format_string: str = "best",
+    temp_dir: Optional[Path] = None,
 ) -> None:
     """
     Download YouTube video and send it to the user.
@@ -31,6 +35,7 @@ async def download_youtube_video(
         bot: Telegram bot instance
         chat_id: ID of the chat to send the video to
         url: URL of the YouTube video
+        format_string: yt-dlp format string
         temp_dir: Directory to store temporary files, defaults to TEMP_DIR
 
     Raises:
@@ -43,7 +48,9 @@ async def download_youtube_video(
     temp_download_path = Path(temp_download_dir)
 
     try:
-        logger.info(f"Starting download: {url} for chat_id: {chat_id}")
+        logger.info(
+            f"Starting download: {url} with format: {format_string} for chat_id: {chat_id}"
+        )
 
         # Send message indicating download has started
         status_message = await bot.send_message(
@@ -52,7 +59,7 @@ async def download_youtube_video(
 
         # Options for yt-dlp
         ydl_opts = {
-            "format": "best",  # Best quality format
+            "format": format_string,  # Use the requested format
             "outtmpl": str(temp_download_path / "%(title)s.%(ext)s"),
             "noplaylist": True,
             "quiet": True,
@@ -85,7 +92,6 @@ async def download_youtube_video(
             )
 
             # Send file as document (supports files up to 2GB)
-
             await bot.send_document(
                 chat_id,
                 document=FSInputFile(file_path),
