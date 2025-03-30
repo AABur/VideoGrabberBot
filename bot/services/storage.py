@@ -34,9 +34,7 @@ def get_url(url_id: str) -> Optional[str]:
         URL or None if not found
     """
     data = URL_STORAGE.get(url_id)
-    if data:
-        return data[0]
-    return None
+    return data[0] if data else None
 
 
 def store_format(url_id: str, format_id: str) -> bool:
@@ -68,9 +66,7 @@ def get_format(url_id: str) -> Optional[str]:
         Format ID or None if not found
     """
     data = URL_STORAGE.get(url_id)
-    if data:
-        return data[1]
-    return None
+    return data[1] if data else None
 
 
 def clear_url(url_id: str) -> None:

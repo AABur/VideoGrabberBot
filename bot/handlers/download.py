@@ -145,7 +145,9 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     bot = get_bot()
 
     # Acknowledge the callback
-    await callback.answer(f"Processing your request in {format_data['label']} format...")
+    await callback.answer(
+        f"Processing your request in {format_data['label']} format..."
+    )
 
     # Check if queue is processing and user is already in queue
     is_processing = download_queue.is_processing
@@ -174,7 +176,7 @@ async def process_format_selection(callback: CallbackQuery) -> None:
         url=url,
         format_string=format_data["format"],
         status_message_id=status_message.message_id,
-        additional_data={"bot": bot, "url_id": url_id}
+        additional_data={"bot": bot, "url_id": url_id},
     )
 
     queue_position = await download_queue.add_task(task)
@@ -184,7 +186,7 @@ async def process_format_selection(callback: CallbackQuery) -> None:
         await bot.edit_message_text(
             f"{status_text}\n\nQueue position: {queue_position}",
             chat_id=callback.message.chat.id,
-            message_id=status_message.message_id
+            message_id=status_message.message_id,
         )
 
     # Note: We don't clear the URL here since it will be done by the queue processor
