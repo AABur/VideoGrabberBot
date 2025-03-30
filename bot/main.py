@@ -14,6 +14,7 @@ from bot.handlers.download import download_router
 
 # bot/main.py (модифицировать функцию startup)
 
+
 async def startup() -> None:
     """Perform startup tasks."""
     # Initialize database
@@ -29,7 +30,7 @@ async def startup() -> None:
         ]
     )
 
-    logger.info("Bot has been started successfully")    """Perform startup tasks."""
+    logger.info("Bot has been started successfully")
     # Initialize database
     await init_db()
 

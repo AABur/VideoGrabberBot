@@ -62,11 +62,14 @@ async def download_youtube_video(
                 chat_id=chat_id,
                 message_id=status_message_id,
             )
-            status_message = types.Message(message_id=status_message_id, chat=types.Chat(id=chat_id), bot=bot)
+            status_message = types.Message(
+                message_id=status_message_id, chat=types.Chat(id=chat_id), bot=bot
+            )
         else:
             # Send message indicating download has started
             status_message = await bot.send_message(
-                chat_id, f"⏳ <b>Download started</b>\n\nProcessing your request for {url}"
+                chat_id,
+                f"⏳ <b>Download started</b>\n\nProcessing your request for {url}",
             )
 
         # Options for yt-dlp
