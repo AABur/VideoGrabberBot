@@ -3,10 +3,10 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
+from loguru import logger
 
 from bot.config import ADMIN_USER_ID
 from bot.utils.db import add_user, create_invite, is_user_authorized
-from loguru import logger
 
 # Create router for command handlers
 router = Router(name="commands_router")
@@ -45,6 +45,9 @@ async def command_start(message: Message) -> None:
     logger.info(f"Start command from user: {user_id} (@{username})")
 
 
+# bot/handlers/commands.py (модифицировать функцию command_help)
+
+
 @router.message(Command("help"))
 async def command_help(message: Message) -> None:
     """
@@ -67,7 +70,8 @@ async def command_help(message: Message) -> None:
         "/start - Start the bot and see welcome message\n"
         "/help - Show this help message\n"
         "/invite - Generate an invite link (for authorized users)\n"
-        "/adduser - Add a new user (admin only)\n\n"
+        "/adduser - Add a new user (admin only)\n"
+        "/cancel - Cancel your active downloads\n\n"
         "<b>How to download:</b>\n"
         "Simply send a YouTube or Instagram link, and I'll provide format options.\n\n"
         "<b>Supported formats:</b>\n"
@@ -174,3 +178,43 @@ async def command_adduser(message: Message) -> None:
             "Please ask the user to send a message to the bot first, then use their user ID."
         )
         logger.info(f"Admin attempted to add user by username: @{username}")
+
+
+# bot/handlers/commands.py (добавить в существующую функцию)
+
+
+@router.message(Command("cancel"))
+async def command_cancel(message: Message) -> None:
+    """
+    Handle /cancel command.
+
+    Cancel all download tasks for the user in the queue.
+    """
+    user_id = message.from_user.id
+
+    # Check if user is authorized
+    if not await is_user_authorized(user_id):
+        await message.answer(
+            "⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot."
+        )
+        return
+
+    # Import here to avoid circular imports
+    from bot.services.queue import download_queue
+
+    # Check if user has tasks in queue
+    if not download_queue.is_user_in_queue(message.chat.id):
+        await message.answer(
+            "ℹ️ <b>No Active Downloads</b>\n\n"
+            "You don't have any downloads in the queue to cancel."
+        )
+        return
+
+    # Clear user tasks
+    removed = download_queue.clear_user_tasks(message.chat.id)
+
+    await message.answer(
+        f"✅ <b>Downloads Cancelled</b>\n\n"
+        f"Successfully cancelled {removed} download{'s' if removed != 1 else ''} from the queue."
+    )
+    logger.info(f"User {user_id} cancelled {removed} downloads")

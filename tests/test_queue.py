@@ -1,0 +1,151 @@
+# tests/test_queue.py
+"""Tests for download queue."""
+
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
+from bot.services.queue import DownloadQueue, DownloadTask
+
+
+@pytest.mark.asyncio
+async def test_queue_add_task():
+    """Test adding tasks to the queue."""
+    queue = DownloadQueue()
+
+    # Mock _process_queue to prevent actual execution
+    queue._process_queue = AsyncMock()
+
+    # Add a task
+    task = DownloadTask(
+        chat_id=123, url="https://example.com", format_string="test_format"
+    )
+
+    position = await queue.add_task(task)
+
+    # Should be first in queue
+    assert position == 1
+    assert queue.is_user_in_queue(123)
+    assert not queue.is_user_in_queue(456)
+
+    # Add another task
+    task2 = DownloadTask(
+        chat_id=456, url="https://example2.com", format_string="test_format"
+    )
+
+    position = await queue.add_task(task2)
+
+    # Should be second in queue
+    assert position == 2
+    assert queue.is_user_in_queue(123)
+    assert queue.is_user_in_queue(456)
+
+
+@pytest.mark.asyncio
+async def test_queue_processing():
+    """Test queue processing."""
+    queue = DownloadQueue()
+
+    # Create mock bot
+    mock_bot = AsyncMock()
+
+    # Mock download function
+    with patch(
+        "bot.services.downloader.download_youtube_video", AsyncMock()
+    ) as mock_download:
+        # Add tasks
+        task1 = DownloadTask(
+            chat_id=123,
+            url="https://example.com/1",
+            format_string="test_format",
+            additional_data={"bot": mock_bot},
+        )
+
+        task2 = DownloadTask(
+            chat_id=456,
+            url="https://example.com/2",
+            format_string="test_format",
+            additional_data={"bot": mock_bot},
+        )
+
+        await queue.add_task(task1)
+        await queue.add_task(task2)
+
+        # Process the queue
+        await queue._process_queue()
+
+        # Both tasks should have been processed
+        assert mock_download.call_count == 2
+
+        # Queue should be empty
+        assert queue.queue.empty()
+        assert not queue.is_processing
+
+
+@pytest.mark.asyncio
+async def test_queue_error_handling():
+    """Test queue handles errors properly."""
+    queue = DownloadQueue()
+
+    # Create mock bot
+    mock_bot = AsyncMock()
+
+    # Mock download function to raise an exception
+    with patch(
+        "bot.services.downloader.download_youtube_video",
+        AsyncMock(side_effect=Exception("Test error")),
+    ) as mock_download:
+        # Add a task
+        task = DownloadTask(
+            chat_id=123,
+            url="https://example.com",
+            format_string="test_format",
+            additional_data={"bot": mock_bot},
+        )
+
+        await queue.add_task(task)
+
+        # Process the queue
+        await queue._process_queue()
+
+        # Function should have been called
+        mock_download.assert_called_once()
+
+        # Queue should be empty despite the error
+        assert queue.queue.empty()
+        assert not queue.is_processing
+
+
+@pytest.mark.asyncio
+async def test_clear_user_tasks():
+    """Test clearing user tasks from queue."""
+    queue = DownloadQueue()
+
+    # Add tasks for two different users
+    task1 = DownloadTask(
+        chat_id=123, url="https://example.com/1", format_string="test_format"
+    )
+
+    task2 = DownloadTask(
+        chat_id=123, url="https://example.com/2", format_string="test_format"
+    )
+
+    task3 = DownloadTask(
+        chat_id=456, url="https://example.com/3", format_string="test_format"
+    )
+
+    # Add tasks to queue directly (bypassing async method for test)
+    queue.queue.put_nowait(task1)
+    queue.queue.put_nowait(task2)
+    queue.queue.put_nowait(task3)
+
+    # Clear tasks for user 123
+    removed = queue.clear_user_tasks(123)
+
+    # Should have removed 2 tasks
+    assert removed == 2
+
+    # Queue should have 1 task remaining
+    assert queue.queue.qsize() == 1
+    assert not queue.is_user_in_queue(123)
+    assert queue.is_user_in_queue(456)

@@ -1,3 +1,4 @@
+# bot/services/downloader.py
 """Download service for video grabber bot."""
 
 import os
@@ -7,7 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import yt_dlp
-from aiogram import Bot
+from aiogram import Bot, types
 from loguru import logger
 
 from bot.config import TEMP_DIR
@@ -27,6 +28,7 @@ async def download_youtube_video(
     url: str,
     format_string: str = "best",
     temp_dir: Optional[Path] = None,
+    status_message_id: Optional[int] = None,
 ) -> None:
     """
     Download YouTube video and send it to the user.
@@ -37,6 +39,7 @@ async def download_youtube_video(
         url: URL of the YouTube video
         format_string: yt-dlp format string
         temp_dir: Directory to store temporary files, defaults to TEMP_DIR
+        status_message_id: ID of the status message to update
 
     Raises:
         DownloadError: If downloading or sending fails
@@ -47,15 +50,24 @@ async def download_youtube_video(
     temp_download_dir = tempfile.mkdtemp(dir=temp_dir)
     temp_download_path = Path(temp_download_dir)
 
-    try:
-        logger.info(
-            f"Starting download: {url} with format: {format_string} for chat_id: {chat_id}"
-        )
+    logger.info(
+        f"Starting download: {url} with format: {format_string} for chat_id: {chat_id}"
+    )
 
-        # Send message indicating download has started
-        status_message = await bot.send_message(
-            chat_id, f"⏳ <b>Download started</b>\n\nProcessing your request for {url}"
-        )
+    try:
+        # If we have a status message, update it instead of creating a new one
+        if status_message_id:
+            await bot.edit_message_text(
+                f"⏳ <b>Download started</b>\n\nProcessing your request for {url}",
+                chat_id=chat_id,
+                message_id=status_message_id,
+            )
+            status_message = types.Message(message_id=status_message_id, chat=types.Chat(id=chat_id), bot=bot)
+        else:
+            # Send message indicating download has started
+            status_message = await bot.send_message(
+                chat_id, f"⏳ <b>Download started</b>\n\nProcessing your request for {url}"
+            )
 
         # Options for yt-dlp
         ydl_opts = {
