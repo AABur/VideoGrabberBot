@@ -1,10 +1,10 @@
 # VideoGrabberBot
 
-A Telegram bot for downloading videos and audio from YouTube and Instagram.
+A Telegram bot for downloading videos and audio from YouTube.
 
 ## Features
 
-- Downloads videos from YouTube and Instagram
+- Downloads videos from YouTube
 - Supports multiple video formats (SD, HD, Full HD, Original)
 - Supports audio extraction (MP3 320kbps)
 - Access control through invitation links or admin approval

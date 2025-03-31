@@ -86,7 +86,7 @@ async def process_url(message: Message) -> None:
 
     else:
         await message.answer(
-            "⚠️ <b>Unsupported URL</b>\n\nCurrently only YouTube links are supported."
+            "⚠️ <b>Unsupported URL</b>\n\nPlease provide a valid YouTube link."
         )
 
 

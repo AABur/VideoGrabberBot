@@ -35,9 +35,9 @@ async def command_start(message: Message) -> None:
     # User is authorized, provide welcome message
     await message.answer(
         "👋 <b>Welcome to VideoGrabberBot!</b>\n\n"
-        "I can help you download videos and audio from YouTube and Instagram.\n\n"
+        "I can help you download videos and audio from YouTube.\n\n"
         "<b>How to use:</b>\n"
-        "1. Send me a YouTube or Instagram link\n"
+        "1. Send me a YouTube link\n"
         "2. Choose the format you want to download\n"
         "3. Wait for the download to complete\n\n"
         "Use /help to see all available commands."
@@ -73,7 +73,7 @@ async def command_help(message: Message) -> None:
         "/adduser - Add a new user (admin only)\n"
         "/cancel - Cancel your active downloads\n\n"
         "<b>How to download:</b>\n"
-        "Simply send a YouTube or Instagram link, and I'll provide format options.\n\n"
+        "Simply send a YouTube link, and I'll provide format options.\n\n"
         "<b>Supported formats:</b>\n"
         "• Video: SD (480p), HD (720p), Full HD (1080p), Original\n"
         "• Audio: MP3 (320kbps)\n\n"
