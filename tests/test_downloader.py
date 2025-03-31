@@ -25,7 +25,7 @@ async def test_is_youtube_url():
     # Invalid YouTube URLs
     assert not is_youtube_url("https://www.example.com")
     assert not is_youtube_url("https://vimeo.com/123456")
-    assert not is_youtube_url("https://instagram.com/p/123456")
+    assert not is_youtube_url("https://video.example.com/p/123456")
 
 
 @pytest.mark.asyncio

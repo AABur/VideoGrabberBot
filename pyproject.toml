@@ -1,7 +1,7 @@
 [project]
 name = "VideoGrabberBot"
 version = "0.1.0"
-description = "Telegram bot for downloading videos and audio from YouTube and Instagram"
+description = "Telegram bot for downloading videos and audio from YouTube"
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }
@@ -18,5 +18,23 @@ dev = [
     "mypy>=1.15.0",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
+    "pytest-cov>=5.0.0",
     "ruff>=0.11.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["bot"]
+omit = ["*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:"
 ]
