@@ -1,4 +1,3 @@
-# bot/handlers/download.py (изменения)
 """Download handler for processing video links."""
 
 from aiogram import F, Router
@@ -98,7 +97,7 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     Args:
         callback: Callback query containing format and URL ID
     """
-    # Логирование полученных данных
+    # Log received data
     logger.debug(f"Received callback data: {callback.data}")
 
     # Parse callback data
@@ -112,10 +111,10 @@ async def process_format_selection(callback: CallbackQuery) -> None:
         await callback.answer("Invalid format selection")
         return
 
-    # Первая часть - fmt, последняя - url_id, всё между - format_id
+    # First part is fmt, last part is url_id, everything in between is format_id
     cmd = parts[0]
     url_id = parts[-1]
-    format_id = ":".join(parts[1:-1])  # Собираем format_id обратно
+    format_id = ":".join(parts[1:-1])  # Reassemble format_id
 
     user_id = callback.from_user.id
     logger.debug(f"Parsed values: cmd={cmd}, format_id={format_id}, url_id={url_id}")

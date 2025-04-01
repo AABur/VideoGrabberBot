@@ -88,10 +88,10 @@ async def test_cancel_command_with_active_downloads():
 
         # Verify user queue check
         mock_queue.is_user_in_queue.assert_called_once_with(123456)
-        
+
         # Verify user tasks cleared
         mock_queue.clear_user_tasks.assert_called_once_with(123456)
-        
+
         # Check response message
         mock_message.answer.assert_called_once()
         args = mock_message.answer.call_args[0][0]
@@ -125,10 +125,10 @@ async def test_cancel_command_no_downloads():
 
         # Verify user queue check
         mock_queue.is_user_in_queue.assert_called_once_with(123456)
-        
+
         # Verify clear_user_tasks was not called
         mock_queue.clear_user_tasks.assert_not_called()
-        
+
         # Check response message
         mock_message.answer.assert_called_once()
         args = mock_message.answer.call_args[0][0]

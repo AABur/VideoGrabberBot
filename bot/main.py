@@ -12,15 +12,10 @@ from bot.utils.db import init_db
 from bot.handlers.download import download_router
 
 
-# bot/main.py (модифицировать функцию startup)
-
-
 async def startup() -> None:
     """Perform startup tasks."""
-    # Initialize database
     await init_db()
 
-    # Set bot commands for menu display
     await bot.set_my_commands(
         [
             types.BotCommand(command="start", description="Start the bot"),
@@ -31,10 +26,8 @@ async def startup() -> None:
     )
 
     logger.info("Bot has been started successfully")
-    # Initialize database
     await init_db()
 
-    # Set bot commands for menu display
     await bot.set_my_commands(
         [
             types.BotCommand(command="start", description="Start the bot"),
@@ -48,14 +41,11 @@ async def startup() -> None:
 
 async def main() -> None:
     """Start the bot."""
-    # Register routers
     dp.include_router(commands_router)
     dp.include_router(download_router)
 
-    # Make sure database is initialized
     await startup()
 
-    # Start polling
     logger.info("Starting bot polling...")
     await dp.start_polling(bot)
 

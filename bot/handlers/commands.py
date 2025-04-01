@@ -45,7 +45,7 @@ async def command_start(message: Message) -> None:
     logger.info(f"Start command from user: {user_id} (@{username})")
 
 
-# bot/handlers/commands.py (модифицировать функцию command_help)
+# bot/handlers/commands.py (help command implementation)
 
 
 @router.message(Command("help"))
@@ -180,7 +180,7 @@ async def command_adduser(message: Message) -> None:
         logger.info(f"Admin attempted to add user by username: @{username}")
 
 
-# bot/handlers/commands.py (добавить в существующую функцию)
+# bot/handlers/commands.py (cancel command implementation)
 
 
 @router.message(Command("cancel"))
