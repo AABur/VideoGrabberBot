@@ -19,15 +19,15 @@ run: ## Run the bot
 	$(PY) run.py
 
 # Run all tests with coverage
-tests: ## Run all tests with coverage
-	$(PYTEST) --cov=bot --cov-report=term-missing
+tests: ## Run all tests with coverage and generate HTML report
+	$(PYTEST) --cov=bot --cov-report=term-missing --cov-report=html
 
 # Run a specific test (usage: make test test_file.py::test_function)
-test: ## Run specific test (e.g., make test test_config.py or test_config.py::test_load_config)
+test: ## Run specific test with coverage report (e.g., make test test_config.py or test_config.py::test_function)
 	@if [ -z "$(filter-out test,$@)" ]; then \
 		echo "Usage: make test <test_file.py::test_function_name>"; \
 	else \
-		$(PYTEST) tests/$(filter-out test,$@); \
+		$(PYTEST) tests/$(filter-out test,$@) --cov=bot --cov-report=term-missing --cov-report=html; \
 	fi
 
 # Format code
