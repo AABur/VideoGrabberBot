@@ -2,21 +2,51 @@
 
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Telegram configuration
-TELEGRAM_TOKEN: str = os.getenv("TELEGRAM_TOKEN", "")
-if not TELEGRAM_TOKEN:
-    raise ValueError("TELEGRAM_TOKEN is not set in .env file")
 
-ADMIN_USER_ID: int = int(os.getenv("ADMIN_USER_ID", 0))
-if not ADMIN_USER_ID:
-    raise ValueError("ADMIN_USER_ID is not set in .env file")
+def validate_token(token: str) -> str:
+    """Validate the Telegram token.
+
+    Args:
+        token: Telegram bot token to validate.
+
+    Returns:
+        The token if valid.
+
+    Raises:
+        ValueError: If token is empty.
+    """
+    if not token:
+        raise ValueError("TELEGRAM_TOKEN is not set in .env file")
+    return token
+
+
+def validate_admin_id(admin_id: int) -> int:
+    """Validate the admin user ID.
+
+    Args:
+        admin_id: Telegram admin user ID to validate.
+
+    Returns:
+        The admin ID if valid.
+
+    Raises:
+        ValueError: If admin ID is zero.
+    """
+    if not admin_id:
+        raise ValueError("ADMIN_USER_ID is not set in .env file")
+    return admin_id
+
+
+# Telegram configuration
+TELEGRAM_TOKEN: str = validate_token(os.getenv("TELEGRAM_TOKEN", ""))
+ADMIN_USER_ID: int = validate_admin_id(int(os.getenv("ADMIN_USER_ID", 0)))
 
 # File system paths
 BASE_DIR: Path = Path(__file__).parent.parent.absolute()
