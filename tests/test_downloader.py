@@ -74,6 +74,53 @@ async def test_download_youtube_video_success():
 
 
 @pytest.mark.asyncio
+async def test_download_youtube_video_with_status_message():
+    """Test download with existing status message ID."""
+    # Create mocks
+    bot = AsyncMock()
+    bot.edit_message_text = AsyncMock()
+    bot.send_document = AsyncMock()
+
+    # Create a temporary file to simulate download
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+
+        # Mock YoutubeDL
+        mock_ydl = MagicMock()
+        mock_ydl.extract_info.return_value = {"title": "Test Video"}
+        mock_ydl.download.return_value = None
+
+        # Create a dummy file to simulate downloaded content
+        dummy_file = temp_dir_path / "test_video.mp4"
+        with open(dummy_file, "w") as f:
+            f.write("dummy content")
+
+        # Mock the YoutubeDL context manager
+        mock_ydl_context = MagicMock()
+        mock_ydl_context.__enter__.return_value = mock_ydl
+        mock_ydl_context.__exit__.return_value = None
+
+        # Mock classes and functions
+        with (
+            patch("tempfile.mkdtemp", return_value=str(temp_dir_path)),
+            patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context),
+            patch("pathlib.Path.glob", return_value=[dummy_file]),
+            patch("bot.services.downloader.types.Message"),
+            patch("bot.services.downloader.types.Chat"),
+        ):
+            # Call the function with status_message_id
+            await download_youtube_video(
+                bot, 12345, "https://www.youtube.com/watch?v=test",
+                status_message_id=789
+            )
+
+            # Verify edit_message_text was called instead of send_message
+            bot.send_message.assert_not_called()
+            assert bot.edit_message_text.call_count == 3  # Initial + progress + completion
+            bot.send_document.assert_called_once()
+
+
+@pytest.mark.asyncio
 async def test_download_youtube_video_failure():
     """Test video download failure handling."""
     # Create mocks
@@ -115,3 +162,88 @@ async def test_download_youtube_video_failure():
                 "Download failed" in kwargs.get("text", "")
                 or "Download failed" in args[1]
             )
+
+
+@pytest.mark.asyncio
+async def test_download_youtube_video_no_files():
+    """Test download when no files are found after download."""
+    # Create mocks
+    bot = AsyncMock()
+    bot.send_message = AsyncMock(return_value=MagicMock(message_id=123))
+
+    # Mock YoutubeDL
+    mock_ydl = MagicMock()
+    mock_ydl.extract_info.return_value = {"title": "Test Video"}
+    mock_ydl.download.return_value = None
+
+    # Mock the YoutubeDL context manager
+    mock_ydl_context = MagicMock()
+    mock_ydl_context.__enter__.return_value = mock_ydl
+    mock_ydl_context.__exit__.return_value = None
+
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Mock tempfile.mkdtemp
+        with (
+            patch("tempfile.mkdtemp", return_value=temp_dir),
+            patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context),
+            patch("pathlib.Path.glob", return_value=[]),  # No files found
+            patch("bot.utils.logging.notify_admin", AsyncMock()),
+        ):
+            # Call the function and verify it raises the expected exception
+            with pytest.raises(DownloadError) as exc_info:
+                await download_youtube_video(
+                    bot, 12345, "https://www.youtube.com/watch?v=test"
+                )
+            
+            # Check error message
+            assert "no files found" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_download_youtube_video_cleanup_failure():
+    """Test download when cleanup fails."""
+    # Create mocks
+    bot = AsyncMock()
+    bot.send_message = AsyncMock(return_value=MagicMock(message_id=123))
+    bot.edit_message_text = AsyncMock()
+    bot.send_document = AsyncMock()
+
+    # Create a temporary file to simulate download
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+
+        # Mock YoutubeDL
+        mock_ydl = MagicMock()
+        mock_ydl.extract_info.return_value = {"title": "Test Video"}
+        mock_ydl.download.return_value = None
+
+        # Create a dummy file to simulate downloaded content
+        dummy_file = temp_dir_path / "test_video.mp4"
+        with open(dummy_file, "w") as f:
+            f.write("dummy content")
+
+        # Mock the YoutubeDL context manager
+        mock_ydl_context = MagicMock()
+        mock_ydl_context.__enter__.return_value = mock_ydl
+        mock_ydl_context.__exit__.return_value = None
+
+        # Mock cleanup to raise an exception
+        mock_rmtree = MagicMock(side_effect=Exception("Cleanup failed"))
+
+        # Mock tempfile.mkdtemp to return our controlled temporary directory
+        with (
+            patch("tempfile.mkdtemp", return_value=str(temp_dir_path)),
+            patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context),
+            patch("pathlib.Path.glob", return_value=[dummy_file]),
+            patch("shutil.rmtree", mock_rmtree),
+            patch("bot.services.downloader.logger.error") as mock_logger_error,
+        ):
+            # Call the function - should complete without raising exception
+            await download_youtube_video(
+                bot, 12345, "https://www.youtube.com/watch?v=test"
+            )
+
+            # Verify the function logged the cleanup error
+            mock_logger_error.assert_called_once()
+            assert "Failed to clean up" in mock_logger_error.call_args[0][0]

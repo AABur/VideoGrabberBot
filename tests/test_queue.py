@@ -1,7 +1,7 @@
 # tests/test_queue.py
 """Tests for download queue."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -94,7 +94,9 @@ async def test_queue_error_handling():
     with patch(
         "bot.services.downloader.download_youtube_video",
         AsyncMock(side_effect=Exception("Test error")),
-    ) as mock_download:
+    ) as mock_download, patch(
+        "bot.services.queue.logger.error", MagicMock()
+    ) as mock_logger_error:
         # Add a task
         task = DownloadTask(
             chat_id=123,
@@ -110,6 +112,9 @@ async def test_queue_error_handling():
 
         # Function should have been called
         mock_download.assert_called_once()
+
+        # Error should have been logged
+        mock_logger_error.assert_called_once()
 
         # Queue should be empty despite the error
         assert queue.queue.empty()
@@ -149,3 +154,81 @@ async def test_clear_user_tasks():
     assert queue.queue.qsize() == 1
     assert not queue.is_user_in_queue(123)
     assert queue.is_user_in_queue(456)
+
+
+@pytest.mark.asyncio
+async def test_clear_user_tasks_empty_queue():
+    """Test clearing user tasks from an empty queue."""
+    queue = DownloadQueue()
+
+    # Clear tasks for non-existent user
+    removed = queue.clear_user_tasks(123)
+
+    # Should have removed 0 tasks
+    assert removed == 0
+    assert queue.queue.empty()
+
+
+@pytest.mark.asyncio
+async def test_get_queue_position():
+    """Test get_queue_position method."""
+    queue = DownloadQueue()
+
+    # Add tasks for different users
+    task1 = DownloadTask(
+        chat_id=123, url="https://example.com/1", format_string="test_format"
+    )
+    task2 = DownloadTask(
+        chat_id=456, url="https://example.com/2", format_string="test_format"
+    )
+    task3 = DownloadTask(
+        chat_id=123, url="https://example.com/3", format_string="test_format"
+    )
+
+    # Add tasks to queue directly
+    queue.queue.put_nowait(task1)
+    queue.queue.put_nowait(task2)
+    queue.queue.put_nowait(task3)
+
+    # Check positions
+    assert queue.get_queue_position(123, "https://example.com/1") == 1
+    assert queue.get_queue_position(456, "https://example.com/2") == 2
+    assert queue.get_queue_position(123, "https://example.com/3") == 3
+    assert queue.get_queue_position(789, "https://example.com/4") is None
+
+
+@pytest.mark.asyncio
+async def test_get_queue_position_empty_queue():
+    """Test get_queue_position with empty queue."""
+    queue = DownloadQueue()
+    assert queue.get_queue_position(123, "https://example.com") is None
+
+
+@pytest.mark.asyncio
+async def test_process_queue_missing_bot():
+    """Test queue processing when bot is missing in task data."""
+    queue = DownloadQueue()
+
+    # Mock logger
+    with patch("bot.services.queue.logger.error") as mock_logger_error:
+        # Add task without bot
+        task = DownloadTask(
+            chat_id=123,
+            url="https://example.com",
+            format_string="test_format",
+            additional_data={},  # No bot instance
+        )
+
+        # Add directly to queue
+        queue.queue.put_nowait(task)
+
+        # Process the queue
+        await queue._process_queue()
+
+        # Should log error about missing bot
+        mock_logger_error.assert_called_once()
+        assert "Bot instance not provided" in mock_logger_error.call_args[0][0]
+
+        # Queue should be empty
+        assert queue.queue.empty()
+        assert not queue.is_processing
