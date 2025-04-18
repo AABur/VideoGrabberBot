@@ -1,11 +1,11 @@
 """Format handling module for VideoGrabberBot."""
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from bot.config import AUDIO_FORMAT, VIDEO_FORMATS
 
 
-def get_available_formats(url: str = None) -> Dict[str, Dict[str, str]]:
+def get_available_formats(url: Optional[str] = None) -> Dict[str, Dict[str, str]]:
     """
     Get available formats for the URL.
 
@@ -61,7 +61,7 @@ def get_format_options() -> List[Tuple[str, str]]:
     return options
 
 
-def get_format_by_id(format_id: str) -> Dict[str, str]:
+def get_format_by_id(format_id: str) -> Optional[Dict[str, str]]:
     """
     Get format details by format ID.
 

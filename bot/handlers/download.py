@@ -10,12 +10,10 @@ from aiogram.types import (
 from loguru import logger
 
 from bot.services.downloader import (
-    DownloadError,
-    download_youtube_video,
     is_youtube_url,
 )
 from bot.services.formats import get_format_by_id, get_format_options
-from bot.services.storage import store_url, get_url, store_format, clear_url
+from bot.services.storage import store_url, get_url, store_format
 from bot.telegram_api.client import get_bot
 from bot.utils.db import is_user_authorized
 from bot.services.queue import download_queue, DownloadTask
@@ -56,7 +54,7 @@ async def process_url(message: Message) -> None:
 
         # Create inline keyboard with format options
         keyboard = []
-        row = []
+        row: list[InlineKeyboardButton] = []
 
         for i, (format_id, label) in enumerate(format_options):
             # Create a new row after every 2 buttons

@@ -142,7 +142,7 @@ class DownloadQueue:
             return 0
 
         # Create a new queue without the specified user's tasks
-        new_queue = asyncio.Queue()
+        new_queue: asyncio.Queue = asyncio.Queue()
         removed_count = 0
 
         # Move items to the new queue, skipping those from the specified user
