@@ -180,10 +180,9 @@ async def test_start_command_authorized():
     mock_message.from_user = mock_user
 
     # Mock is_user_authorized to return True
-    with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)
-    ), patch(
-        "bot.handlers.commands.logger.info", MagicMock()
+    with (
+        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
+        patch("bot.handlers.commands.logger.info", MagicMock()),
     ):
         await command_start(mock_message)
 
@@ -209,10 +208,11 @@ async def test_start_command_unauthorized():
     mock_message.from_user = mock_user
 
     # Mock is_user_authorized to return False
-    with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)
-    ), patch(
-        "bot.handlers.commands.logger.info", MagicMock()
+    with (
+        patch(
+            "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)
+        ),
+        patch("bot.handlers.commands.logger.info", MagicMock()),
     ):
         await command_start(mock_message)
 
@@ -242,12 +242,13 @@ async def test_invite_command_success():
     mock_message.bot = mock_bot
 
     # Mock dependencies
-    with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)
-    ), patch(
-        "bot.handlers.commands.create_invite", AsyncMock(return_value="test_invite_code")
-    ), patch(
-        "bot.handlers.commands.logger.info", MagicMock()
+    with (
+        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.commands.create_invite",
+            AsyncMock(return_value="test_invite_code"),
+        ),
+        patch("bot.handlers.commands.logger.info", MagicMock()),
     ):
         await command_invite(mock_message)
 
@@ -271,12 +272,10 @@ async def test_invite_command_failure():
     mock_message.from_user = mock_user
 
     # Mock dependencies
-    with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)
-    ), patch(
-        "bot.handlers.commands.create_invite", AsyncMock(return_value=None)
-    ), patch(
-        "bot.handlers.commands.logger.error", MagicMock()
+    with (
+        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
+        patch("bot.handlers.commands.create_invite", AsyncMock(return_value=None)),
+        patch("bot.handlers.commands.logger.error", MagicMock()),
     ):
         await command_invite(mock_message)
 
@@ -324,10 +323,12 @@ async def test_adduser_command_non_admin():
     mock_message.from_user = mock_user
 
     # Mock admin ID
-    with patch(
-        "bot.handlers.commands.ADMIN_USER_ID", 123456  # Different from mock_user.id
-    ), patch(
-        "bot.handlers.commands.logger.warning", MagicMock()
+    with (
+        patch(
+            "bot.handlers.commands.ADMIN_USER_ID",
+            123456,  # Different from mock_user.id
+        ),
+        patch("bot.handlers.commands.logger.warning", MagicMock()),
     ):
         await command_adduser(mock_message)
 
@@ -375,12 +376,10 @@ async def test_adduser_command_with_userid_success():
     mock_message.text = "/adduser 789012"  # User ID as arg
 
     # Mock dependencies
-    with patch(
-        "bot.handlers.commands.ADMIN_USER_ID", 123456
-    ), patch(
-        "bot.handlers.commands.add_user", AsyncMock(return_value=True)
-    ), patch(
-        "bot.handlers.commands.logger.info", MagicMock()
+    with (
+        patch("bot.handlers.commands.ADMIN_USER_ID", 123456),
+        patch("bot.handlers.commands.add_user", AsyncMock(return_value=True)),
+        patch("bot.handlers.commands.logger.info", MagicMock()),
     ):
         await command_adduser(mock_message)
 
@@ -405,10 +404,9 @@ async def test_adduser_command_with_userid_already_exists():
     mock_message.text = "/adduser 789012"  # User ID as arg
 
     # Mock dependencies
-    with patch(
-        "bot.handlers.commands.ADMIN_USER_ID", 123456
-    ), patch(
-        "bot.handlers.commands.add_user", AsyncMock(return_value=False)
+    with (
+        patch("bot.handlers.commands.ADMIN_USER_ID", 123456),
+        patch("bot.handlers.commands.add_user", AsyncMock(return_value=False)),
     ):
         await command_adduser(mock_message)
 
@@ -433,10 +431,9 @@ async def test_adduser_command_with_username():
     mock_message.text = "/adduser @test_user"  # Username as arg
 
     # Mock dependencies
-    with patch(
-        "bot.handlers.commands.ADMIN_USER_ID", 123456
-    ), patch(
-        "bot.handlers.commands.logger.info", MagicMock()
+    with (
+        patch("bot.handlers.commands.ADMIN_USER_ID", 123456),
+        patch("bot.handlers.commands.logger.info", MagicMock()),
     ):
         await command_adduser(mock_message)
 

@@ -41,19 +41,19 @@ async def test_process_url_youtube_authorized():
         # Verify answer was called with format selection
         mock_message.answer.assert_called_once()
         args, kwargs = mock_message.answer.call_args
-        
+
         # Check message content
         assert "Choose Download Format" in args[0]
-        
+
         # Check keyboard markup
         assert "reply_markup" in kwargs
         markup = kwargs["reply_markup"]
         assert isinstance(markup, InlineKeyboardMarkup)
-        
+
         # Check buttons
         keyboard = markup.inline_keyboard
         assert len(keyboard) > 0  # At least one row
-        
+
         # Check callback data format
         first_button = keyboard[0][0]
         assert first_button.callback_data.startswith("fmt:")
@@ -119,12 +119,12 @@ async def test_url_storage_cleanup():
     with patch("bot.services.storage.URL_STORAGE", {"test_id": ("test_url", None)}):
         # Verify URL exists before cleanup
         from bot.services.storage import URL_STORAGE, get_url
-        
+
         assert get_url("test_id") == "test_url"
-        
+
         # Call cleanup function
         clear_url("test_id")
-        
+
         # Verify URL was removed
         assert "test_id" not in URL_STORAGE
         assert get_url("test_id") is None

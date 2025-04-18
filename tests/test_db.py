@@ -1,9 +1,8 @@
 """Tests for the database module."""
 
-import sqlite3
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
@@ -131,24 +130,25 @@ async def test_is_user_authorized_exception(temp_db):
 async def test_invite_create_and_exceptions():
     """Test creating invites and exception handling."""
     # Normal case with mock
-    with patch("aiosqlite.connect") as mock_connect, \
-         patch("uuid.uuid4", return_value="test-uuid"):
-        
+    with (
+        patch("aiosqlite.connect") as mock_connect,
+        patch("uuid.uuid4", return_value="test-uuid"),
+    ):
         # Configure mock connection and cursor
         mock_cursor = AsyncMock()
         mock_conn = AsyncMock()
         mock_conn.execute = AsyncMock(return_value=mock_cursor)
         mock_conn.__aenter__.return_value = mock_conn
         mock_connect.return_value = mock_conn
-        
+
         # Create invite
         invite_id = await create_invite(987654321)
         assert invite_id == "test-uuid"
-        
+
         # Verify db calls
         mock_conn.execute.assert_called_once()
         mock_conn.commit.assert_called_once()
-        
+
     # Exception case
     with patch("aiosqlite.connect", side_effect=Exception("Database error")):
         invite_id = await create_invite(987654321)
@@ -160,42 +160,40 @@ async def test_use_invite_and_exceptions():
     """Test using invites and exception handling."""
     # First mock - invite exists
     with patch("aiosqlite.connect") as mock_connect:
-        
         # Configure mock
         mock_cursor = AsyncMock()
         mock_cursor.fetchone.return_value = ["test-invite-id"]  # Invite exists
-        
+
         mock_conn = AsyncMock()
         mock_conn.execute = AsyncMock(return_value=mock_cursor)
         mock_conn.__aenter__.return_value = mock_conn
         mock_connect.return_value = mock_conn
-        
+
         # Also mock add_user to avoid db operations
         with patch("bot.utils.db.add_user", AsyncMock(return_value=True)):
             # Test use invite
             result = await use_invite("test-invite-id", 123456789)
             assert result is True
-            
+
             # Verify correct calls
             assert mock_conn.execute.call_count == 2  # Check and update
             mock_conn.commit.assert_called_once()
-    
+
     # Second mock - invite doesn't exist
     with patch("aiosqlite.connect") as mock_connect:
-        
         # Configure mock
         mock_cursor = AsyncMock()
         mock_cursor.fetchone.return_value = None  # No invite
-        
+
         mock_conn = AsyncMock()
         mock_conn.execute = AsyncMock(return_value=mock_cursor)
         mock_conn.__aenter__.return_value = mock_conn
         mock_connect.return_value = mock_conn
-        
+
         # Test use invite
         result = await use_invite("invalid-invite", 123456789)
         assert result is False
-    
+
     # Exception case
     with patch("aiosqlite.connect", side_effect=Exception("Database error")):
         result = await use_invite("test-invite-id", 123456789)

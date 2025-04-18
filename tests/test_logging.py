@@ -1,8 +1,7 @@
 """Tests for the logging module."""
 
-import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from loguru import logger
@@ -67,7 +66,7 @@ def test_setup_logger_default_path(monkeypatch):
 
     # Mock Path
     mock_data_dir = Path("/mock/data/dir")
-    
+
     # Apply mocks
     monkeypatch.setattr(logger, "remove", mock_remove)
     monkeypatch.setattr(logger, "add", mock_add)
@@ -82,7 +81,7 @@ def test_setup_logger_default_path(monkeypatch):
 
     # Check that add was called for both stdout and file
     assert len(logger_add_calls) == 2
-    
+
     # Check that default path was used
     file_sink = logger_add_calls[1][0]
     assert str(mock_data_dir / "bot.log") == str(file_sink)

@@ -23,25 +23,29 @@ async def test_process_url_authorized_youtube():
     mock_message.text = "https://www.youtube.com/watch?v=test"
 
     # Setup mocks
-    with patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)), \
-         patch("bot.handlers.download.is_youtube_url", return_value=True), \
-         patch("bot.handlers.download.store_url", return_value="test_url_id"), \
-         patch("bot.handlers.download.get_format_options", return_value=[
-             ("SD", "SD (480p)"),
-             ("HD", "HD (720p)"),
-             ("FHD", "Full HD (1080p)"),
-             ("ORIGINAL", "Original")
-         ]), \
-         patch("bot.handlers.download.logger.info"):
-        
+    with (
+        patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)),
+        patch("bot.handlers.download.is_youtube_url", return_value=True),
+        patch("bot.handlers.download.store_url", return_value="test_url_id"),
+        patch(
+            "bot.handlers.download.get_format_options",
+            return_value=[
+                ("SD", "SD (480p)"),
+                ("HD", "HD (720p)"),
+                ("FHD", "Full HD (1080p)"),
+                ("ORIGINAL", "Original"),
+            ],
+        ),
+        patch("bot.handlers.download.logger.info"),
+    ):
         await process_url(mock_message)
-        
+
         # Verify message was answered
         mock_message.answer.assert_called_once()
-        
+
         # Get the args and kwargs
         args, kwargs = mock_message.answer.call_args
-        
+
         # Verify the message contains format selection
         assert "Choose Download Format" in args[0]
         # Verify we have a reply_markup with the keyboard
@@ -62,15 +66,16 @@ async def test_process_url_authorized_non_youtube():
     mock_message.text = "https://example.com/video"
 
     # Setup mocks
-    with patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)), \
-         patch("bot.handlers.download.is_youtube_url", return_value=False), \
-         patch("bot.handlers.download.logger.info"):
-        
+    with (
+        patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)),
+        patch("bot.handlers.download.is_youtube_url", return_value=False),
+        patch("bot.handlers.download.logger.info"),
+    ):
         await process_url(mock_message)
-        
+
         # Verify message was answered
         mock_message.answer.assert_called_once()
-        
+
         # Verify the message contains unsupported URL info
         args = mock_message.answer.call_args[0][0]
         assert "Unsupported URL" in args
@@ -91,14 +96,17 @@ async def test_process_url_unauthorized():
     mock_message.text = "https://www.youtube.com/watch?v=test"
 
     # Setup mocks
-    with patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=False)), \
-         patch("bot.handlers.download.logger.info"):
-        
+    with (
+        patch(
+            "bot.handlers.download.is_user_authorized", AsyncMock(return_value=False)
+        ),
+        patch("bot.handlers.download.logger.info"),
+    ):
         await process_url(mock_message)
-        
+
         # Verify message was answered
         mock_message.answer.assert_called_once()
-        
+
         # Verify the message contains access denied info
         args = mock_message.answer.call_args[0][0]
         assert "Access Denied" in args
@@ -140,25 +148,29 @@ async def test_process_format_selection_success():
     mock_download_queue.add_task = AsyncMock(return_value=1)  # Position 1 in queue
 
     # Mock dependencies
-    with patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data), \
-         patch("bot.handlers.download.get_url", return_value="https://www.youtube.com/watch?v=test"), \
-         patch("bot.handlers.download.store_format"), \
-         patch("bot.handlers.download.get_bot", return_value=mock_bot), \
-         patch("bot.handlers.download.download_queue", mock_download_queue), \
-         patch("bot.handlers.download.logger.debug"), \
-         patch("bot.handlers.download.logger.info"):
-        
+    with (
+        patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data),
+        patch(
+            "bot.handlers.download.get_url",
+            return_value="https://www.youtube.com/watch?v=test",
+        ),
+        patch("bot.handlers.download.store_format"),
+        patch("bot.handlers.download.get_bot", return_value=mock_bot),
+        patch("bot.handlers.download.download_queue", mock_download_queue),
+        patch("bot.handlers.download.logger.debug"),
+        patch("bot.handlers.download.logger.info"),
+    ):
         await process_format_selection(mock_callback)
-        
+
         # Verify callback was answered
         mock_callback.answer.assert_called_once()
-        
+
         # Verify message was edited
         mock_message.edit_text.assert_called_once()
-        
+
         # Verify task was added to queue
         mock_download_queue.add_task.assert_called_once()
-        
+
         # Verify bot.edit_message_text was NOT called (since position = 1)
         mock_bot.edit_message_text.assert_not_called()
 
@@ -199,25 +211,29 @@ async def test_process_format_selection_queued():
     mock_download_queue.add_task = AsyncMock(return_value=2)  # Position 2 in queue
 
     # Mock dependencies
-    with patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data), \
-         patch("bot.handlers.download.get_url", return_value="https://www.youtube.com/watch?v=test"), \
-         patch("bot.handlers.download.store_format"), \
-         patch("bot.handlers.download.get_bot", return_value=mock_bot), \
-         patch("bot.handlers.download.download_queue", mock_download_queue), \
-         patch("bot.handlers.download.logger.debug"), \
-         patch("bot.handlers.download.logger.info"):
-        
+    with (
+        patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data),
+        patch(
+            "bot.handlers.download.get_url",
+            return_value="https://www.youtube.com/watch?v=test",
+        ),
+        patch("bot.handlers.download.store_format"),
+        patch("bot.handlers.download.get_bot", return_value=mock_bot),
+        patch("bot.handlers.download.download_queue", mock_download_queue),
+        patch("bot.handlers.download.logger.debug"),
+        patch("bot.handlers.download.logger.info"),
+    ):
         await process_format_selection(mock_callback)
-        
+
         # Verify callback was answered
         mock_callback.answer.assert_called_once()
-        
+
         # Verify message was edited
         mock_message.edit_text.assert_called_once()
-        
+
         # Verify task was added to queue
         mock_download_queue.add_task.assert_called_once()
-        
+
         # Verify bot.edit_message_text was called to update queue position
         mock_bot.edit_message_text.assert_called_once()
         # Check the queue position in the message
@@ -261,16 +277,20 @@ async def test_process_format_selection_already_processing():
     mock_download_queue.add_task = AsyncMock(return_value=3)  # Position 3 in queue
 
     # Mock dependencies
-    with patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data), \
-         patch("bot.handlers.download.get_url", return_value="https://www.youtube.com/watch?v=test"), \
-         patch("bot.handlers.download.store_format"), \
-         patch("bot.handlers.download.get_bot", return_value=mock_bot), \
-         patch("bot.handlers.download.download_queue", mock_download_queue), \
-         patch("bot.handlers.download.logger.debug"), \
-         patch("bot.handlers.download.logger.info"):
-        
+    with (
+        patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data),
+        patch(
+            "bot.handlers.download.get_url",
+            return_value="https://www.youtube.com/watch?v=test",
+        ),
+        patch("bot.handlers.download.store_format"),
+        patch("bot.handlers.download.get_bot", return_value=mock_bot),
+        patch("bot.handlers.download.download_queue", mock_download_queue),
+        patch("bot.handlers.download.logger.debug"),
+        patch("bot.handlers.download.logger.info"),
+    ):
         await process_format_selection(mock_callback)
-        
+
         # The edited text should include queue notification
         args, kwargs = mock_message.edit_text.call_args
         assert "Download queued" in args[0]
@@ -292,15 +312,16 @@ async def test_process_format_selection_invalid_callback_data():
 
     # Setup mocks for logger
     logger_error_mock = MagicMock()
-    
-    with patch("bot.handlers.download.logger.debug"), \
-         patch("bot.handlers.download.logger.error", logger_error_mock):
-        
+
+    with (
+        patch("bot.handlers.download.logger.debug"),
+        patch("bot.handlers.download.logger.error", logger_error_mock),
+    ):
         await process_format_selection(mock_callback)
-        
+
         # Verify logger.error was called
         logger_error_mock.assert_called_once()
-        
+
         # Verify callback was answered with error
         mock_callback.answer.assert_called_once_with("Invalid format selection")
 
@@ -319,12 +340,13 @@ async def test_process_format_selection_url_not_found():
     mock_callback.from_user = mock_from_user  # Add the missing attribute
 
     # Setup mocks
-    with patch("bot.handlers.download.get_url", return_value=None), \
-         patch("bot.handlers.download.logger.debug"), \
-         patch("bot.handlers.download.logger.error"):
-        
+    with (
+        patch("bot.handlers.download.get_url", return_value=None),
+        patch("bot.handlers.download.logger.debug"),
+        patch("bot.handlers.download.logger.error"),
+    ):
         await process_format_selection(mock_callback)
-        
+
         # Verify callback was answered with error
         mock_callback.answer.assert_called_once_with("URL not found or expired")
 
@@ -343,12 +365,16 @@ async def test_process_format_selection_format_not_found():
     mock_callback.from_user = mock_from_user  # Add the missing attribute
 
     # Setup mocks
-    with patch("bot.handlers.download.get_url", return_value="https://www.youtube.com/watch?v=test"), \
-         patch("bot.handlers.download.get_format_by_id", return_value=None), \
-         patch("bot.handlers.download.logger.debug"), \
-         patch("bot.handlers.download.logger.error"):
-        
+    with (
+        patch(
+            "bot.handlers.download.get_url",
+            return_value="https://www.youtube.com/watch?v=test",
+        ),
+        patch("bot.handlers.download.get_format_by_id", return_value=None),
+        patch("bot.handlers.download.logger.debug"),
+        patch("bot.handlers.download.logger.error"),
+    ):
         await process_format_selection(mock_callback)
-        
+
         # Verify callback was answered with error
         mock_callback.answer.assert_called_once_with("Selected format not found")

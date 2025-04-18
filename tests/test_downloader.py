@@ -110,13 +110,17 @@ async def test_download_youtube_video_with_status_message():
         ):
             # Call the function with status_message_id
             await download_youtube_video(
-                bot, 12345, "https://www.youtube.com/watch?v=test",
-                status_message_id=789
+                bot,
+                12345,
+                "https://www.youtube.com/watch?v=test",
+                status_message_id=789,
             )
 
             # Verify edit_message_text was called instead of send_message
             bot.send_message.assert_not_called()
-            assert bot.edit_message_text.call_count == 3  # Initial + progress + completion
+            assert (
+                bot.edit_message_text.call_count == 3
+            )  # Initial + progress + completion
             bot.send_document.assert_called_once()
 
 
@@ -195,7 +199,7 @@ async def test_download_youtube_video_no_files():
                 await download_youtube_video(
                     bot, 12345, "https://www.youtube.com/watch?v=test"
                 )
-            
+
             # Check error message
             assert "no files found" in str(exc_info.value).lower()
 
