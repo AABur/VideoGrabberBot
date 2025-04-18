@@ -56,6 +56,22 @@ Or manually:
 uv run python run.py
 ```
 
+## Deployment
+
+### Render.com Deployment
+
+This project includes configuration for easy deployment on Render.com:
+
+1. Fork or clone this repository to your GitHub account
+2. Sign up on [Render.com](https://render.com) (GitHub authentication recommended)
+3. Create a new Web Service linked to your GitHub repo
+4. Render will automatically detect the `render.yaml` configuration
+5. Set the required environment variables:
+   - `TELEGRAM_TOKEN`: Your Telegram bot token
+   - `ADMIN_USER_ID`: Your Telegram user ID for admin notifications
+
+The service will automatically use a mounted disk for storing the database and downloaded files.
+
 ## Development
 
 ### Make Commands

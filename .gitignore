@@ -172,3 +172,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# data directory (except empty .gitkeep files to preserve structure)
+data/*
+!data/.gitkeep
+!data/temp/
+data/temp/*
+!data/temp/.gitkeep
+
+# macOS system files
+.DS_Store

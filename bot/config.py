@@ -50,7 +50,8 @@ ADMIN_USER_ID: int = validate_admin_id(int(os.getenv("ADMIN_USER_ID", 0)))
 
 # File system paths
 BASE_DIR: Path = Path(__file__).parent.parent.absolute()
-DATA_DIR: Path = BASE_DIR / "data"
+# Use mounted disk on Render if available, otherwise use default data directory
+DATA_DIR: Path = Path("/data") if os.path.exists("/data") else BASE_DIR / "data"
 TEMP_DIR: Path = DATA_DIR / "temp"
 DB_PATH: Path = DATA_DIR / "bot.db"
 
