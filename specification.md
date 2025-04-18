@@ -1,134 +1,161 @@
-Техническое задание: VideoGrabberBot
+# Technical Specification: VideoGrabberBot
 
-Краткое описание проекта
+## Disclaimer
 
-VideoGrabberBot – это Telegram-бот, предназначенный для скачивания видео и аудио из YouTube по предоставленной ссылке. Бот предоставляет пользователю возможность выбора формата скачивания: для видео – варианты SD (480p), HD (720p), Full HD (1080p) и Original (максимальное доступное качество, включая 2K/4K), для аудио – MP3 (320 kbps). Полученный файл отправляется непосредственно в чат. Доступ к боту осуществляется либо по уникальной ссылке-приглашению, либо пользователи добавляются администратором (по их Telegram User Name). Информация о пользователях хранится в базе SQLite. В случае возникновения ошибок, бот уведомляет администратора. Развертывание производится непосредственно из GitHub-репозитория без использования Docker.
+**This project is a personal educational initiative created solely for learning purposes and is not intended for commercial use.** The specifications below serve as technical requirements for an educational programming exercise, aimed at practicing Python development skills, asynchronous programming, and Telegram bot development.
 
-Функциональные требования
-	•	Поддержка источников:
-	•	YouTube: Использовать библиотеку yt-dlp для извлечения и скачивания контента. Возможность дальнейшего расширения для поддержки других платформ через yt-dlp.
-	•	Выбор формата перед скачиванием:
-	•	Видео форматы:
-	•	SD (480p): для слабого интернет-соединения, экономия трафика.
-	•	HD (720p): хороший баланс качества и размера файла.
-	•	Full HD (1080p): высокое качество для современных устройств.
-	•	Original: максимальное доступное качество (включая 2K/4K).
-	•	Аудио формат:
-	•	MP3 (320 kbps): высокое качество звука, универсальный формат.
-	•	После отправки ссылки бот извлекает доступные варианты и формирует сообщение с кнопками (InlineKeyboard) для выбора конкретного формата.
-	•	Ограниченный доступ:
-	•	Доступ к боту реализуется либо посредством уникальной ссылки-приглашения, либо через механизм добавления пользователей администратором по их Telegram User Name.
-	•	Информация о пользователях, имеющих доступ, хранится в базе данных SQLite.
-	•	При обращении неавторизованного пользователя бот должен уведомить его о невозможности использования сервиса.
-	•	Логирование и обработка ошибок:
-	•	Использовать Loguru для логирования. Loguru обеспечивает современное форматирование, поддержку асинхронности и низкие накладные расходы.
-	•	Все ключевые события (запуск, получение запросов, начало и окончание скачивания) логируются.
-	•	При возникновении ошибок – в дополнение к уведомлением пользователя – бот отправляет сообщение-уведомление администратору (например, с подробностями ошибки и стектрейсом).
-	•	Очередь задач:
-	•	Для ограниченного числа пользователей и редкого одновременного использования реализовать очередь задач, чтобы гарантировать последовательное выполнение запросов без конфликтов.
-	•	При поступлении нового запроса, если бот занят, пользователю может отправляться уведомление о постановке запроса в очередь.
-	•	Работа с большими файлами:
-	•	Проект должен поддерживать обработку файлов до 2 ГБ.
-	•	Для отправки таких файлов использовать способ передачи в виде документа через Telegram (поскольку формат медиа-сообщений имеет ограничения).
-	•	При необходимости реализовать альтернативные подходы (например, отправка ссылки на файл после сохранения его на сервере), чтобы обеспечить возможность работы с крупными файлами.
+## Project Overview
 
-Нефункциональные требования и инструменты разработки
-	•	Управление зависимостями и окружением:
-	•	Использовать uv для управления зависимостями и создания изолированного окружения. Конфигурация проекта оформляется в файле pyproject.toml с указанием всех зависимостей (например, aiogram, yt-dlp, mypy, pytest, ruff).
-	•	Статическая типизация:
-	•	Код снабжается аннотациями типов (по крайней мере, в сигнатурах функций) и проверяется с помощью mypy.
-	•	Тестирование:
-	•	Для модульного и интеграционного тестирования используется pytest.
-	•	Тестируются основные модули: функции скачивания, выбор формата, проверка авторизации и обработка очереди запросов.
-	•	Линтер и форматтер:
-	•	Применяется Ruff для проверки стиля кода и автоматического форматирования.
-	•	Контроль версий:
-	•	Проект хранится в репозитории Git с продуманной историей коммитов. Файл .gitignore исключает виртуальное окружение, секретные файлы (например, .env) и другие временные файлы.
-	•	Конфигурация:
-	•	Секретные данные (например, TELEGRAM_TOKEN) хранятся в файле .env, который не добавляется в репозиторий.
-	•	Дополнительные настройки (например, путь к базе данных SQLite для хранения пользователей) также настраиваются через переменные окружения.
-	•	Логирование:
-	•	Использовать Loguru для настройки логирования. Все логи, включая ошибки, форматируются современным образом. В случае ошибок, помимо локального логирования, бот уведомляет администратора.
-	•	Выбор библиотеки для Telegram:
-	•	Использовать aiogram как единственную библиотеку для взаимодействия с Telegram Bot API, что обеспечивает асинхронность и современное API.
-	•	Деплой:
-	•	Развертывание осуществляется напрямую из GitHub-репозитория. В проекте должны присутствовать инструкции для развёртывания без использования Docker.
+VideoGrabberBot is a Telegram bot designed to download videos and audio from YouTube based on provided links. The bot offers users a choice of download formats: for video - SD (480p), HD (720p), Full HD (1080p), and Original (maximum available quality, including 2K/4K); for audio - MP3 (320 kbps). The downloaded file is sent directly to the chat. Access to the bot is granted either through a unique invitation link or by administrator approval (based on Telegram User Name). User information is stored in an SQLite database. In case of errors, the bot notifies the administrator. Deployment is done directly from the GitHub repository without using Docker.
 
-Архитектура проекта
+## Functional Requirements
 
-Общий подход
+### Source Support
+- **YouTube:** Use the yt-dlp library for content extraction and downloading. Possibility of further expansion to support other platforms through yt-dlp.
 
-Проект оформляется как модульный пакет Python, с четким разделением функциональности между компонентами бота (обработка сообщений, бизнес-логика скачивания, утилиты, работа с базой данных и логированием). Ниже предложена структура каталогов с учетом внесенных изменений:
+### Format Selection Before Download
+- **Video Formats:**
+  - SD (480p): for weak internet connections, traffic savings.
+  - HD (720p): good balance of quality and file size.
+  - Full HD (1080p): high quality for modern devices.
+  - Original: maximum available quality (including 2K/4K).
+- **Audio Format:**
+  - MP3 (320 kbps): high sound quality, universal format.
+- After sending a link, the bot extracts available options and forms a message with buttons (InlineKeyboard) for selecting a specific format.
 
-VideoGrabberBot/                # Корневая директория проекта
-├── bot/                       # Основной пакет бота
+### Limited Access
+- Access to the bot is implemented either through a unique invitation link or through a mechanism for adding users by the administrator using their Telegram User Name.
+- Information about users with access is stored in an SQLite database.
+- When an unauthorized user contacts the bot, it should notify them of the impossibility of using the service.
+
+### Logging and Error Handling
+- Use Loguru for logging. Loguru provides modern formatting, asynchronous support, and low overhead.
+- All key events (startup, receiving requests, start and end of downloads) are logged.
+- In case of errors - in addition to user notifications - the bot sends a notification message to the administrator (e.g., with error details and stack trace).
+
+### Task Queue
+- For a limited number of users and infrequent simultaneous use, implement a task queue to ensure sequential execution of requests without conflicts.
+- When a new request arrives while the bot is busy, the user may receive a notification about the request being queued.
+
+### Working with Large Files
+- The project should support processing files up to 2 GB.
+- For sending such files, use the document transmission method via Telegram (since the media message format has limitations).
+- If necessary, implement alternative approaches (e.g., sending a link to the file after saving it on the server) to enable working with large files.
+
+## Non-Functional Requirements and Development Tools
+
+### Dependency and Environment Management
+- Use uv for dependency management and creating an isolated environment. Project configuration is done in the pyproject.toml file with all dependencies specified (e.g., aiogram, yt-dlp, mypy, pytest, ruff).
+
+### Static Typing
+- Code is equipped with type annotations (at least in function signatures) and checked with mypy.
+
+### Testing
+- pytest is used for unit and integration testing.
+- Main modules are tested: download functions, format selection, authorization check, and request queue processing.
+
+### Linter and Formatter
+- Ruff is used for code style checking and automatic formatting.
+
+### Version Control
+- The project is stored in a Git repository with a well-thought-out commit history. The .gitignore file excludes virtual environment, secret files (e.g., .env), and other temporary files.
+
+### Configuration
+- Secret data (e.g., TELEGRAM_TOKEN) is stored in a .env file, which is not added to the repository.
+- Additional settings (e.g., path to SQLite database for storing users) are also configured through environment variables.
+
+### Logging
+- Use Loguru for logging configuration. All logs, including errors, are formatted in a modern way. In case of errors, in addition to local logging, the bot notifies the administrator.
+
+### Telegram Library Choice
+- Use aiogram as the only library for interacting with the Telegram Bot API, providing asynchronicity and modern API.
+
+### Deployment
+- Deployment is done directly from the GitHub repository. The project should include instructions for deployment without using Docker.
+
+## Project Architecture
+
+### General Approach
+
+The project is structured as a modular Python package, with clear separation of functionality between bot components (message handling, download business logic, utilities, database and logging work). The following directory structure is proposed:
+
+```
+VideoGrabberBot/                # Root project directory
+├── bot/                       # Main bot package
 │   ├── __init__.py
-│   ├── main.py                # Точка входа: инициализация aiogram, запуск бота
-│   ├── config.py              # Загрузка конфигурации из .env, настройка путей (например, база данных)
-│   ├── handlers/              # Пакет с обработчиками команд и сообщений
+│   ├── main.py                # Entry point: aiogram initialization, bot launch
+│   ├── config.py              # Loading configuration from .env, setting up paths (e.g., database)
+│   ├── handlers/              # Package with command and message handlers
 │   │   ├── __init__.py
-│   │   ├── commands.py        # Обработчики команд (/start, /help, /invite, /adduser)
-│   │   └── download.py        # Обработка ссылок, выбор формата (InlineKeyboard) и обработка callback-запросов
-│   ├── services/              # Бизнес-логика работы с внешними библиотеками
+│   │   ├── commands.py        # Command handlers (/start, /help, /invite, /adduser)
+│   │   └── download.py        # Link processing, format selection (InlineKeyboard) and callback query handling
+│   ├── services/              # Business logic for working with external libraries
 │   │   ├── __init__.py
-│   │   ├── downloader.py      # Функции взаимодействия с yt-dlp: получение форматов, скачивание файлов
-│   │   └── formats.py         # Логика формирования списка доступных форматов (SD, HD, Full HD, Original для видео и MP3 для аудио)
-│   ├── utils/                 # Вспомогательные утилиты
+│   │   ├── downloader.py      # Functions for interacting with yt-dlp: getting formats, downloading files
+│   │   └── formats.py         # Logic for forming a list of available formats (SD, HD, Full HD, Original for video and MP3 for audio)
+│   ├── utils/                 # Helper utilities
 │   │   ├── __init__.py
-│   │   ├── logging.py         # Настройка логирования через Loguru
-│   │   └── db.py              # Модуль для работы с базой SQLite (хранение авторизованных пользователей, приглашений)
-│   └── telegram_api/          # Абстракция над aiogram (инициализация бота, диспетчера)
+│   │   ├── logging.py         # Logging configuration through Loguru
+│   │   └── db.py              # Module for working with SQLite database (storing authorized users, invitations)
+│   └── telegram_api/          # Abstraction over aiogram (initialization of Bot, Dispatcher)
 │       ├── __init__.py
-│       └── client.py          # Инициализация объекта Bot и Dispatcher
-├── tests/                     # Тесты (pytest)
+│       └── client.py          # Initialization of Bot and Dispatcher objects
+├── tests/                     # Tests (pytest)
 │   ├── __init__.py
-│   ├── test_downloader.py     # Тесты функций скачивания и формирования списка форматов
-│   └── test_handlers.py       # Тесты обработчиков (проверка авторизации, очереди задач)
-├── pyproject.toml             # Файл конфигурации проекта (uv, Ruff, mypy, pytest)
-├── .env                     # Файл с переменными окружения (TELEGRAM_TOKEN, настройки базы и др.)
-├── README.md                # Документация по проекту, инструкции по установке и деплою из GitHub
-└── .gitignore               # Игнорирование виртуального окружения, .env и других временных файлов
+│   ├── test_downloader.py     # Tests for download functions and format list formation
+│   └── test_handlers.py       # Tests for handlers (authorization check, task queue)
+├── pyproject.toml             # Project configuration file (uv, Ruff, mypy, pytest)
+├── .env                     # File with environment variables (TELEGRAM_TOKEN, database settings, etc.)
+├── README.md                # Project documentation, installation and deployment instructions from GitHub
+└── .gitignore               # Ignoring virtual environment, .env, and other temporary files
+```
 
-Основные компоненты и их задачи
-	•	main.py:
-	•	Инициализация aiogram: создание объекта Bot (с токеном, загружаемым из .env) и Dispatcher.
-	•	Подключение обработчиков команд и callback-запросов.
-	•	Инициализация очереди задач для скачивания.
-	•	Запуск бота (long polling или webhook, в зависимости от деплоя).
-	•	Конфигурация (config.py):
-	•	Загрузка секретных переменных (например, TELEGRAM_TOKEN) из файла .env.
-	•	Чтение настроек для подключения к базе SQLite (например, путь к файлу базы).
-	•	Прочие глобальные настройки (например, директория для временных файлов).
-	•	Обработчики (handlers/):
-	•	commands.py:
-	•	Реализация базовых команд:
-	•	/start – приветственное сообщение, разъяснение работы бота.
-	•	/help – справка по использованию.
-	•	/invite – генерация уникальной ссылки-приглашения для доступа.
-	•	/adduser – команда для администратора по добавлению пользователей через Telegram User Name.
-	•	download.py:
-	•	Обработка сообщений, содержащих ссылки на видео/аудио.
-	•	Выделение платформы по URL (YouTube или Instagram).
-	•	Получение списка доступных форматов через вызов сервиса.
-	•	Отправка пользователю сообщения с кнопками выбора (InlineKeyboard) для каждого варианта:
-	•	Для видео: SD (480p), HD (720p), Full HD (1080p), Original.
-	•	Для аудио: MP3 (320 kbps).
-	•	Обработка callback-запроса: после выбора пользователем конкретного формата – постановка задачи в очередь скачивания.
-	•	Сервисы (services/):
-	•	downloader.py:
-	•	Работа с библиотекой yt-dlp:
-	•	Функция получения информации о доступных форматах (с фильтрацией вариантов согласно спецификации).
-	•	Функция скачивания файла с заданным форматом, с указанием опций (например, параметр format).
-	•	Обработка ошибок при скачивании: перехват исключений, логирование ошибки и уведомление администратора.
-	•	formats.py:
-	•	Логика формирования удобного списка для пользователя с вариантами форматов, включая человеческие описания для каждой опции.
-	•	Утилиты (utils/):
-	•	logging.py:
-	•	Настройка Loguru для логирования: определение формата, уровня логов, вывода в файл и консоль.
-	•	Функция для отправки уведомлений об ошибках администратору (через отдельное сообщение в Telegram).
-	•	db.py:
-	•	Функции для работы с SQLite: создание базы данных, таблиц для хранения пользователей и приглашений, добавление/удаление пользователей, запросы к базе.
-	•	Обеспечение доступа к данным об авторизованных пользователях, что позволяет проверить, имеет ли пользователь право на использование бота.
-	•	Telegram API взаимодействие (telegram_api/client.py):
-	•	Абстрагирование и инициализация объектов aiogram (Bot и Dispatcher).
-	•	Возможное инкапсулирование логики работы с обновлениями и отправкой сообщений.
+### Main Components and Their Tasks
+
+#### main.py:
+- aiogram initialization: creating a Bot object (with token loaded from .env) and Dispatcher.
+- Connecting command handlers and callback queries.
+- Initializing download task queue.
+- Launching the bot (long polling or webhook, depending on deployment).
+
+#### Configuration (config.py):
+- Loading secret variables (e.g., TELEGRAM_TOKEN) from the .env file.
+- Reading settings for connecting to SQLite database (e.g., database file path).
+- Other global settings (e.g., directory for temporary files).
+
+#### Handlers (handlers/):
+- commands.py:
+  - Implementation of basic commands:
+    - /start – welcome message, explanation of how the bot works.
+    - /help – usage guide.
+    - /invite – generation of a unique invitation link for access.
+    - /adduser – admin command for adding users through Telegram User Name.
+- download.py:
+  - Processing messages containing links to videos/audio.
+  - Extracting the platform from the URL (YouTube or Instagram).
+  - Getting a list of available formats through service call.
+  - Sending a message to the user with selection buttons (InlineKeyboard) for each option:
+    - For video: SD (480p), HD (720p), Full HD (1080p), Original.
+    - For audio: MP3 (320 kbps).
+  - Processing callback request: after the user selects a specific format – queuing the download task.
+
+#### Services (services/):
+- downloader.py:
+  - Working with the yt-dlp library:
+    - Function for getting information about available formats (with filtering options according to specification).
+    - Function for downloading a file with a specified format, with options specified (e.g., format parameter).
+    - Error handling during downloads: catching exceptions, logging the error, and notifying the administrator.
+- formats.py:
+  - Logic for forming a user-friendly list with format options, including human descriptions for each option.
+
+#### Utilities (utils/):
+- logging.py:
+  - Configuring Loguru for logging: defining format, log levels, output to file and console.
+  - Function for sending error notifications to the administrator (through a separate message in Telegram).
+- db.py:
+  - Functions for working with SQLite: creating a database, tables for storing users and invitations, adding/removing users, querying the database.
+  - Providing access to data about authorized users, which allows checking if a user has the right to use the bot.
+
+#### Telegram API Interaction (telegram_api/client.py):
+- Abstracting and initializing aiogram objects (Bot and Dispatcher).
+- Possible encapsulation of update handling and message sending logic.

@@ -2,6 +2,10 @@
 
 A Telegram bot for downloading videos and audio from YouTube.
 
+## Disclaimer
+
+**This project is a personal educational initiative, created solely for learning purposes and is not intended for commercial use.** It was developed to practice modern Python development techniques, asynchronous programming, and Telegram API interactions. Please respect copyright laws and platforms' terms of service when using this software.
+
 ## Features
 
 - Downloads videos from YouTube
@@ -10,6 +14,7 @@ A Telegram bot for downloading videos and audio from YouTube.
 - Access control through invitation links or admin approval
 - Asynchronous download queue system
 - Persistent storage of user preferences
+- Comprehensive error handling and admin notifications
 
 ## Requirements
 
@@ -33,9 +38,10 @@ A Telegram bot for downloading videos and audio from YouTube.
    ```
 
 3. Configure environment variables:
-   Create a `.env` file with your Telegram bot token:
+   Create a `.env` file with your Telegram bot token and admin user ID:
    ```
    TELEGRAM_TOKEN=your_telegram_token
+   ADMIN_USER_ID=your_telegram_user_id
    ```
 
 ## Running the bot
@@ -90,6 +96,7 @@ If you prefer not to use Make:
   - `telegram_api/` - Telegram API client
   - `utils/` - Utility functions
 - `tests/` - Unit and integration tests
+  - `integration/` - Integration tests
 - `data/` - Database and temporary files storage
 
 ## Technologies
@@ -98,7 +105,12 @@ If you prefer not to use Make:
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) - YouTube downloader
 - [aiosqlite](https://aiosqlite.omnilib.dev/) - Async SQLite database
 - [loguru](https://loguru.readthedocs.io/) - Logging
+- [pytest](https://docs.pytest.org/) - Testing framework
 
 ## License
 
 See the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+This is a personal educational project, but suggestions and improvements are welcome. Please feel free to open an issue or submit a pull request.

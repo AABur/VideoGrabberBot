@@ -1,121 +1,117 @@
-План разработки (этапы)
+# Development Plan for VideoGrabberBot
 
-1. Подготовительный этап и регистрация бота
-	•	Регистрация бота в Telegram:
-	•	Создать бота через BotFather, получить TELEGRAM_TOKEN и сохранить его в файле .env.
-	•	Инициализация репозитория и структуры проекта:
-	•	Создать Git-репозиторий с необходимой структурой каталогов (см. архитектуру проекта).
-	•	Настроить файл .gitignore для исключения виртуального окружения, файла .env и временных файлов.
-	•	Настройка менеджера зависимостей:
-	•	Инициализировать проект через uv и создать pyproject.toml с зависимостями (aiogram, yt-dlp, mypy, pytest, ruff, loguru и т.д.).
+## Disclaimer
 
-⸻
+**This project is a personal educational initiative created solely for learning purposes and is not intended for commercial use.** The development plan outlined below serves as a learning framework for practicing Python programming, async development, and Telegram bot implementation.
 
-2. Настройка конфигурации, базы данных и логирования
-	•	Конфигурация (config.py):
-	•	Реализовать загрузку переменных из .env (например, TELEGRAM_TOKEN).
-	•	Настроить пути для временных файлов и подключение к базе SQLite для хранения пользователей.
-	•	База данных (модуль db.py):
-	•	Создать таблицы для авторизованных пользователей и приглашений.
-	•	Реализовать функции добавления/удаления и проверки доступа.
-	•	Логирование (модуль logging.py с Loguru):
-	•	Настроить Loguru с уровнями логирования (DEBUG, INFO, WARNING, ERROR).
-	•	Интегрировать логирование сразу во все основные модули.
-	•	Реализовать функцию для отправки уведомлений об ошибках администратору через Telegram.
+## Development Phases
 
-Примечание: Параллельно с написанием каждого модуля создаются модульные тесты (pytest) для проверки корректности работы.
+### 1. Initial Setup and Bot Registration
 
-⸻
+- **Bot Registration in Telegram:**
+  - Create a bot via BotFather, obtain the TELEGRAM_TOKEN and save it in the .env file.
+- **Repository and Project Structure Setup:**
+  - Create a Git repository with the necessary directory structure (see project architecture).
+  - Configure .gitignore file to exclude virtual environment, .env file, and temporary files.
+- **Dependency Management:**
+  - Initialize the project using uv and create pyproject.toml with dependencies (aiogram, yt-dlp, mypy, pytest, ruff, loguru, etc.).
 
-3. Инициализация Telegram-бота и базовые обработчики
-	•	Инициализация aiogram:
-	•	Создать объект Bot и Dispatcher в модуле telegram_api/client.py.
-	•	Подключить базовые обработчики команд.
-	•	Базовые команды (handlers/commands.py):
-	•	/start, /help – вывод справочной информации.
-	•	/invite – генерация уникальной ссылки-приглашения.
-	•	/adduser – команда для администратора по добавлению пользователей по их Telegram User Name.
-	•	Проверка авторизации:
-	•	В каждом обработчике реализовать проверку доступа через базу SQLite.
-	•	Интеграционные тесты:
-	•	Создать тесты для проверки корректности работы базовых команд и авторизации.
-	•	Проверка функциональности:
-	•	Возможность запустить бота в тестовом режиме для проверки работы команд в реальном чате.
+### 2. Configuration, Database, and Logging Setup
 
-⸻
+- **Configuration (config.py):**
+  - Implement loading of variables from .env (e.g., TELEGRAM_TOKEN).
+  - Set up paths for temporary files and connection to SQLite database for user storage.
+- **Database (db.py module):**
+  - Create tables for authorized users and invitations.
+  - Implement functions for adding/removing and checking access.
+- **Logging (logging.py module with Loguru):**
+  - Configure Loguru with logging levels (DEBUG, INFO, WARNING, ERROR).
+  - Integrate logging into all main modules.
+  - Implement function for sending error notifications to the administrator via Telegram.
 
-4. Реализация функционала скачивания (базовая версия)
-	•	Функция скачивания:
-	•	В services/downloader.py реализовать базовую функцию скачивания контента с YouTube (с использованием yt-dlp) без выбора формата.
-	•	Обработать передачу файла через Telegram (в виде документа, учитывая поддержку файлов до 2 ГБ).
-	•	Параллельное тестирование:
-	•	Написать модульные тесты для функции скачивания (с использованием моков для yt-dlp).
-	•	Логировать начало, завершение и возможные ошибки скачивания.
+*Note: Unit tests (pytest) will be created in parallel with each module to verify correct operation.*
 
-⸻
+### 3. Telegram Bot Initialization and Basic Handlers
 
-5. Реализация выбора формата скачивания
-	•	Формирование списка форматов (services/formats.py):
-	•	Реализовать логику формирования списка доступных форматов:
-	•	Видео: SD (480p), HD (720p), Full HD (1080p), Original.
-	•	Аудио: MP3 (320 kbps).
-	•	Обработчик выбора формата (handlers/download.py):
-	•	После получения ссылки – запросить список форматов и отправить InlineKeyboard с вариантами.
-	•	Обработать callback-запрос, связанный с выбором формата, и поставить задачу скачивания в очередь.
-	•	Тестирование:
-	•	Создать тесты для проверки корректности формирования списка форматов и работы InlineKeyboard.
-	•	Логировать выбор пользователя и постановку задачи в очередь.
+- **aiogram Initialization:**
+  - Create Bot and Dispatcher objects in the telegram_api/client.py module.
+  - Connect basic command handlers.
+- **Basic Commands (handlers/commands.py):**
+  - /start, /help – display help information.
+  - /invite – generate a unique invitation link.
+  - /adduser – admin command for adding users by their Telegram User Name.
+- **Authorization Check:**
+  - Implement access verification through SQLite database in each handler.
+- **Integration Tests:**
+  - Create tests to verify the correct operation of basic commands and authorization.
+- **Functionality Testing:**
+  - Ability to run the bot in test mode to check command operation in a real chat.
 
-⸻
+### 4. Download Functionality Implementation (Basic Version)
 
-6. Реализация очереди задач для скачивания
-	•	Очередь задач:
-	•	Внедрить механизм очереди для последовательного выполнения запросов.
-	•	При поступлении нового запроса, если бот занят – уведомлять пользователя о постановке в очередь.
-	•	Логирование очереди:
-	•	Логировать добавление задачи в очередь, начало обработки и завершение.
-	•	Тесты:
-	•	Написать тесты, имитирующие последовательное выполнение запросов, чтобы убедиться, что очередь работает корректно.
+- **Download Function:**
+  - In services/downloader.py, implement a basic function for downloading content from YouTube (using yt-dlp) without format selection.
+  - Handle file transmission through Telegram (as a document, considering support for files up to 2 GB).
+- **Parallel Testing:**
+  - Write unit tests for the download function (using mocks for yt-dlp).
+  - Log the start, completion, and possible errors of downloads.
 
-⸻
+### 5. Format Selection Implementation
 
-7. Оптимизация работы с YouTube
-	•	Оптимизация логики скачивания:
-	•	В handlers/download.py оптимизировать обработку YouTube-ссылок.
-	•	В services/downloader.py улучшить поддержку скачивания контента с YouTube через yt-dlp.
-	•	Параллельное тестирование:
-	•	Написать дополнительные тесты для функционала YouTube.
-	•	Логировать все действия скачивания.
+- **Format List Formation (services/formats.py):**
+  - Implement logic for generating a list of available formats:
+    - Video: SD (480p), HD (720p), Full HD (1080p), Original.
+    - Audio: MP3 (320 kbps).
+- **Format Selection Handler (handlers/download.py):**
+  - After receiving a link, request a list of formats and send an InlineKeyboard with options.
+  - Process the callback query related to format selection and queue the download task.
+- **Testing:**
+  - Create tests to verify the correct formation of the format list and InlineKeyboard operation.
+  - Log user selection and task queuing.
 
-⸻
+### 6. Download Task Queue Implementation
 
-8. Обработка ошибок и уведомление администратора
-	•	Обработка исключений:
-	•	Во всех критических блоках (скачивание, выбор формата, работа с базой) добавить try/except с логированием ошибок.
-	•	Использовать Loguru для записи ошибок с детализацией (включая стек вызовов).
-	•	Уведомление администратора:
-	•	При возникновении критических ошибок отправлять сообщение-уведомление администратору через aiogram.
-	•	Тестирование ошибок:
-	•	Создать тесты, имитирующие ошибки (например, недопустимый URL, сбой yt-dlp) и проверять, что администратор получает уведомление.
+- **Task Queue:**
+  - Implement a queue mechanism for sequential request execution.
+  - When a new request arrives, if the bot is busy, notify the user about queuing.
+- **Queue Logging:**
+  - Log task addition to the queue, start of processing, and completion.
+- **Tests:**
+  - Write tests simulating sequential request execution to ensure the queue works correctly.
 
-⸻
+### 7. YouTube Integration Optimization
 
-9. Интеграционное тестирование и проверка новой функциональности
-	•	Интеграционные тесты:
-	•	Создать окружение для интеграционного тестирования, позволяющее запускать бота и проверять последовательную работу всех модулей.
-	•	Тестировать полные сценарии – от получения команды до отправки файла, включая обработку очереди.
-	•	Проверка в реальном времени:
-	•	Обеспечить возможность быстрого запуска тестовой версии бота для ручной проверки новой функциональности в Telegram.
-	•	Использовать CI/CD (если требуется) для автоматизированного запуска тестов при каждом изменении в коде.
+- **Download Logic Optimization:**
+  - In handlers/download.py, optimize processing of YouTube links.
+  - In services/downloader.py, improve support for downloading content from YouTube via yt-dlp.
+- **Parallel Testing:**
+  - Write additional tests for YouTube functionality.
+  - Log all download actions.
 
-⸻
+### 8. Error Handling and Administrator Notification
 
-10. Документация и деплой
-	•	Документация:
-	•	Обновить README.md с подробными инструкциями по установке, настройке и запуску проекта.
-	•	Описать порядок деплоя напрямую из GitHub-репозитория (например, через автоматизированный pull и запуск скрипта).
-	•	Финальное интеграционное тестирование:
-	•	Провести комплексное тестирование всех функций в тестовой среде.
-	•	Подготовить проект к деплою и обеспечить возможность быстрого обновления кода через GitHub.
+- **Exception Handling:**
+  - Add try/except with error logging in all critical blocks (download, format selection, database operations).
+  - Use Loguru for detailed error recording (including call stack).
+- **Administrator Notification:**
+  - Send notification messages to the administrator via aiogram when critical errors occur.
+- **Error Testing:**
+  - Create tests simulating errors (e.g., invalid URL, yt-dlp failure) and verify that the administrator receives notifications.
 
-⸻
+### 9. Integration Testing and New Functionality Verification
+
+- **Integration Tests:**
+  - Create an environment for integration testing, allowing the bot to be run and sequential operation of all modules to be verified.
+  - Test complete scenarios – from receiving a command to sending a file, including queue processing.
+- **Real-time Verification:**
+  - Provide the ability to quickly launch a test version of the bot for manual verification of new functionality in Telegram.
+  - Use CI/CD (if required) for automated test execution with each code change.
+
+### 10. Documentation and Deployment
+
+- **Documentation:**
+  - Update README.md with detailed instructions for installation, configuration, and project launch.
+  - Describe the deployment process directly from the GitHub repository (e.g., through automated pull and script execution).
+- **Final Integration Testing:**
+  - Conduct comprehensive testing of all functions in the test environment.
+  - Prepare the project for deployment and ensure the ability to quickly update code via GitHub.
