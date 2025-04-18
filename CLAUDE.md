@@ -16,7 +16,8 @@
 - **Error handling**: Use try/except with specific exceptions, log errors with loguru
 - **Docstrings**: Google style docstrings for all modules, classes, and functions
 - **Async**: Use async/await for I/O bound operations (DB, network)
-- **Formatting**: 4 spaces indentation, max 79 char line length
+- **Formatting**: 4 spaces indentation, max 79 char line length, one empty line at end of file
+- **File Structure**: Each file should have one and only one blank line at the end
 - **Logging**: Use loguru with appropriate levels (debug, info, error)
 - **Testing**: pytest with pytest-asyncio for async tests, pytest-mock for mocking
 - **Language**: Always use English for ALL code, comments, and docstrings (even if communication may be in Russian)
@@ -36,4 +37,4 @@
 - aiosqlite: https://aiosqlite.omnilib.dev/en/latest/
 - loguru: https://loguru.readthedocs.io/
 
-Remember to run `uv run mypy .` and `uv run ruff check .` before committing changes.
+Remember to run `uv run ruff check .` and `uv run ruff format .` after making changes to ensure code quality. Always run the tests with `uv run pytest` to verify code functionality.
