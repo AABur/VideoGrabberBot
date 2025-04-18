@@ -7,6 +7,9 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
+# Type hint for Task
+Task = asyncio.Task
+
 
 @dataclass
 class DownloadTask:
@@ -22,12 +25,12 @@ class DownloadTask:
 class DownloadQueue:
     """Manages a queue of download tasks."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize download queue."""
-        self.queue = asyncio.Queue()
+        self.queue: asyncio.Queue[DownloadTask] = asyncio.Queue()
         self.is_processing = False
         self.current_task: Optional[DownloadTask] = None
-        self._worker_task = None
+        self._worker_task: Optional[Task[None]] = None
 
     async def add_task(self, task: DownloadTask) -> int:
         """
@@ -51,34 +54,36 @@ class DownloadQueue:
 
         return queue_size
 
-    async def _process_queue(self):
+    async def _process_queue(self) -> None:
         """Process tasks in the queue sequentially."""
         while not self.queue.empty():
             self.is_processing = True
             self.current_task = await self.queue.get()
 
             try:
-                logger.info(
-                    f"Processing task: {self.current_task.url}, format: {self.current_task.format_string}"
-                )
+                if self.current_task:  # Type guard to help mypy
+                    logger.info(
+                        f"Processing task: {self.current_task.url}, format: {self.current_task.format_string}"
+                    )
 
-                # Import here to avoid circular imports
-                from bot.services.downloader import download_youtube_video
+                    # Import here to avoid circular imports
+                    from bot.services.downloader import download_youtube_video
 
-                bot = self.current_task.additional_data.get("bot")
-                if not bot:
-                    logger.error("Bot instance not provided in task data")
-                    continue
+                    additional_data = self.current_task.additional_data or {}
+                    bot = additional_data.get("bot")
+                    if not bot:
+                        logger.error("Bot instance not provided in task data")
+                        continue
 
-                # Download the video
-                await download_youtube_video(
-                    bot,
-                    self.current_task.chat_id,
-                    self.current_task.url,
-                    self.current_task.format_string,
-                )
+                    # Download the video
+                    await download_youtube_video(
+                        bot,
+                        self.current_task.chat_id,
+                        self.current_task.url,
+                        self.current_task.format_string,
+                    )
 
-                logger.info(f"Task completed: {self.current_task.url}")
+                    logger.info(f"Task completed: {self.current_task.url}")
 
             except Exception as e:
                 logger.error(f"Error processing task: {str(e)}", exc_info=True)
@@ -103,7 +108,8 @@ class DownloadQueue:
             return None
 
         # Create a list from queue items (without removing them)
-        queue_items = list(self.queue._queue)
+        # Mypy doesn't know about _queue attribute, but it exists
+        queue_items = list(self.queue._queue)  # type: ignore
 
         for i, task in enumerate(queue_items):
             if task.chat_id == chat_id and task.url == url:
@@ -125,7 +131,7 @@ class DownloadQueue:
             return False
 
         # Check if user has a task in the queue
-        queue_items = list(self.queue._queue)
+        queue_items = list(self.queue._queue)  # type: ignore
         return any(task.chat_id == chat_id for task in queue_items)
 
     def clear_user_tasks(self, chat_id: int) -> int:
@@ -142,11 +148,11 @@ class DownloadQueue:
             return 0
 
         # Create a new queue without the specified user's tasks
-        new_queue: asyncio.Queue = asyncio.Queue()
+        new_queue: asyncio.Queue[DownloadTask] = asyncio.Queue()
         removed_count = 0
 
         # Move items to the new queue, skipping those from the specified user
-        old_queue_items = list(self.queue._queue)
+        old_queue_items = list(self.queue._queue)  # type: ignore
         self.queue = asyncio.Queue()
 
         for task in old_queue_items:
