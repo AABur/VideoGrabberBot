@@ -24,10 +24,11 @@
 
 ## Environment
 - Python version management: Uses `uv` for Python version and dependency management
-- Python version: >=3.13 (as specified in pyproject.toml)
+- Python version: >=3.11.11 (as specified in pyproject.toml)
 - Dependencies are managed with `uv` and defined in pyproject.toml
 - Use `uv pip install -e .` for development install
 - Use `uv pip install -e ".[dev]"` to install development dependencies
+- For deployment on Render.com, Python 3.11.11 is used (current default)
 
 ## Documentation References
 - aiogram: https://docs.aiogram.dev/
@@ -36,5 +37,6 @@
   - Wiki: https://github.com/yt-dlp/yt-dlp/wiki
 - aiosqlite: https://aiosqlite.omnilib.dev/en/latest/
 - loguru: https://loguru.readthedocs.io/
+- Render.com: https://render.com/docs
 
 Remember to run `uv run ruff check .` and `uv run ruff format .` after making changes to ensure code quality. Always run the tests with `uv run pytest` to verify code functionality.
