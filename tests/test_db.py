@@ -1,7 +1,9 @@
 """Tests for the database module."""
 
+import sqlite3
 import tempfile
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -52,6 +54,15 @@ async def test_add_user(temp_db):
 
 
 @pytest.mark.asyncio
+async def test_add_user_exception(temp_db):
+    """Test handling exception when adding a user."""
+    # Mock aiosqlite.connect to raise an exception
+    with patch("aiosqlite.connect", side_effect=Exception("Database error")):
+        result = await add_user(123456789, "testuser", 987654321)
+        assert result is False
+
+
+@pytest.mark.asyncio
 async def test_get_all_users(temp_db):
     """Test retrieving all users."""
     # Add multiple users
@@ -73,6 +84,15 @@ async def test_get_all_users(temp_db):
 
 
 @pytest.mark.asyncio
+async def test_get_all_users_exception(temp_db):
+    """Test exception handling when retrieving users."""
+    # Mock aiosqlite.connect to raise an exception
+    with patch("aiosqlite.connect", side_effect=Exception("Database error")):
+        users = await get_all_users()
+        assert users == []
+
+
+@pytest.mark.asyncio
 async def test_deactivate_user(temp_db):
     """Test deactivating a user."""
     # Add a user
@@ -90,50 +110,96 @@ async def test_deactivate_user(temp_db):
 
 
 @pytest.mark.asyncio
-async def test_invite_system(temp_db):
-    """Test the invite system."""
-    # Create an invite
-    invite_id = await create_invite(987654321)
-    assert invite_id is not None
-
-    # Use the invite - обратите внимание: мы используем автономную функцию для тестов
-    # без прямого использования use_invite, чтобы избежать блокировки
-    # Add user directly for this test
-    await add_user(123456789, None, 0)
-
-    # Mark invite as used
-    import aiosqlite
-    from datetime import datetime
-
-    async with aiosqlite.connect(temp_db) as db:
-        now = datetime.now().isoformat()
-        await db.execute(
-            "UPDATE invites SET used_by = ?, used_at = ?, is_active = FALSE WHERE id = ?",
-            (123456789, now, invite_id),
-        )
-        await db.commit()
-
-    # Check if user is authorized
-    is_auth = await is_user_authorized(123456789)
-    assert is_auth is True
+async def test_deactivate_user_exception(temp_db):
+    """Test exception handling when deactivating a user."""
+    # Mock aiosqlite.connect to raise an exception
+    with patch("aiosqlite.connect", side_effect=Exception("Database error")):
+        result = await deactivate_user(123456789)
+        assert result is False
 
 
 @pytest.mark.asyncio
-async def test_multiple_invites(temp_db):
-    """Test creating and using multiple invites."""
-    # Create multiple invites
-    invite1 = await create_invite(987654321)
-    invite2 = await create_invite(987654321)
+async def test_is_user_authorized_exception(temp_db):
+    """Test exception handling when checking if a user is authorized."""
+    # Mock aiosqlite.connect to raise an exception
+    with patch("aiosqlite.connect", side_effect=Exception("Database error")):
+        is_auth = await is_user_authorized(123456789)
+        assert is_auth is False
 
-    assert invite1 != invite2  # Invites should be unique
 
-    # Add users directly for this test
-    await add_user(111, None, 0)
-    await add_user(222, None, 0)
+@pytest.mark.asyncio
+async def test_invite_create_and_exceptions():
+    """Test creating invites and exception handling."""
+    # Normal case with mock
+    with patch("aiosqlite.connect") as mock_connect, \
+         patch("uuid.uuid4", return_value="test-uuid"):
+        
+        # Configure mock connection and cursor
+        mock_cursor = AsyncMock()
+        mock_conn = AsyncMock()
+        mock_conn.execute = AsyncMock(return_value=mock_cursor)
+        mock_conn.__aenter__.return_value = mock_conn
+        mock_connect.return_value = mock_conn
+        
+        # Create invite
+        invite_id = await create_invite(987654321)
+        assert invite_id == "test-uuid"
+        
+        # Verify db calls
+        mock_conn.execute.assert_called_once()
+        mock_conn.commit.assert_called_once()
+        
+    # Exception case
+    with patch("aiosqlite.connect", side_effect=Exception("Database error")):
+        invite_id = await create_invite(987654321)
+        assert invite_id is None
 
-    # Verify both users are authorized
-    assert await is_user_authorized(111) is True
-    assert await is_user_authorized(222) is True
+
+@pytest.mark.asyncio
+async def test_use_invite_and_exceptions():
+    """Test using invites and exception handling."""
+    # First mock - invite exists
+    with patch("aiosqlite.connect") as mock_connect:
+        
+        # Configure mock
+        mock_cursor = AsyncMock()
+        mock_cursor.fetchone.return_value = ["test-invite-id"]  # Invite exists
+        
+        mock_conn = AsyncMock()
+        mock_conn.execute = AsyncMock(return_value=mock_cursor)
+        mock_conn.__aenter__.return_value = mock_conn
+        mock_connect.return_value = mock_conn
+        
+        # Also mock add_user to avoid db operations
+        with patch("bot.utils.db.add_user", AsyncMock(return_value=True)):
+            # Test use invite
+            result = await use_invite("test-invite-id", 123456789)
+            assert result is True
+            
+            # Verify correct calls
+            assert mock_conn.execute.call_count == 2  # Check and update
+            mock_conn.commit.assert_called_once()
+    
+    # Second mock - invite doesn't exist
+    with patch("aiosqlite.connect") as mock_connect:
+        
+        # Configure mock
+        mock_cursor = AsyncMock()
+        mock_cursor.fetchone.return_value = None  # No invite
+        
+        mock_conn = AsyncMock()
+        mock_conn.execute = AsyncMock(return_value=mock_cursor)
+        mock_conn.__aenter__.return_value = mock_conn
+        mock_connect.return_value = mock_conn
+        
+        # Test use invite
+        result = await use_invite("invalid-invite", 123456789)
+        assert result is False
+    
+    # Exception case
+    with patch("aiosqlite.connect", side_effect=Exception("Database error")):
+        result = await use_invite("test-invite-id", 123456789)
+        assert result is False
 
 
 @pytest.mark.asyncio

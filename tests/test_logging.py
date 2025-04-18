@@ -1,6 +1,8 @@
 """Tests for the logging module."""
 
+import sys
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from loguru import logger
@@ -45,6 +47,47 @@ def test_setup_logger(monkeypatch):
     assert logger_info_called
 
 
+def test_setup_logger_default_path(monkeypatch):
+    """Test logger setup with default log path."""
+    # Mock logger functions
+    logger_remove_called = False
+    logger_add_calls = []
+    logger_info_called = False
+
+    def mock_remove():
+        nonlocal logger_remove_called
+        logger_remove_called = True
+
+    def mock_add(sink, **kwargs):
+        logger_add_calls.append((sink, kwargs))
+
+    def mock_info(message):
+        nonlocal logger_info_called
+        logger_info_called = True
+
+    # Mock Path
+    mock_data_dir = Path("/mock/data/dir")
+    
+    # Apply mocks
+    monkeypatch.setattr(logger, "remove", mock_remove)
+    monkeypatch.setattr(logger, "add", mock_add)
+    monkeypatch.setattr(logger, "info", mock_info)
+    monkeypatch.setattr("bot.utils.logging.DATA_DIR", mock_data_dir)
+
+    # Call the setup function with default path
+    setup_logger()
+
+    # Verify that logger was configured correctly
+    assert logger_remove_called
+
+    # Check that add was called for both stdout and file
+    assert len(logger_add_calls) == 2
+    
+    # Check that default path was used
+    file_sink = logger_add_calls[1][0]
+    assert str(mock_data_dir / "bot.log") == str(file_sink)
+
+
 @pytest.mark.asyncio
 async def test_notify_admin_success(monkeypatch):
     """Test that admin notifications are sent successfully."""
@@ -81,6 +124,33 @@ async def test_notify_admin_success(monkeypatch):
     # Check arguments
     assert "Test notification" in send_message_args[1]
     assert log_called
+
+
+@pytest.mark.asyncio
+async def test_notify_admin_error_level(monkeypatch):
+    """Test that error-level notifications use logger.error."""
+    # Create mock bot
+    mock_bot = AsyncMock()
+
+    # Mock logger.error
+    error_called = False
+    error_message = None
+
+    def mock_error(message, **kwargs):
+        nonlocal error_called, error_message
+        error_called = True
+        error_message = message
+
+    # Apply mock
+    monkeypatch.setattr(logger, "error", mock_error)
+    monkeypatch.setattr(logger, "log", MagicMock())
+
+    # Call the function with ERROR level
+    await notify_admin(mock_bot, "Error message", level="ERROR")
+
+    # Verify logger.error was called
+    assert error_called
+    assert "Error message" in error_message
 
 
 @pytest.mark.asyncio
