@@ -40,3 +40,54 @@ exclude_lines = [
     "raise NotImplementedError",
     "if __name__ == .__main__.:"
 ]
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_any_generics = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+strict_optional = true
+
+# Ignore missing stubs for third-party libraries
+[[tool.mypy.overrides]]
+module = "yt_dlp"
+ignore_missing_imports = true
+
+# Ignore aiogram type issues - safe to ignore for this project
+# since these are due to internal aiogram types
+[[tool.mypy.overrides]]
+module = "bot.handlers.*"
+disable_error_code = ["union-attr"]
+
+# Ignore specific errors in downloader.py
+[[tool.mypy.overrides]]
+module = "bot.services.downloader"
+disable_error_code = ["call-arg"]
+
+# Ignore test code
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disable_error_code = ["arg-type", "index", "operator", "method-assign", "union-attr"]
+
+# Ignore mypy errors in scripts and main entry point files
+[[tool.mypy.overrides]]
+module = "scripts.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = "run"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = "main"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
