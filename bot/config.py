@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from dotenv import load_dotenv
 
@@ -47,6 +47,17 @@ def validate_admin_id(admin_id: int) -> int:
 # Telegram configuration
 TELEGRAM_TOKEN: str = validate_token(os.getenv("TELEGRAM_TOKEN", ""))
 ADMIN_USER_ID: int = validate_admin_id(int(os.getenv("ADMIN_USER_ID", 0)))
+
+# Web configuration
+WEBHOOK_HOST: Optional[str] = os.getenv("WEBHOOK_HOST", None)
+WEBHOOK_PATH: str = f"/webhook/{TELEGRAM_TOKEN}"
+WEBHOOK_URL: Optional[str] = None
+if WEBHOOK_HOST:
+    WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+PORT: int = int(os.getenv("PORT", 10000))
+
+# Determine if we should use webhook or polling
+USE_WEBHOOK: bool = bool(WEBHOOK_HOST)
 
 # File system paths
 BASE_DIR: Path = Path(__file__).parent.parent.absolute()
