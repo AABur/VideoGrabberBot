@@ -77,8 +77,6 @@ async def download_youtube_video(
             "format": format_string,  # Use the requested format
             "outtmpl": str(temp_download_path / "%(title)s.%(ext)s"),
             "noplaylist": True,
-            "quiet": True,
-            "no_warnings": True,
             # Bypass age verification and avoid "sign in to confirm you're not a bot"
             "nocheckcertificate": True,
             # Use HTTP instead of HTTPS to work better with some proxies
@@ -95,9 +93,18 @@ async def download_youtube_video(
                 "Accept-Encoding": "gzip, deflate, br",
                 "Referer": "https://www.youtube.com/",
                 "Upgrade-Insecure-Requests": "1",
-            }
+            },
         }
-        
+
+        # Check if verbose mode is enabled
+        if os.getenv("YT_DLP_VERBOSE", "NO").upper() == "YES":
+            logger.info("Running yt-dlp in verbose mode")
+            ydl_opts["verbose"] = True
+            ydl_opts["quiet"] = False
+        else:
+            ydl_opts["quiet"] = True
+            ydl_opts["no_warnings"] = True
+
         # Add cookiefile if set in environment
         cookie_file = os.getenv("YOUTUBE_COOKIES")
         if cookie_file and os.path.exists(cookie_file):

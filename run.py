@@ -4,7 +4,6 @@
 import asyncio
 import logging
 import sys
-import os
 
 from aiohttp import web
 from loguru import logger
@@ -23,22 +22,24 @@ async def start_bot():
     from bot.config import PORT, USE_WEBHOOK
 
     app_or_none = await main()
-    
+
     # If main() returned a web application, start it
     if app_or_none is not None and USE_WEBHOOK:
         logger.info(f"Starting web server on port {PORT}")
         # Using a runner to properly handle async startup/shutdown
         runner = web.AppRunner(app_or_none)
         await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', PORT)
-        
+        site = web.TCPSite(runner, "0.0.0.0", PORT)
+
         try:
             await site.start()
             logger.info(f"Server started on port {PORT}")
-            
+
             # Keep the server running
             while True:
-                await asyncio.sleep(3600)  # Sleep for an hour, wake up to check if we need to stop
+                await asyncio.sleep(
+                    3600
+                )  # Sleep for an hour, wake up to check if we need to stop
         except KeyboardInterrupt:
             logger.info("Received shutdown signal")
         finally:

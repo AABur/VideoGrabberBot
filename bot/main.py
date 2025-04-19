@@ -2,7 +2,6 @@
 
 import asyncio
 import os
-import sys
 import datetime
 from typing import Optional
 from aiohttp import web
@@ -10,10 +9,7 @@ from aiohttp import web
 from aiogram import types
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from loguru import logger
-from bot.config import (
-    PORT, USE_WEBHOOK, WEBHOOK_PATH, WEBHOOK_URL, 
-    IS_RENDER, DATA_DIR
-)
+from bot.config import PORT, USE_WEBHOOK, WEBHOOK_PATH, WEBHOOK_URL, IS_RENDER, DATA_DIR
 from bot.handlers.commands import router as commands_router
 from bot.telegram_api.client import bot, dp
 from bot.utils.db import init_db
@@ -50,22 +46,22 @@ async def startup() -> None:
 
 async def on_startup(application: web.Application) -> None:
     """Execute startup actions for webhook mode.
-    
+
     Args:
         application: Web application passed by aiohttp
     """
     # This will be called by the aiohttp application startup event
     await startup()
-    
+
     # Only set webhook if using webhook mode
     if USE_WEBHOOK and WEBHOOK_URL:
         logger.info(f"Setting webhook to: {WEBHOOK_URL}")
         await bot.set_webhook(url=WEBHOOK_URL)
-        
+
 
 async def on_shutdown(application: web.Application) -> None:
     """Execute shutdown actions.
-    
+
     Args:
         application: Web application passed by aiohttp
     """
@@ -73,20 +69,20 @@ async def on_shutdown(application: web.Application) -> None:
     if USE_WEBHOOK:
         logger.info("Deleting webhook")
         await bot.delete_webhook()
-    
+
     logger.info("Shutting down bot...")
 
 
 async def main() -> Optional[web.Application]:
     """Start the bot using polling or webhook depending on configuration.
-    
+
     Returns:
         Web application if in webhook mode, None otherwise
     """
     # Register routers
     dp.include_router(commands_router)
     dp.include_router(download_router)
-    
+
     # For debugging
     if IS_RENDER:
         logger.info("Running on Render.com environment")
@@ -94,7 +90,7 @@ async def main() -> Optional[web.Application]:
         logger.info(f"Webhook configuration: URL={WEBHOOK_URL}, PATH={WEBHOOK_PATH}")
     else:
         logger.info("Webhook not configured")
-        
+
     if not USE_WEBHOOK:
         # Use polling mode (for local development)
         logger.info("Starting bot in polling mode...")
@@ -104,49 +100,49 @@ async def main() -> Optional[web.Application]:
     else:
         # Use webhook mode (for production)
         logger.info(f"Starting bot in webhook mode on port {PORT}...")
-        
+
         # Create aiohttp application
         app = web.Application()
-        
+
         # Register application startup and shutdown handlers for the web app
         # Note: These are different from the aiogram dispatcher handlers
         app.on_startup.append(on_startup)
         app.on_shutdown.append(on_shutdown)
-        
+
         # Setup webhook handler
         webhook_requests_handler = SimpleRequestHandler(
             dispatcher=dp,
             bot=bot,
         )
         webhook_requests_handler.register(app, path=WEBHOOK_PATH)
-        
+
         # Setup webhook routes
         setup_application(app, dp, bot=bot)
-        
+
         # Add a simple route for health checks and home page
         async def health(request: web.Request) -> web.Response:
             """Health check endpoint.
-            
+
             Args:
                 request: Web request object
-                
+
             Returns:
                 Web response with OK status
             """
             return web.Response(
                 text="<html><body><h1>VideoGrabberBot</h1><p>Bot is running. Visit @VGraber_bot on Telegram.</p></body></html>",
-                content_type="text/html"
+                content_type="text/html",
             )
-        
+
         app.router.add_get("/", health)
-        
+
         # Debug endpoint to verify environment
         async def debug_info(request: web.Request) -> web.Response:
             """Debug endpoint to verify environment variables.
-            
+
             Args:
                 request: Web request object
-                
+
             Returns:
                 Web response with debug info
             """
@@ -159,15 +155,17 @@ async def main() -> Optional[web.Application]:
                 "render_dir_exists": os.path.exists("/opt/render"),
                 "data_dir": str(DATA_DIR),
             }
-            
-            return web.json_response({
-                "ok": True,
-                "webhook_config": webhook_info,
-                "timestamp": str(datetime.datetime.now())
-            })
-        
+
+            return web.json_response(
+                {
+                    "ok": True,
+                    "webhook_config": webhook_info,
+                    "timestamp": str(datetime.datetime.now()),
+                }
+            )
+
         app.router.add_get("/debug", debug_info)
-        
+
         # Return the application to be started by the caller
         logger.info(f"Prepared web application to run on port {PORT}")
         return app

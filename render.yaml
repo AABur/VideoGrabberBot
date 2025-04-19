@@ -18,6 +18,8 @@ services:
         value: https://videograbberbot.onrender.com
       - key: YOUTUBE_COOKIES
         sync: false
+      - key: YT_DLP_VERBOSE
+        value: "NO"
     disk:
       name: data
       mountPath: /data
