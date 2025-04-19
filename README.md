@@ -1,6 +1,12 @@
 # VideoGrabberBot
 
-A Telegram bot for downloading videos and audio from YouTube.
+A Telegram bot for downloading videos and audio from YouTube with format selection options.
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.13%2B-blue" alt="Python 3.13+">
+  <img src="https://img.shields.io/badge/framework-aiogram-blue" alt="Aiogram">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License MIT">
+</p>
 
 ## Disclaimer
 
@@ -8,108 +14,112 @@ A Telegram bot for downloading videos and audio from YouTube.
 
 ## Features
 
-- Downloads videos from YouTube
-- Supports multiple video formats (SD, HD, Full HD, Original)
-- Supports audio extraction (MP3 320kbps)
-- Access control through invitation links or admin approval
-- Asynchronous download queue system
-- Persistent storage of user preferences
-- Comprehensive error handling and admin notifications
+- **Video Downloads**: Get videos from YouTube in multiple formats:
+  - SD (480p)
+  - HD (720p)
+  - Full HD (1080p)
+  - Original (Maximum available quality)
+- **Audio Extraction**: Extract high-quality MP3 (320kbps) audio from videos
+- **Access Control**: Restrict bot usage through invitation links or admin approval
+- **Queue System**: Asynchronous download queue for handling multiple requests
+- **Error Handling**: Comprehensive error handling with admin notifications
+- **Modern Architecture**: Built with asyncio, aiogram, and yt-dlp
 
-## Requirements
+## How It Works
+
+1. **Send a YouTube link** to the bot
+2. **Choose a format** from the provided options
+3. **Wait for download** to complete
+4. **Receive the file** directly in your Telegram chat
+
+## Quick Start
+
+### Requirements
 
 - Python 3.13+
-- Telegram Bot API token
-- Make (for development commands)
+- Telegram Bot API token (from [BotFather](https://t.me/botfather))
+- [uv](https://github.com/astral-sh/uv) - Python package installer and environment manager
 
-## Installation
+### Installation
 
-1. Clone the repository:
+1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/VideoGrabberBot.git
+   git clone https://github.com/AABur/VideoGrabberBot.git
    cd VideoGrabberBot
    ```
 
-2. Create a virtual environment and install dependencies:
+2. **Set up environment with uv**:
    ```bash
    uv venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   uv pip install -e ".[dev]"
+   uv pip install -e .
    ```
 
-3. Configure environment variables:
-   Create a `.env` file with your Telegram bot token and admin user ID:
+3. **Configure the bot**:
+   Create a `.env` file with:
    ```
    TELEGRAM_TOKEN=your_telegram_token
    ADMIN_USER_ID=your_telegram_user_id
    ```
 
-## Running the bot
-
-```bash
-make run
-```
-
-Or manually:
-
-```bash
-uv run python run.py
-```
+4. **Run the bot**:
+   ```bash
+   uv run python run.py
+   ```
 
 ## Development
 
-### Make Commands
-
-The project includes a Makefile for common development tasks. To see all available commands:
+### Commands
 
 ```bash
-make help
+# Run the bot
+uv run python run.py
+
+# Run all tests
+uv run pytest
+
+# Run tests with coverage
+uv run pytest --cov=bot --cov-report=term-missing --cov-report=html
+
+# Run a specific test
+uv run pytest tests/test_file.py::test_function_name
+
+# Type checking
+uv run mypy .
+
+# Lint code
+uv run ruff check .
+
+# Format code
+uv run ruff format .
 ```
 
-Key commands:
+## Project Structure
 
-- `make run` - Run the bot
-- `make tests` - Run all tests with coverage
-- `make test test_file.py::test_function_name` - Run a specific test
-- `make check` - Run all checks (format, lint, type check)
-- `make format` - Format code with ruff
-- `make lint` - Lint code with ruff
-- `make mypy` - Type check with mypy
-
-### Manual Commands
-
-If you prefer not to use Make:
-
-- Run the bot: `uv run python run.py`
-- Run all tests: `uv run pytest`
-- Run a specific test: `uv run pytest tests/test_file.py::test_function_name`
-- Test with coverage: `uv run pytest --cov=bot --cov-report=term-missing`
-- Type checking: `uv run mypy .`
-- Lint code: `uv run ruff check .`
-- Format code: `uv run ruff format .`
-
-### Project Structure
-
-- `bot/` - Main bot code
-  - `handlers/` - Telegram message handlers
-  - `services/` - Core functionality (download, queue, storage)
-  - `telegram_api/` - Telegram API client
-  - `utils/` - Utility functions
-- `tests/` - Unit and integration tests
-  - `integration/` - Integration tests
-- `data/` - Database and temporary files storage
+```
+VideoGrabberBot/
+├── bot/                # Main bot code
+│   ├── handlers/       # Telegram message handlers
+│   ├── services/       # Core functionality
+│   ├── telegram_api/   # Telegram API client
+│   └── utils/          # Utility functions
+├── tests/              # Test suite
+│   └── integration/    # Integration tests
+├── data/               # Database and temp files
+└── CLAUDE.md           # Development guidelines
+```
 
 ## Technologies
 
-- [aiogram](https://docs.aiogram.dev/) - Telegram Bot framework
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - YouTube downloader
+- [aiogram](https://docs.aiogram.dev/) - Modern Telegram Bot framework
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Powerful YouTube downloader
 - [aiosqlite](https://aiosqlite.omnilib.dev/) - Async SQLite database
-- [loguru](https://loguru.readthedocs.io/) - Logging
-- [pytest](https://docs.pytest.org/) - Testing framework
+- [loguru](https://loguru.readthedocs.io/) - Advanced logging
+- [uv](https://github.com/astral-sh/uv) - Fast Python package installer and resolver
 
 ## License
 
-See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 

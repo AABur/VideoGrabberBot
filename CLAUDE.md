@@ -38,3 +38,32 @@
 - loguru: https://loguru.readthedocs.io/
 
 Remember to run `uv run ruff check .` and `uv run ruff format .` after making changes to ensure code quality. Always run the tests with `uv run pytest` to verify code functionality.
+
+## Claude Interaction Guidelines
+
+This section contains rules and guidelines for working with Claude on this project. These rules should be followed during all interactions related to VideoGrabberBot development.
+
+### Communication Rules
+
+1. **Language**: 
+   - Claude should communicate with developers in Russian in the chat
+   - All project artifacts (code, comments, documentation, commit messages) must be in English
+
+2. **Message Tags**:
+   - Use special tags in messages for Claude to recognize specific instructions:
+     - `#правило: [содержание правила]` — for adding a new rule
+     - `#напоминание: [содержание]` — for important reminders
+
+### Project-Specific Rules
+
+1. **Version Control**: 
+   - All changes to project files must be saved to git after developer confirmation
+   - Do not commit changes automatically without explicit approval
+
+### Code Generation Rules
+
+1. **[Add future code generation rules here]**
+
+### Documentation Rules
+
+1. **[Add future documentation rules here]**
