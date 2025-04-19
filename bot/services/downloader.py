@@ -5,7 +5,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import yt_dlp
 from aiogram import Bot, types
@@ -73,14 +73,13 @@ async def download_youtube_video(
             )
 
         # Options for yt-dlp
-        ydl_opts = {
+        ydl_opts: Dict[str, Any] = {
             "format": format_string,  # Use the requested format
             "outtmpl": str(temp_download_path / "%(title)s.%(ext)s"),
             "noplaylist": True,
             "quiet": True,
             "no_warnings": True,
             # Bypass age verification and avoid "sign in to confirm you're not a bot"
-            "cookiefile": os.getenv("YOUTUBE_COOKIES", None),
             "nocheckcertificate": True,
             # Use HTTP instead of HTTPS to work better with some proxies
             "prefer_insecure": True,
@@ -98,6 +97,12 @@ async def download_youtube_video(
                 "Upgrade-Insecure-Requests": "1",
             }
         }
+        
+        # Add cookiefile if set in environment
+        cookie_file = os.getenv("YOUTUBE_COOKIES")
+        if cookie_file and os.path.exists(cookie_file):
+            logger.info(f"Using YouTube cookies from: {cookie_file}")
+            ydl_opts["cookiefile"] = cookie_file
 
         # Download video
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

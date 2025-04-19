@@ -64,8 +64,12 @@ async def on_shutdown(bot_instance: object) -> None:
     logger.info("Shutting down bot...")
 
 
-async def main() -> None:
-    """Start the bot using polling or webhook depending on configuration."""
+async def main() -> web.Application:
+    """Start the bot using polling or webhook depending on configuration.
+    
+    Returns:
+        Web application if in webhook mode, None otherwise
+    """
     # Register routers
     dp.include_router(commands_router)
     dp.include_router(download_router)
@@ -150,13 +154,9 @@ async def main() -> None:
         
         app.router.add_get("/debug", debug_info)
         
-        # Start the application
-        try:
-            logger.info(f"Starting web server on port {PORT}")
-            web.run_app(app, host="0.0.0.0", port=PORT)
-        except Exception as e:
-            logger.error(f"Failed to start web server: {e}")
-            sys.exit(1)
+        # Return the application to be started by the caller
+        logger.info(f"Prepared web application to run on port {PORT}")
+        return app
 
 
 if __name__ == "__main__":
