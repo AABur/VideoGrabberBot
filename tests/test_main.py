@@ -22,13 +22,11 @@ async def test_startup():
         # Call the startup function
         await startup()
 
-        # Verify database initialization (called twice in the current implementation)
-        assert mock_init_db.call_count == 2, (
-            "Database should be initialized twice (duplicated in the code)"
-        )
+        # Verify database initialization (called once after code deduplication)
+        assert mock_init_db.call_count == 1, "Database should be initialized once"
 
-        # Verify bot commands setup (called twice in current implementation)
-        assert mock_bot.set_my_commands.call_count == 2
+        # Verify bot commands setup (called once after code deduplication)
+        assert mock_bot.set_my_commands.call_count == 1
 
         # Verify the correct commands were registered
         commands_arg = mock_bot.set_my_commands.call_args[0][0]

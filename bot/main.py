@@ -26,17 +26,6 @@ async def startup() -> None:
     )
 
     logger.info("Bot has been started successfully")
-    await init_db()
-
-    await bot.set_my_commands(
-        [
-            types.BotCommand(command="start", description="Start the bot"),
-            types.BotCommand(command="help", description="Show help information"),
-            types.BotCommand(command="invite", description="Generate invite link"),
-        ]
-    )
-
-    logger.info("Bot has been started successfully")
 
 
 async def main() -> None:
