@@ -57,7 +57,9 @@ if WEBHOOK_HOST:
 PORT: int = int(os.getenv("PORT", 10000))
 
 # Determine if we should use webhook or polling
-USE_WEBHOOK: bool = bool(WEBHOOK_HOST)
+# We detect if we're running on Render.com by checking for their environment directory
+IS_RENDER: bool = os.path.exists("/opt/render")
+USE_WEBHOOK: bool = bool(WEBHOOK_HOST) or IS_RENDER
 
 # File system paths
 BASE_DIR: Path = Path(__file__).parent.parent.absolute()

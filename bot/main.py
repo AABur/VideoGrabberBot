@@ -1,14 +1,19 @@
 """Main module for VideoGrabberBot."""
 
 import asyncio
+import os
 import sys
+import datetime
 from aiohttp import web
 
 from aiogram import types
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from loguru import logger
 
-from bot.config import PORT, USE_WEBHOOK, WEBHOOK_PATH, WEBHOOK_URL
+from bot.config import (
+    PORT, USE_WEBHOOK, WEBHOOK_PATH, WEBHOOK_URL, 
+    IS_RENDER, DATA_DIR
+)
 from bot.handlers.commands import router as commands_router
 from bot.telegram_api.client import bot, dp
 from bot.utils.db import init_db
@@ -65,6 +70,14 @@ async def main() -> None:
     dp.include_router(commands_router)
     dp.include_router(download_router)
     
+    # For debugging
+    if IS_RENDER:
+        logger.info("Running on Render.com environment")
+    if USE_WEBHOOK:
+        logger.info(f"Webhook configuration: URL={WEBHOOK_URL}, PATH={WEBHOOK_PATH}")
+    else:
+        logger.info("Webhook not configured")
+        
     if not USE_WEBHOOK:
         # Use polling mode (for local development)
         logger.info("Starting bot in polling mode...")
@@ -91,7 +104,7 @@ async def main() -> None:
         # Setup webhook routes
         setup_application(app, dp, bot=bot)
         
-        # Add a simple route for health checks
+        # Add a simple route for health checks and home page
         async def health(request: web.Request) -> web.Response:
             """Health check endpoint.
             
@@ -101,9 +114,41 @@ async def main() -> None:
             Returns:
                 Web response with OK status
             """
-            return web.Response(text="OK")
+            return web.Response(
+                text="<html><body><h1>VideoGrabberBot</h1><p>Bot is running. Visit @VGraber_bot on Telegram.</p></body></html>",
+                content_type="text/html"
+            )
         
         app.router.add_get("/", health)
+        
+        # Debug endpoint to verify environment
+        async def debug_info(request: web.Request) -> web.Response:
+            """Debug endpoint to verify environment variables.
+            
+            Args:
+                request: Web request object
+                
+            Returns:
+                Web response with debug info
+            """
+            webhook_info = {
+                "webhook_host": WEBHOOK_HOST,
+                "webhook_path": WEBHOOK_PATH,
+                "webhook_url": WEBHOOK_URL,
+                "port": PORT,
+                "is_render": IS_RENDER,
+                "use_webhook": USE_WEBHOOK,
+                "render_dir_exists": os.path.exists("/opt/render"),
+                "data_dir": str(DATA_DIR),
+            }
+            
+            return web.json_response({
+                "ok": True,
+                "webhook_config": webhook_info,
+                "timestamp": str(web.datetime.datetime.now())
+            })
+        
+        app.router.add_get("/debug", debug_info)
         
         # Start the application
         try:
