@@ -56,11 +56,17 @@ async def test_main_routers():
         patch("bot.main.download_router", "download_router_mock"),
         patch("bot.main.startup", AsyncMock()) as mock_startup,
         patch("bot.main.bot", "bot_mock"),
+        # Mock USE_WEBHOOK to return False so we go down the polling path
+        patch("bot.main.USE_WEBHOOK", False),
+        patch("bot.main.IS_RENDER", False),
     ):
         # Import and call the main function
         from bot.main import main
 
-        await main()
+        result = await main()
+
+        # Result should be None when in polling mode
+        assert result is None, "Result should be None in polling mode"
 
         # Verify routers were registered
         assert mock_dp.include_router.call_count == 2, "Should register 2 routers"
