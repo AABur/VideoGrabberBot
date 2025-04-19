@@ -60,6 +60,16 @@ This section contains rules and guidelines for working with Claude on this proje
    - All changes to project files must be saved to git after developer confirmation
    - Do not commit changes automatically without explicit approval
 
+2. **Testing**:
+   - After changing code, always run corresponding tests
+
+3. **Code Quality**:
+   - Before committing to git, always run formatting and linter
+
+4. **Rule Management**:
+   - All rules must be added to CLAUDE.md
+   - Before adding a new rule, check for duplicates or contradictions
+
 ### Code Generation Rules
 
 1. **[Add future code generation rules here]**
