@@ -10,7 +10,7 @@ dependencies = [
     "aiosqlite>=0.21.0",
     "loguru>=0.7.3",
     "python-dotenv>=1.1.0",
-    "yt-dlp>=2025.3.27",
+    "yt-dlp>=2025.3.31",
 ]
 
 [dependency-groups]
@@ -18,7 +18,7 @@ dev = [
     "mypy>=1.15.0",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
-    "pytest-cov>=5.0.0", 
+    "pytest-cov>=5.0.0",
     "pytest-mock>=3.14.0",
     "ruff>=0.11.2",
 ]
@@ -38,7 +38,7 @@ exclude_lines = [
     "pragma: no cover",
     "def __repr__",
     "raise NotImplementedError",
-    "if __name__ == .__main__.:"
+    "if __name__ == .__main__.:",
 ]
 
 [tool.mypy]
@@ -74,7 +74,13 @@ disable_error_code = ["call-arg"]
 module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
-disable_error_code = ["arg-type", "index", "operator", "method-assign", "union-attr"]
+disable_error_code = [
+    "arg-type",
+    "index",
+    "operator",
+    "method-assign",
+    "union-attr",
+]
 
 # Ignore mypy errors in scripts and main entry point files
 [[tool.mypy.overrides]]
