@@ -37,10 +37,10 @@ The project uses two linting tools that complement each other:
    - Configuration: In .flake8 file
    - Command: `uv run flake8 . --select=WPS` (WPS only checks)
    - No automatic fixes - requires manual corrections
-   
+
 **Recommended workflow**:
 1. Run `make lint-all` or `uv run ruff check && uv run ruff format && uv run flake8 . --select=WPS`
-2. Fix any issues reported by both linters 
+2. Fix any issues reported by both linters
 3. Run tests to verify functionality
 
 The linters work together - Ruff handles most formatting and basic linting, while wemake-python-styleguide adds additional stricter checks.
@@ -54,7 +54,7 @@ The linters work together - Ruff handles most formatting and basic linting, whil
 
 ## Documentation References
 - aiogram: https://docs.aiogram.dev/
-- yt-dlp: 
+- yt-dlp:
   - README: https://github.com/yt-dlp/yt-dlp/blob/master/README.md
   - Wiki: https://github.com/yt-dlp/yt-dlp/wiki
 - aiosqlite: https://aiosqlite.omnilib.dev/en/latest/
@@ -68,7 +68,7 @@ This section contains rules and guidelines for working with Claude on this proje
 
 ### Communication Rules
 
-1. **Language**: 
+1. **Language**:
    - Claude should communicate with developers in Russian in the chat
    - All project artifacts (code, comments, documentation, commit messages) must be in English
 
@@ -79,12 +79,17 @@ This section contains rules and guidelines for working with Claude on this proje
 
 ### Project-Specific Rules
 
-1. **Version Control**: 
+1. **Version Control**:
    - All changes to project files must be saved to git after developer confirmation
    - Do not commit changes automatically without explicit approval
 
 2. **Testing**:
    - After changing code, always run corresponding tests
+   - NEVER change code and tests simultaneously
+   - When adding tests for existing code, do not modify the code itself
+   - When writing new code, run existing tests and create new tests afterward
+   - When refactoring code, always run existing tests to verify functionality
+   - Maintain minimum test coverage of 85%
 
 3. **Code Quality**:
    - Before committing to git, always run formatting and both linters (ruff and flake8)
@@ -93,6 +98,11 @@ This section contains rules and guidelines for working with Claude on this proje
 4. **Rule Management**:
    - All rules must be added to CLAUDE.md
    - Before adding a new rule, check for duplicates or contradictions
+
+5. **Development Workflow**:
+   - **Creating Tests**: When creating tests for existing code, never modify the code itself
+   - **New Feature Development**: When implementing new functionality, first write the code, then run existing tests, fix issues if needed, and finally create tests for the new code
+   - **Code Refactoring**: When refactoring existing code, always run tests after changes to ensure the functionality remains intact
 
 ### Code Generation Rules
 

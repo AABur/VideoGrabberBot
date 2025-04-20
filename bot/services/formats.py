@@ -1,25 +1,27 @@
 """Format handling module for VideoGrabberBot."""
 
-from typing import Dict, List, Optional, Tuple
+from functools import lru_cache
+from typing import Dict, List, Optional, Tuple, TypedDict
 
 from bot.config import AUDIO_FORMAT, VIDEO_FORMATS
 
 
-def get_available_formats(
-    url: Optional[str] = None,
-) -> Dict[str, Dict[str, str]]:
-    """
-    Get available formats for the URL.
+class FormatData(TypedDict):
+    """Type definition for format data."""
 
-    Args:
-        url: URL of the video (optional)
+    label: str
+    format: str
+    type: str
+
+
+def get_available_formats() -> Dict[str, FormatData]:
+    """
+    Get available formats for download.
 
     Returns:
         Dict of format types and their details.
     """
-    # For now, we return all configured formats
-    # In the future, this can be extended to filter formats based on URL or video properties
-    formats = {}
+    formats: Dict[str, FormatData] = {}
 
     # Add video formats
     for format_id, format_data in VIDEO_FORMATS.items():
@@ -48,22 +50,21 @@ def get_format_options() -> List[Tuple[str, str]]:
         List of (callback_data, label) tuples for InlineKeyboard buttons.
     """
     formats = get_available_formats()
-    options = []
+    video_options = []
+    audio_options = []
 
-    # Add video formats first
+    # Group formats by type in a single pass
     for format_id, format_data in formats.items():
         if format_data["type"] == "video":
-            options.append((format_id, format_data["label"]))
+            video_options.append((format_id, format_data["label"]))
+        elif format_data["type"] == "audio":
+            audio_options.append((format_id, format_data["label"]))
 
-    # Then add audio formats
-    for format_id, format_data in formats.items():
-        if format_data["type"] == "audio":
-            options.append((format_id, format_data["label"]))
-
-    return options
+    # Return combined list with videos first, then audio options
+    return video_options + audio_options
 
 
-def get_format_by_id(format_id: str) -> Optional[Dict[str, str]]:
+def get_format_by_id(format_id: str) -> Optional[FormatData]:
     """
     Get format details by format ID.
 
@@ -73,5 +74,4 @@ def get_format_by_id(format_id: str) -> Optional[Dict[str, str]]:
     Returns:
         Format details dict or None if not found
     """
-    formats = get_available_formats()
-    return formats.get(format_id)
+    return get_available_formats().get(format_id)
