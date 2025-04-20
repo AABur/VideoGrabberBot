@@ -1,4 +1,4 @@
-.PHONY: help run tests test check format lint mypy
+.PHONY: help run tests test check format lint lint-all mypy
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -6,6 +6,7 @@ PY := uv run python
 PYTEST := uv run pytest
 MYPY := uv run mypy
 RUFF := uv run ruff
+FLAKE8 := uv run flake8
 
 # Help command
 help: ## Show this help message
@@ -34,9 +35,17 @@ test: ## Run specific test with coverage report (e.g., make test test_config.py 
 format: ## Format code with ruff
 	$(RUFF) format .
 
-# Lint code
+# Lint code with ruff
 lint: ## Lint code with ruff
 	$(RUFF) check .
+
+# Lint code with wemake-python-styleguide
+lint-wps: ## Lint code with wemake-python-styleguide
+	$(FLAKE8) . --select=WPS
+
+# Lint code with all linters
+lint-all: format lint lint-wps ## Run all linting (format, ruff lint, wemake-python-styleguide)
+	@echo "All linting completed"
 
 # Type check
 mypy: ## Run type checking with mypy

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Telegram bot for downloading videos and audio from YouTube"
 readme = "README.md"
 requires-python = ">=3.13"
-license = { text = "MIT" }
+license = "MIT"
 dependencies = [
     "aiogram>=3.19.0",
     "aiosqlite>=0.21.0",
@@ -13,7 +13,7 @@ dependencies = [
     "yt-dlp>=2025.3.27",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "mypy>=1.15.0",
     "pytest>=8.3.5",
@@ -21,7 +21,15 @@ dev = [
     "pytest-cov>=5.0.0", 
     "pytest-mock>=3.14.0",
     "ruff>=0.11.2",
+    "wemake-python-styleguide>=1.1.0",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["bot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -87,7 +95,37 @@ module = "run"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 
-[[tool.mypy.overrides]]
-module = "main"
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
+[tool.ruff]
+# Ruff config
+preview = true
+fix = true
+target-version = "py313"
+line-length = 79
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = false
+
+[tool.ruff.lint]
+# Basic Ruff configuration 
+select = [
+  "E",    # pycodestyle
+  "F",    # pyflakes
+  "B",    # flake8-bugbear
+  "W",    # pycodestyle warnings
+  "I",    # isort
+]
+external = ["WPS"]
+
+# Exclude some directories from Ruff
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache"
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bot"]

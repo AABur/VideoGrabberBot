@@ -6,8 +6,11 @@
 - Run single test: `uv run pytest tests/test_file.py::test_function_name`
 - Run tests with coverage: `uv run pytest --cov=bot --cov-report=term-missing`
 - Type check: `uv run mypy .`
-- Lint code: `uv run ruff check .`
+- Lint code with Ruff: `uv run ruff check .`
+- Lint code with wemake-python-styleguide: `uv run flake8 . --select=WPS`
 - Format code: `uv run ruff format .`
+- Complete linting: `uv run ruff check && uv run ruff format && uv run flake8 . --select=WPS`
+- Using Makefile: `make lint-all` (runs all linting commands in sequence)
 
 ## Code Style
 - **Imports**: Standard lib → Third-party → Local (alphabetical within groups)
@@ -21,6 +24,26 @@
 - **Logging**: Use loguru with appropriate levels (debug, info, error)
 - **Testing**: pytest with pytest-asyncio for async tests, pytest-mock for mocking
 - **Language**: Always use English for ALL code, comments, and docstrings (even if communication may be in Russian)
+
+## Linting
+The project uses two linting tools that complement each other:
+
+1. **Ruff**: Fast Python linter for basic checks and formatting
+   - Configuration: In pyproject.toml under [tool.ruff]
+   - Command: `uv run ruff check .`
+   - Format: `uv run ruff format .`
+
+2. **wemake-python-styleguide**: Strict linter for enforcing best practices
+   - Configuration: In .flake8 file
+   - Command: `uv run flake8 . --select=WPS` (WPS only checks)
+   - No automatic fixes - requires manual corrections
+   
+**Recommended workflow**:
+1. Run `make lint-all` or `uv run ruff check && uv run ruff format && uv run flake8 . --select=WPS`
+2. Fix any issues reported by both linters 
+3. Run tests to verify functionality
+
+The linters work together - Ruff handles most formatting and basic linting, while wemake-python-styleguide adds additional stricter checks.
 
 ## Environment
 - Python version management: Uses `uv` for Python version and dependency management
@@ -36,8 +59,8 @@
   - Wiki: https://github.com/yt-dlp/yt-dlp/wiki
 - aiosqlite: https://aiosqlite.omnilib.dev/en/latest/
 - loguru: https://loguru.readthedocs.io/
-
-Remember to run `uv run ruff check .` and `uv run ruff format .` after making changes to ensure code quality. Always run the tests with `uv run pytest` to verify code functionality.
+- wemake-python-styleguide: https://wemake-python-styleguide.readthedocs.io/
+- ruff: https://docs.astral.sh/ruff/
 
 ## Claude Interaction Guidelines
 
@@ -64,7 +87,8 @@ This section contains rules and guidelines for working with Claude on this proje
    - After changing code, always run corresponding tests
 
 3. **Code Quality**:
-   - Before committing to git, always run formatting and linter
+   - Before committing to git, always run formatting and both linters (ruff and flake8)
+   - Use `make lint-all` to run all linting tools in the correct sequence
 
 4. **Rule Management**:
    - All rules must be added to CLAUDE.md

@@ -55,14 +55,19 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
    uv pip install -e .
    ```
 
-3. **Configure the bot**:
+3. **For development, install dev dependencies**:
+   ```bash
+   uv pip install -e ".[dev]"
+   ```
+
+4. **Configure the bot**:
    Create a `.env` file with:
    ```
    TELEGRAM_TOKEN=your_telegram_token
    ADMIN_USER_ID=your_telegram_user_id
    ```
 
-4. **Run the bot**:
+5. **Run the bot**:
    ```bash
    uv run python run.py
    ```
@@ -87,11 +92,38 @@ uv run pytest tests/test_file.py::test_function_name
 # Type checking
 uv run mypy .
 
-# Lint code
-uv run ruff check .
-
 # Format code
 uv run ruff format .
+
+# Lint code with Ruff
+uv run ruff check .
+
+# Lint code with wemake-python-styleguide
+uv run flake8 . --select=WPS
+
+# Complete linting sequence (format & lint with both linters)
+uv run ruff check && uv run ruff format && uv run flake8 . --select=WPS
+```
+
+### Makefile Commands
+
+The project includes a Makefile for simplified development workflow:
+
+```bash
+# Format and lint code (Ruff only)
+make lint
+
+# Run all linting tools (format, ruff check, and wemake-python-styleguide)
+make lint-all
+
+# Run type checking
+make mypy
+
+# Run all tests with coverage
+make tests
+
+# Run the bot
+make run
 ```
 
 ## Project Structure
@@ -106,8 +138,22 @@ VideoGrabberBot/
 ├── tests/              # Test suite
 │   └── integration/    # Integration tests
 ├── data/               # Database and temp files
+├── .flake8             # wemake-python-styleguide configuration
+├── Makefile            # Development workflow commands
 └── CLAUDE.md           # Development guidelines
 ```
+
+## Code Quality
+
+This project uses multiple tools to ensure high code quality:
+
+- **Type Checking**: Static type checking with mypy
+- **Linting**: 
+  - Primary linter: Ruff for fast checking and auto-fixes
+  - Secondary linter: wemake-python-styleguide for strict enforcement of best practices
+  - The tools work together - Ruff handles most linting and formatting, while wemake-python-styleguide adds stricter checks
+- **Formatting**: Automatic code formatting with Ruff
+- **Testing**: Comprehensive test suite with pytest
 
 ## Technologies
 
@@ -116,6 +162,8 @@ VideoGrabberBot/
 - [aiosqlite](https://aiosqlite.omnilib.dev/) - Async SQLite database
 - [loguru](https://loguru.readthedocs.io/) - Advanced logging
 - [uv](https://github.com/astral-sh/uv) - Fast Python package installer and resolver
+- [ruff](https://github.com/astral-sh/ruff) - Fast Python linter and formatter
+- [wemake-python-styleguide](https://github.com/wemake-services/wemake-python-styleguide) - The strictest and most opinionated Python linter
 
 ## License
 
