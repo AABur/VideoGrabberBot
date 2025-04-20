@@ -6,9 +6,11 @@ from aiogram.enums import ParseMode
 
 from bot.config import TELEGRAM_TOKEN
 
-
 # Initialize bot instance with default parse mode using new API
-bot = Bot(token=TELEGRAM_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(
+    token=TELEGRAM_TOKEN,
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+)
 
 # Initialize dispatcher
 dp = Dispatcher()

@@ -13,10 +13,10 @@ from bot.services.downloader import (
     is_youtube_url,
 )
 from bot.services.formats import get_format_by_id, get_format_options
-from bot.services.storage import store_url, get_url, store_format
+from bot.services.queue import DownloadTask, download_queue
+from bot.services.storage import get_url, store_format, store_url
 from bot.telegram_api.client import get_bot
 from bot.utils.db import is_user_authorized
-from bot.services.queue import download_queue, DownloadTask
 
 # Create router for download handlers
 download_router = Router()
@@ -115,7 +115,9 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     format_id = ":".join(parts[1:-1])  # Reassemble format_id
 
     user_id = callback.from_user.id
-    logger.debug(f"Parsed values: cmd={cmd}, format_id={format_id}, url_id={url_id}")
+    logger.debug(
+        f"Parsed values: cmd={cmd}, format_id={format_id}, url_id={url_id}"
+    )
 
     # Get URL from storage
     url = get_url(url_id)
@@ -148,10 +150,14 @@ async def process_format_selection(callback: CallbackQuery) -> None:
 
     # Check if queue is processing and user is already in queue
     is_processing = download_queue.is_processing
-    is_user_in_queue = download_queue.is_user_in_queue(callback.message.chat.id)
+    is_user_in_queue = download_queue.is_user_in_queue(
+        callback.message.chat.id
+    )
 
     # Prepare status message
-    status_text = f"🔄 <b>Download {'' if not is_processing else 'queued'}</b>\n\n"
+    status_text = (
+        f"🔄 <b>Download {'' if not is_processing else 'queued'}</b>\n\n"
+    )
     status_text += f"Format: <b>{format_data['label']}</b>\n"
     status_text += f"URL: {url}\n\n"
 

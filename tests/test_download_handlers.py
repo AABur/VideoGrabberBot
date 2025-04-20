@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from aiogram import Bot
-from aiogram.types import Message, User, CallbackQuery
+from aiogram.types import CallbackQuery, Message, User
 
-from bot.handlers.download import process_url, process_format_selection
+from bot.handlers.download import process_format_selection, process_url
 
 
 @pytest.mark.asyncio
@@ -24,7 +24,10 @@ async def test_process_url_authorized_youtube():
 
     # Setup mocks
     with (
-        patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.download.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch("bot.handlers.download.is_youtube_url", return_value=True),
         patch("bot.handlers.download.store_url", return_value="test_url_id"),
         patch(
@@ -67,7 +70,10 @@ async def test_process_url_authorized_non_youtube():
 
     # Setup mocks
     with (
-        patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.download.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch("bot.handlers.download.is_youtube_url", return_value=False),
         patch("bot.handlers.download.logger.info"),
     ):
@@ -98,7 +104,8 @@ async def test_process_url_unauthorized():
     # Setup mocks
     with (
         patch(
-            "bot.handlers.download.is_user_authorized", AsyncMock(return_value=False)
+            "bot.handlers.download.is_user_authorized",
+            AsyncMock(return_value=False),
         ),
         patch("bot.handlers.download.logger.info"),
     ):
@@ -145,11 +152,16 @@ async def test_process_format_selection_success():
     mock_download_queue = MagicMock()
     mock_download_queue.is_processing = False
     mock_download_queue.is_user_in_queue.return_value = False
-    mock_download_queue.add_task = AsyncMock(return_value=1)  # Position 1 in queue
+    mock_download_queue.add_task = AsyncMock(
+        return_value=1
+    )  # Position 1 in queue
 
     # Mock dependencies
     with (
-        patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data),
+        patch(
+            "bot.handlers.download.get_format_by_id",
+            return_value=mock_format_data,
+        ),
         patch(
             "bot.handlers.download.get_url",
             return_value="https://www.youtube.com/watch?v=test",
@@ -208,11 +220,16 @@ async def test_process_format_selection_queued():
     mock_download_queue = MagicMock()
     mock_download_queue.is_processing = False
     mock_download_queue.is_user_in_queue.return_value = False
-    mock_download_queue.add_task = AsyncMock(return_value=2)  # Position 2 in queue
+    mock_download_queue.add_task = AsyncMock(
+        return_value=2
+    )  # Position 2 in queue
 
     # Mock dependencies
     with (
-        patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data),
+        patch(
+            "bot.handlers.download.get_format_by_id",
+            return_value=mock_format_data,
+        ),
         patch(
             "bot.handlers.download.get_url",
             return_value="https://www.youtube.com/watch?v=test",
@@ -273,12 +290,19 @@ async def test_process_format_selection_already_processing():
     # Mock queue task
     mock_download_queue = MagicMock()
     mock_download_queue.is_processing = True  # Queue is processing
-    mock_download_queue.is_user_in_queue.return_value = True  # User already has tasks
-    mock_download_queue.add_task = AsyncMock(return_value=3)  # Position 3 in queue
+    mock_download_queue.is_user_in_queue.return_value = (
+        True  # User already has tasks
+    )
+    mock_download_queue.add_task = AsyncMock(
+        return_value=3
+    )  # Position 3 in queue
 
     # Mock dependencies
     with (
-        patch("bot.handlers.download.get_format_by_id", return_value=mock_format_data),
+        patch(
+            "bot.handlers.download.get_format_by_id",
+            return_value=mock_format_data,
+        ),
         patch(
             "bot.handlers.download.get_url",
             return_value="https://www.youtube.com/watch?v=test",
@@ -323,7 +347,9 @@ async def test_process_format_selection_invalid_callback_data():
         logger_error_mock.assert_called_once()
 
         # Verify callback was answered with error
-        mock_callback.answer.assert_called_once_with("Invalid format selection")
+        mock_callback.answer.assert_called_once_with(
+            "Invalid format selection"
+        )
 
 
 @pytest.mark.asyncio
@@ -348,7 +374,9 @@ async def test_process_format_selection_url_not_found():
         await process_format_selection(mock_callback)
 
         # Verify callback was answered with error
-        mock_callback.answer.assert_called_once_with("URL not found or expired")
+        mock_callback.answer.assert_called_once_with(
+            "URL not found or expired"
+        )
 
 
 @pytest.mark.asyncio
@@ -377,4 +405,6 @@ async def test_process_format_selection_format_not_found():
         await process_format_selection(mock_callback)
 
         # Verify callback was answered with error
-        mock_callback.answer.assert_called_once_with("Selected format not found")
+        mock_callback.answer.assert_called_once_with(
+            "Selected format not found"
+        )

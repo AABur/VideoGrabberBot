@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest_asyncio
 from aiogram import Bot, Dispatcher
-from aiogram.types import Message, User, Chat, CallbackQuery
+from aiogram.types import CallbackQuery, Chat, Message, User
 
 from bot.config import ADMIN_USER_ID
 from bot.handlers.commands import router as commands_router
@@ -24,8 +24,8 @@ async def temp_db(monkeypatch):
         temp_dir_path = Path(temp_dir)
 
         # Patch DB_PATH and TEMP_DIR in the config module
-        import bot.utils.db
         import bot.config
+        import bot.utils.db
 
         monkeypatch.setattr(bot.utils.db, "DB_PATH", temp_db_path)
         monkeypatch.setattr(bot.config, "DB_PATH", temp_db_path)

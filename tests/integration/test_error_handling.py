@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from bot.handlers.download import process_url, process_format_selection
+from bot.handlers.download import process_format_selection, process_url
 from bot.services.downloader import DownloadError
-from bot.services.queue import download_queue, DownloadTask
+from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
@@ -21,7 +21,9 @@ async def test_download_error_handling(
     mock_message.answer.reset_mock()
 
     # First process the URL
-    with patch("bot.handlers.download.store_url", return_value="test_error_url_id"):
+    with patch(
+        "bot.handlers.download.store_url", return_value="test_error_url_id"
+    ):
         await process_url(mock_message)
 
         # Verify message was sent with format options
@@ -40,7 +42,9 @@ async def test_download_error_handling(
     mock_bot = integration_setup["bot"]
 
     # Create a download error for testing
-    download_error = AsyncMock(side_effect=DownloadError("Test download error"))
+    download_error = AsyncMock(
+        side_effect=DownloadError("Test download error")
+    )
 
     # Simulate the download process
     with (
@@ -56,7 +60,9 @@ async def test_download_error_handling(
                 "type": "video",
             },
         ),
-        patch("bot.services.downloader.download_youtube_video", download_error),
+        patch(
+            "bot.services.downloader.download_youtube_video", download_error
+        ),
         patch("bot.telegram_api.client.get_bot", return_value=mock_bot),
     ):
         # Process format selection (this adds task to queue)
@@ -115,7 +121,9 @@ async def test_multiple_download_failures(integration_setup, mock_bot):
     assert download_queue.queue.qsize() == 2
 
     # Process the queue with both failing tasks
-    with patch("bot.services.downloader.download_youtube_video", download_error):
+    with patch(
+        "bot.services.downloader.download_youtube_video", download_error
+    ):
         await download_queue._process_queue()
 
         # Verify queue is empty after error handling
@@ -171,7 +179,8 @@ async def test_admin_notification_on_error(integration_setup, mock_bot):
     # Process the queue with error that should trigger admin notification
     with (
         patch(
-            "bot.services.downloader.download_youtube_video", mock_download_with_error
+            "bot.services.downloader.download_youtube_video",
+            mock_download_with_error,
         ),
         patch("bot.utils.logging.notify_admin", notify_admin_mock),
     ):

@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from bot.handlers.commands import (
-    command_start,
-    command_help,
-    command_cancel,
-    command_invite,
     command_adduser,
+    command_cancel,
+    command_help,
+    command_invite,
+    command_start,
 )
-from bot.services.queue import download_queue, DownloadTask
+from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
@@ -43,7 +43,8 @@ async def test_command_interaction_flow(
 
     # Mock to create a predictable invite code
     with patch(
-        "bot.handlers.commands.create_invite", AsyncMock(return_value="test_invite")
+        "bot.handlers.commands.create_invite",
+        AsyncMock(return_value="test_invite"),
     ):
         await command_invite(mock_message)
 
@@ -77,7 +78,9 @@ async def test_admin_user_commands(integration_setup, mock_message):
     # Try adding a user that already exists
     mock_message.text = "/adduser 987654321"
 
-    with patch("bot.handlers.commands.add_user", AsyncMock(return_value=False)):
+    with patch(
+        "bot.handlers.commands.add_user", AsyncMock(return_value=False)
+    ):
         await command_adduser(mock_message)
 
         # Verify message about existing user
@@ -138,7 +141,8 @@ async def test_invite_workflow(integration_setup, mock_message, mock_bot):
 
     # Mock invite creation
     with patch(
-        "bot.handlers.commands.create_invite", AsyncMock(return_value="test_invite")
+        "bot.handlers.commands.create_invite",
+        AsyncMock(return_value="test_invite"),
     ):
         await command_invite(mock_message)
 

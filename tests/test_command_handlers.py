@@ -7,11 +7,11 @@ from aiogram import Bot
 from aiogram.types import Message, User
 
 from bot.handlers.commands import (
-    command_help,
-    command_cancel,
-    command_start,
-    command_invite,
     command_adduser,
+    command_cancel,
+    command_help,
+    command_invite,
+    command_start,
 )
 
 
@@ -29,7 +29,8 @@ async def test_help_command_authorized():
 
     # Mock is_user_authorized to return True
     with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)
+        "bot.handlers.commands.is_user_authorized",
+        AsyncMock(return_value=True),
     ):
         await command_help(mock_message)
 
@@ -58,7 +59,8 @@ async def test_help_command_unauthorized():
 
     # Mock is_user_authorized to return False
     with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)
+        "bot.handlers.commands.is_user_authorized",
+        AsyncMock(return_value=False),
     ):
         await command_help(mock_message)
 
@@ -88,7 +90,10 @@ async def test_cancel_command_with_active_downloads():
 
     # Mock dependencies
     with (
-        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.commands.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch("bot.services.queue.download_queue", mock_queue),
     ):
         await command_cancel(mock_message)
@@ -125,7 +130,10 @@ async def test_cancel_command_no_downloads():
 
     # Mock dependencies
     with (
-        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.commands.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch("bot.services.queue.download_queue", mock_queue),
     ):
         await command_cancel(mock_message)
@@ -156,7 +164,8 @@ async def test_cancel_command_unauthorized():
 
     # Mock is_user_authorized to return False
     with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)
+        "bot.handlers.commands.is_user_authorized",
+        AsyncMock(return_value=False),
     ):
         await command_cancel(mock_message)
 
@@ -181,7 +190,10 @@ async def test_start_command_authorized():
 
     # Mock is_user_authorized to return True
     with (
-        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.commands.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch("bot.handlers.commands.logger.info", MagicMock()),
     ):
         await command_start(mock_message)
@@ -210,7 +222,8 @@ async def test_start_command_unauthorized():
     # Mock is_user_authorized to return False
     with (
         patch(
-            "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)
+            "bot.handlers.commands.is_user_authorized",
+            AsyncMock(return_value=False),
         ),
         patch("bot.handlers.commands.logger.info", MagicMock()),
     ):
@@ -243,7 +256,10 @@ async def test_invite_command_success():
 
     # Mock dependencies
     with (
-        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.commands.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch(
             "bot.handlers.commands.create_invite",
             AsyncMock(return_value="test_invite_code"),
@@ -273,8 +289,13 @@ async def test_invite_command_failure():
 
     # Mock dependencies
     with (
-        patch("bot.handlers.commands.is_user_authorized", AsyncMock(return_value=True)),
-        patch("bot.handlers.commands.create_invite", AsyncMock(return_value=None)),
+        patch(
+            "bot.handlers.commands.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
+        patch(
+            "bot.handlers.commands.create_invite", AsyncMock(return_value=None)
+        ),
         patch("bot.handlers.commands.logger.error", MagicMock()),
     ):
         await command_invite(mock_message)
@@ -300,7 +321,8 @@ async def test_invite_command_unauthorized():
 
     # Mock is_user_authorized to return False
     with patch(
-        "bot.handlers.commands.is_user_authorized", AsyncMock(return_value=False)
+        "bot.handlers.commands.is_user_authorized",
+        AsyncMock(return_value=False),
     ):
         await command_invite(mock_message)
 

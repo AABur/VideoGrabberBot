@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 import aiosqlite
+from loguru import logger
 
 from bot.config import DB_PATH
-from loguru import logger
 
 
 async def init_db() -> None:
@@ -67,7 +67,9 @@ async def init_db() -> None:
 
 
 async def add_user(
-    user_id: int, username: Optional[str] = None, added_by: Optional[int] = None
+    user_id: int,
+    username: Optional[str] = None,
+    added_by: Optional[int] = None,
 ) -> bool:
     """
     Add a new user to the database.
@@ -83,7 +85,9 @@ async def add_user(
     try:
         async with aiosqlite.connect(DB_PATH) as db:
             # Check if user already exists
-            cursor = await db.execute("SELECT id FROM users WHERE id = ?", (user_id,))
+            cursor = await db.execute(
+                "SELECT id FROM users WHERE id = ?", (user_id,)
+            )
             existing_user = await cursor.fetchone()
 
             if existing_user:
@@ -123,7 +127,8 @@ async def is_user_authorized(user_id: int) -> bool:
     try:
         async with aiosqlite.connect(DB_PATH) as db:
             cursor = await db.execute(
-                "SELECT id FROM users WHERE id = ? AND is_active = TRUE", (user_id,)
+                "SELECT id FROM users WHERE id = ? AND is_active = TRUE",
+                (user_id,),
             )
             user = await cursor.fetchone()
             return user is not None

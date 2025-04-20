@@ -9,11 +9,11 @@ from typing import Optional
 
 import yt_dlp
 from aiogram import Bot, types
+from aiogram.types import FSInputFile
 from loguru import logger
 
 from bot.config import TEMP_DIR
 from bot.utils.logging import notify_admin
-from aiogram.types import FSInputFile
 
 
 class DownloadError(Exception):
@@ -63,7 +63,9 @@ async def download_youtube_video(
                 message_id=status_message_id,
             )
             status_message = types.Message(
-                message_id=status_message_id, chat=types.Chat(id=chat_id), bot=bot
+                message_id=status_message_id,
+                chat=types.Chat(id=chat_id),
+                bot=bot,
             )
         else:
             # Send message indicating download has started
@@ -127,7 +129,9 @@ async def download_youtube_video(
         logger.error(error_message, exc_info=True)
 
         # Notify user of the error
-        await bot.send_message(chat_id, f"❌ <b>Download failed</b>\n\n{error_message}")
+        await bot.send_message(
+            chat_id, f"❌ <b>Download failed</b>\n\n{error_message}"
+        )
 
         # Notify admin
         await notify_admin(bot, f"Download failed: {url}\nError: {str(e)}")
@@ -139,7 +143,9 @@ async def download_youtube_video(
         try:
             if os.path.exists(temp_download_dir):
                 shutil.rmtree(temp_download_dir)
-                logger.debug(f"Cleaned up temporary directory: {temp_download_dir}")
+                logger.debug(
+                    f"Cleaned up temporary directory: {temp_download_dir}"
+                )
         except Exception as e:
             logger.error(f"Failed to clean up temporary directory: {str(e)}")
 

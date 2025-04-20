@@ -96,7 +96,9 @@ async def test_queue_error_handling():
             "bot.services.downloader.download_youtube_video",
             AsyncMock(side_effect=Exception("Test error")),
         ) as mock_download,
-        patch("bot.services.queue.logger.error", MagicMock()) as mock_logger_error,
+        patch(
+            "bot.services.queue.logger.error", MagicMock()
+        ) as mock_logger_error,
     ):
         # Add a task
         task = DownloadTask(

@@ -5,7 +5,9 @@ from typing import Dict, List, Optional, Tuple
 from bot.config import AUDIO_FORMAT, VIDEO_FORMATS
 
 
-def get_available_formats(url: Optional[str] = None) -> Dict[str, Dict[str, str]]:
+def get_available_formats(
+    url: Optional[str] = None,
+) -> Dict[str, Dict[str, str]]:
     """
     Get available formats for the URL.
 

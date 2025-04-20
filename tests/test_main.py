@@ -23,7 +23,9 @@ async def test_startup():
         await startup()
 
         # Verify database initialization (called once after code deduplication)
-        assert mock_init_db.call_count == 1, "Database should be initialized once"
+        assert mock_init_db.call_count == 1, (
+            "Database should be initialized once"
+        )
 
         # Verify bot commands setup (called once after code deduplication)
         assert mock_bot.set_my_commands.call_count == 1
@@ -61,7 +63,9 @@ async def test_main_routers():
         await main()
 
         # Verify routers were registered
-        assert mock_dp.include_router.call_count == 2, "Should register 2 routers"
+        assert mock_dp.include_router.call_count == 2, (
+            "Should register 2 routers"
+        )
 
         # Check router registration order
         mock_dp.include_router.assert_any_call("commands_router_mock")

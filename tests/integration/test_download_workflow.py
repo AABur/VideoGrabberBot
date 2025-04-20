@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from aiogram.types import InlineKeyboardMarkup
 
-from bot.handlers.download import process_url, process_format_selection
-from bot.services.queue import download_queue, DownloadTask
+from bot.handlers.download import process_format_selection, process_url
+from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
@@ -63,7 +63,9 @@ async def test_full_download_workflow(
             # Process the download queue manually since we're in test mode
 
             # Mock the download task processing
-            with patch("bot.services.downloader.download_youtube_video", AsyncMock()):
+            with patch(
+                "bot.services.downloader.download_youtube_video", AsyncMock()
+            ):
                 await download_queue._process_queue()
 
                 # Verify queue is now empty (task was processed)
@@ -143,7 +145,9 @@ async def test_download_workflow_with_queue(
 
 
 @pytest.mark.asyncio
-async def test_download_workflow_non_youtube_url(integration_setup, mock_message):
+async def test_download_workflow_non_youtube_url(
+    integration_setup, mock_message
+):
     """Test handling of non-YouTube URLs."""
     # Setup message with non-YouTube URL
     mock_message.text = "https://example.com/video"
@@ -194,7 +198,9 @@ async def test_queue_notification_message(
     mock_message.text = "https://www.youtube.com/watch?v=test_video_queued"
 
     # Mock the store_url function to return a predictable ID
-    with patch("bot.handlers.download.store_url", return_value="test_queue_url_id"):
+    with patch(
+        "bot.handlers.download.store_url", return_value="test_queue_url_id"
+    ):
         # Process URL
         await process_url(mock_message)
 
@@ -225,7 +231,10 @@ async def test_queue_notification_message(
         # Force download_queue.is_processing to return True
         patch("bot.services.queue.download_queue.is_processing", True),
         # Force is_user_in_queue to return False to test notification message
-        patch("bot.services.queue.download_queue.is_user_in_queue", return_value=False),
+        patch(
+            "bot.services.queue.download_queue.is_user_in_queue",
+            return_value=False,
+        ),
     ):
         # Process format selection
         await process_format_selection(mock_callback_query)

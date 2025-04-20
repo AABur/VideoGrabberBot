@@ -24,7 +24,10 @@ async def test_process_url_youtube_authorized():
 
     # Set up mocks for dependencies
     with (
-        patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.download.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch("bot.handlers.download.is_youtube_url", return_value=True),
         patch("bot.handlers.download.store_url", return_value="test_url_id"),
         patch(
@@ -75,7 +78,10 @@ async def test_process_url_non_youtube():
 
     # Set up mocks for dependencies
     with (
-        patch("bot.handlers.download.is_user_authorized", AsyncMock(return_value=True)),
+        patch(
+            "bot.handlers.download.is_user_authorized",
+            AsyncMock(return_value=True),
+        ),
         patch("bot.handlers.download.is_youtube_url", return_value=False),
     ):
         await process_url(mock_message)
@@ -102,7 +108,8 @@ async def test_process_url_unauthorized():
 
     # Mock is_user_authorized to return False
     with patch(
-        "bot.handlers.download.is_user_authorized", AsyncMock(return_value=False)
+        "bot.handlers.download.is_user_authorized",
+        AsyncMock(return_value=False),
     ):
         await process_url(mock_message)
 
@@ -116,7 +123,9 @@ async def test_process_url_unauthorized():
 async def test_url_storage_cleanup():
     """Test URL cleanup after processing."""
     # Test the URL cleanup function
-    with patch("bot.services.storage.URL_STORAGE", {"test_id": ("test_url", None)}):
+    with patch(
+        "bot.services.storage.URL_STORAGE", {"test_id": ("test_url", None)}
+    ):
         # Verify URL exists before cleanup
         from bot.services.storage import URL_STORAGE, get_url
 

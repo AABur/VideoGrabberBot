@@ -198,7 +198,11 @@ async def test_notify_admin_with_kwargs(monkeypatch):
 
     # Call with additional data
     await notify_admin(
-        mock_bot, "Test with data", level="WARNING", user_id=12345, action="test_action"
+        mock_bot,
+        "Test with data",
+        level="WARNING",
+        user_id=12345,
+        action="test_action",
     )
 
     # Check message content includes the additional data

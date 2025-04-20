@@ -1,13 +1,14 @@
 """Tests for the configuration module."""
 
 import os
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 def test_config_paths():
     """Test that configuration paths are correctly setup."""
-    from bot.config import BASE_DIR, DATA_DIR, TEMP_DIR, DB_PATH
+    from bot.config import BASE_DIR, DATA_DIR, DB_PATH, TEMP_DIR
 
     # Check if base directories are set correctly
     assert BASE_DIR.exists()
@@ -84,7 +85,9 @@ def test_token_validation():
 
     # Test the validation function
     assert validate_token(TELEGRAM_TOKEN) == TELEGRAM_TOKEN
-    with pytest.raises(ValueError, match="TELEGRAM_TOKEN is not set in .env file"):
+    with pytest.raises(
+        ValueError, match="TELEGRAM_TOKEN is not set in .env file"
+    ):
         validate_token("")
 
 
@@ -97,11 +100,15 @@ def test_admin_id_validation():
 
     # Test the validation function
     assert validate_admin_id(ADMIN_USER_ID) == ADMIN_USER_ID
-    with pytest.raises(ValueError, match="ADMIN_USER_ID is not set in .env file"):
+    with pytest.raises(
+        ValueError, match="ADMIN_USER_ID is not set in .env file"
+    ):
         validate_admin_id(0)
 
 
-@patch.dict(os.environ, {"TELEGRAM_TOKEN": "mock_token", "ADMIN_USER_ID": "123456"})
+@patch.dict(
+    os.environ, {"TELEGRAM_TOKEN": "mock_token", "ADMIN_USER_ID": "123456"}
+)
 def test_env_variables():
     """Test environment variables are correctly used."""
     # We can't easily reload the config module, but we can test
