@@ -107,7 +107,9 @@ This section contains rules and guidelines for working with Claude on this proje
 
 ### Code Generation Rules
 
-1. **[Add future code generation rules here]**
+1. **Code Implementation Approval**: Never start working with code until explicit approval from the developer. Do not write code directly in chat without a specific request.
+
+2. **[Add future code generation rules here]**
 
 ### Documentation Rules
 
