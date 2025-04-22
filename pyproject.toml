@@ -20,6 +20,8 @@ dev = [
     "pytest-asyncio>=0.26.0",
     "pytest-cov>=5.0.0", 
     "pytest-mock>=3.14.0",
+    "pytest-xdist>=3.5.0",      # Parallel test execution
+    "pytest-timeout>=2.2.0",    # Test timeouts
     "ruff>=0.11.2",
     "wemake-python-styleguide>=1.1.0",
 ]
@@ -34,20 +36,76 @@ packages = ["bot"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Configure asyncio mode for better handling of async tests
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
+# Improve test execution and reporting
+# (Note: xvs option was renamed for clarity)
+addopts = [
+    "--strict-markers",         # Ensure all markers are registered
+    "--strict-config",          # Ensure no unknown config options
+    "--no-header",              # Reduce clutter in output
+    "--tb=native",              # Better traceback format
+    "--showlocals",             # Show local variables in tracebacks
+    "--doctest-modules",        # Test doctests in modules
+]
+
+# Define markers for better organization
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "formats: formats module tests",
+    "storage: storage module tests",
+    "queue: queue module tests",
+    "downloader: downloader module tests",
+]
+
+# Note: For parallel test execution using pytest-xdist, use:
+# -n auto (auto-detect CPU count)
+# -n 4 (use 4 processes)
+# --dist=loadscope (distribute tests by module)
+
+# Silence common warnings that aren't relevant
+filterwarnings = [
+    "ignore::DeprecationWarning:aiogram.*:",
+    "ignore::DeprecationWarning:pytest_asyncio.*:",
+]
+
+# Note: To improve test randomization, install pytest-random-order plugin
+# and use the following CLI options:
+# --random-order (randomize test order)
+# --random-order-bucket=module (organize randomization by module)
+# --random-order-seed=<value> (set specific seed to reproduce order)
+
+# Cache setup for improved test performance
+cache_dir = ".pytest_cache"
+
 [tool.coverage.run]
 source = ["bot"]
-omit = ["*/__init__.py"]
+omit = [
+    "*/__init__.py",
+    "*/tests/*",
+    "scripts/*",
+]
+branch = true  # Enable branch coverage
 
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
     "raise NotImplementedError",
-    "if __name__ == .__main__.:"
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+    "except ImportError:",
 ]
+precision = 2
+show_missing = true
+fail_under = 85  # Enforce minimum coverage percentage
 
 [tool.mypy]
 python_version = "3.13"
