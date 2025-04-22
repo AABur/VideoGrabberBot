@@ -103,6 +103,7 @@ This section contains rules and guidelines for working with Claude on this proje
    - **Creating Tests**: When creating tests for existing code, never modify the code itself
    - **New Feature Development**: When implementing new functionality, first write the code, then run existing tests, fix issues if needed, and finally create tests for the new code
    - **Code Refactoring**: When refactoring existing code, always run tests after changes to ensure the functionality remains intact
+   - **Task-Driven Testing**: For complex testing tasks, first create a TODO_*.md file with a step-by-step plan, then follow this plan working on each step sequentially
 
 ### Code Generation Rules
 
