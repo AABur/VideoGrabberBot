@@ -1,5 +1,9 @@
 """Tests for formats module."""
 
+import importlib
+
+import pytest
+
 from bot.services.formats import (
     get_available_formats,
     get_format_by_id,
@@ -7,21 +11,24 @@ from bot.services.formats import (
 )
 
 
+@pytest.fixture
+def reload_formats_module():
+    """Reload formats module to pick up config changes."""
+    import bot.services.formats
+    importlib.reload(bot.services.formats)
+
+
 class TestFormats:
     """Group tests for the formats module."""
 
     def test_get_available_formats(
-        self, mock_video_formats, mock_audio_formats, clear_format_cache
+        self,
+        mock_video_formats,
+        mock_audio_formats,
+        clear_format_cache,
+        reload_formats_module,
     ):
         """Test getting available formats with mocked configuration."""
-        # First, force a reload of the formats module to ensure
-        # it picks up our mocked config values
-        import importlib
-
-        import bot.services.formats
-
-        importlib.reload(bot.services.formats)
-
         # Now get formats
         formats = get_available_formats()
 
@@ -56,16 +63,13 @@ class TestFormats:
             assert formats[key]["type"] == "audio"
 
     def test_get_format_options(
-        self, mock_video_formats, mock_audio_formats, clear_format_cache
+        self,
+        mock_video_formats,
+        mock_audio_formats,
+        clear_format_cache,
+        reload_formats_module,
     ):
         """Test getting format options for inline keyboard."""
-        # Reload the module to ensure it picks up our mocked config
-        import importlib
-
-        import bot.services.formats
-
-        importlib.reload(bot.services.formats)
-
         options = get_format_options()
 
         # Check that options are not empty
@@ -100,28 +104,25 @@ class TestFormats:
 
         # Check that video formats come before audio formats
         video_formats = [opt for opt in options if opt[0].startswith("video:")]
-        audio_formats = [opt for opt in options if opt[0].startswith("audio:")]
+        audio_options = [opt for opt in options if opt[0].startswith("audio:")]
 
         assert len(video_formats) > 0
-        assert len(audio_formats) > 0
+        assert len(audio_options) > 0
 
         # Get indices of first video and first audio format
         first_video_idx = options.index(video_formats[0])
-        first_audio_idx = options.index(audio_formats[0])
+        first_audio_idx = options.index(audio_options[0])
 
         assert first_video_idx < first_audio_idx
 
     def test_get_format_by_id(
-        self, mock_video_formats, mock_audio_formats, clear_format_cache
+        self,
+        mock_video_formats,
+        mock_audio_formats,
+        clear_format_cache,
+        reload_formats_module,
     ):
         """Test getting format by ID."""
-        # Reload the module to ensure it picks up our mocked config
-        import importlib
-
-        import bot.services.formats
-
-        importlib.reload(bot.services.formats)
-
         # Test with valid video format ID
         video_format_id = f"video:{list(mock_video_formats.keys())[0]}"
         format_data = get_format_by_id(video_format_id)
@@ -145,22 +146,96 @@ class TestFormats:
         assert format_data is None
 
     def test_get_format_by_id_edge_cases(
-        self, mock_video_formats, mock_audio_formats, clear_format_cache
+        self,
+        mock_video_formats,
+        mock_audio_formats,
+        clear_format_cache,
+        reload_formats_module,
     ):
         """Test edge cases for get_format_by_id."""
-        # Reload the module to ensure it picks up our mocked config
-        import importlib
-
-        import bot.services.formats
-
-        importlib.reload(bot.services.formats)
-
         # Test with empty string
         format_data = get_format_by_id("")
         assert format_data is None
 
-        # We're using strict typing, so we shouldn't test with None
-        # In production code, the type system would prevent this
-        # Instead, let's test with another invalid case
+        # Test with None-like values
         format_data = get_format_by_id("no_colon_here")
         assert format_data is None
+
+    def test_format_data_type_safety(self, reload_formats_module):
+        """Test that FormatData TypedDict enforces type safety."""
+        # This test ensures that FormatData TypedDict is used correctly
+        formats = get_available_formats()
+
+        # All returned formats should conform to FormatData structure
+        for _, format_data in formats.items():
+            # Explicitly verify each required field with correct types
+            assert isinstance(format_data["label"], str)
+            assert isinstance(format_data["format"], str)
+            assert isinstance(format_data["type"], str)
+            assert format_data["type"] in ["video", "audio"]
+
+    def test_empty_formats(self, clear_format_cache, reset_modules):
+        """Test behavior with empty format configurations."""
+        # Temporarily patch config with empty formats
+        import bot.config
+
+        # Store original values
+        original_video_formats = bot.config.VIDEO_FORMATS
+        original_audio_format = bot.config.AUDIO_FORMAT
+
+        # Set empty formats
+        bot.config.VIDEO_FORMATS = {}
+        bot.config.AUDIO_FORMAT = {}
+
+        # Reload formats module to apply empty configs
+        reset_modules("bot.services.formats")
+        import bot.services.formats
+        importlib.reload(bot.services.formats)
+
+        # Make sure to clear any caches
+        if hasattr(bot.services.formats.get_available_formats, "cache_clear"):
+            bot.services.formats.get_available_formats.cache_clear()
+        if hasattr(bot.services.formats.get_format_options, "cache_clear"):
+            bot.services.formats.get_format_options.cache_clear()
+
+        # Check behavior with empty formats
+        formats = bot.services.formats.get_available_formats()
+        assert len(formats) == 0
+
+        options = bot.services.formats.get_format_options()
+        assert len(options) == 0
+
+        # Restore original values
+        bot.config.VIDEO_FORMATS = original_video_formats
+        bot.config.AUDIO_FORMAT = original_audio_format
+
+        # Reload module to restore original state for other tests
+        importlib.reload(bot.services.formats)
+
+        # Clear caches again to ensure fresh state
+        if hasattr(bot.services.formats.get_available_formats, "cache_clear"):
+            bot.services.formats.get_available_formats.cache_clear()
+        if hasattr(bot.services.formats.get_format_options, "cache_clear"):
+            bot.services.formats.get_format_options.cache_clear()
+
+    def test_format_id_construction(
+        self,
+        mock_video_formats,
+        mock_audio_formats,
+        clear_format_cache,
+        reload_formats_module,
+    ):
+        """Test that format IDs are correctly constructed."""
+        formats = get_available_formats()
+
+        # Check that all format IDs follow the expected pattern
+        for format_id in formats.keys():
+            parts = format_id.split(":")
+            assert len(parts) == 2
+            assert parts[0] in ["video", "audio"]
+
+            # The format key should exist in the original config
+            if parts[0] == "video":
+                assert parts[1] in mock_video_formats
+            elif parts[0] == "audio":
+                assert parts[1] in mock_audio_formats

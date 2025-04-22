@@ -14,6 +14,7 @@ class FormatData(TypedDict):
     type: str
 
 
+@lru_cache(maxsize=1)
 def get_available_formats() -> Dict[str, FormatData]:
     """
     Get available formats for download.
@@ -42,6 +43,7 @@ def get_available_formats() -> Dict[str, FormatData]:
     return formats
 
 
+@lru_cache(maxsize=1)
 def get_format_options() -> List[Tuple[str, str]]:
     """
     Get format options for InlineKeyboard.
