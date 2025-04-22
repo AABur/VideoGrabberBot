@@ -5,135 +5,353 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiogram.types import InlineKeyboardMarkup, Message, User
 
-from bot.handlers.download import process_url
-from bot.services.storage import clear_url
+from bot.handlers.download import process_format_selection, process_url
+from bot.services.storage import get_url
 
 
-@pytest.mark.asyncio
-async def test_process_url_youtube_authorized():
-    """Test processing a YouTube URL from an authorized user."""
-    # Mock user
-    mock_user = MagicMock(spec=User)
-    mock_user.id = 123456
+class TestProcessUrlHandler:
+    """Tests for the process_url handler function."""
 
-    # Mock message with answer as AsyncMock
-    mock_message = MagicMock(spec=Message)
-    mock_message.answer = AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    @pytest.mark.asyncio
+    async def test_unauthorized_user(self):
+        """Test response when an unauthorized user sends a URL."""
+        # Setup
+        mock_user = MagicMock(spec=User)
+        mock_user.id = 999999
+        mock_message = MagicMock(spec=Message)
+        mock_message.answer = AsyncMock()
+        mock_message.from_user = mock_user
+        mock_message.text = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
-    # Set up mocks for dependencies
-    with (
-        patch(
+        # Execute with unauthorized user
+        with patch(
             "bot.handlers.download.is_user_authorized",
-            AsyncMock(return_value=True),
-        ),
-        patch("bot.handlers.download.is_youtube_url", return_value=True),
-        patch("bot.handlers.download.store_url", return_value="test_url_id"),
-        patch(
-            "bot.handlers.download.get_format_options",
-            return_value=[
-                ("video:HD", "HD Video (720p)"),
-                ("video:FHD", "Full HD Video (1080p)"),
-                ("audio:mp3", "MP3 Audio (320kbps)"),
-            ],
-        ),
+            AsyncMock(return_value=False),
+        ):
+            await process_url(mock_message)
+
+            # Verify
+            mock_message.answer.assert_called_once()
+            args = mock_message.answer.call_args[0][0]
+            assert "Access Denied" in args
+            assert "don't have permission" in args
+
+    @pytest.mark.asyncio
+    async def test_non_youtube_url(self):
+        """Test response when a user sends a non-YouTube URL."""
+        # Setup
+        mock_user = MagicMock(spec=User)
+        mock_user.id = 123456
+        mock_message = MagicMock(spec=Message)
+        mock_message.answer = AsyncMock()
+        mock_message.from_user = mock_user
+        mock_message.text = "https://example.com/some/video"
+
+        # Execute with non-YouTube URL
+        with (
+            patch(
+                "bot.handlers.download.is_user_authorized",
+                AsyncMock(return_value=True),
+            ),
+            patch("bot.handlers.download.is_youtube_url", return_value=False),
+        ):
+            await process_url(mock_message)
+
+            # Verify
+            mock_message.answer.assert_called_once()
+            args = mock_message.answer.call_args[0][0]
+            assert "Unsupported URL" in args
+            assert "valid YouTube link" in args
+
+    @pytest.mark.asyncio
+    async def test_valid_youtube_url_format_selection(self):
+        """Test format selection for a valid YouTube URL."""
+        # Setup
+        mock_user = MagicMock(spec=User)
+        mock_user.id = 123456
+        mock_message = MagicMock(spec=Message)
+        mock_message.answer = AsyncMock()
+        mock_message.from_user = mock_user
+        mock_message.text = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+        test_formats = [
+            ("video:HD", "HD Video (720p)"),
+            ("video:FHD", "Full HD Video (1080p)"),
+            ("audio:mp3", "MP3 Audio (320kbps)"),
+        ]
+
+        # Execute with valid YouTube URL
+        with (
+            patch(
+                "bot.handlers.download.is_user_authorized",
+                AsyncMock(return_value=True),
+            ),
+            patch("bot.handlers.download.is_youtube_url", return_value=True),
+            patch(
+                "bot.handlers.download.store_url", return_value="test_url_id"
+            ),
+            patch(
+                "bot.handlers.download.get_format_options",
+                return_value=test_formats,
+            ),
+        ):
+            await process_url(mock_message)
+
+            # Verify answer was called with format selection
+            mock_message.answer.assert_called_once()
+            args, kwargs = mock_message.answer.call_args
+
+            # Check message content
+            assert "Choose Download Format" in args[0]
+
+            # Check keyboard markup
+            assert "reply_markup" in kwargs
+            markup = kwargs["reply_markup"]
+            assert isinstance(markup, InlineKeyboardMarkup)
+
+            # Check buttons
+            keyboard = markup.inline_keyboard
+            assert len(keyboard) > 0  # At least one row
+
+            # Verify all formats are included in the keyboard
+            all_buttons = []
+            for row in keyboard:
+                all_buttons.extend(row)
+
+            # Check number of buttons matches number of formats
+            assert len(all_buttons) == len(test_formats)
+
+            # Check callback data format for all buttons
+            for i, button in enumerate(all_buttons):
+                assert button.callback_data.startswith("fmt:")
+                assert "test_url_id" in button.callback_data
+                format_id, label = test_formats[i]
+                assert format_id in button.callback_data
+                assert button.text == label
+
+
+class TestFormatSelectionHandler:
+    """Tests for the process_format_selection handler function."""
+
+    @pytest.fixture
+    def mock_callback_query(self):
+        """Create a mock callback query."""
+        mock = MagicMock()
+        mock.from_user = MagicMock()
+        mock.from_user.id = 123456
+        mock.message = MagicMock()
+        mock.message.chat.id = 123456
+        mock.answer = AsyncMock()
+        mock.message.edit_text = AsyncMock()
+        return mock
+
+    @pytest.mark.asyncio
+    async def test_invalid_format_not_enough_parts(self, mock_callback_query):
+        """Test handling of invalid callback data with too few parts."""
+        # Setup invalid callback data (missing parts)
+        mock_callback_query.data = (
+            "fmt:missing_parts"  # Only 2 parts, needs at least 3
+        )
+
+        # Execute
+        with patch("bot.handlers.download.logger.error") as mock_logger:
+            await process_format_selection(mock_callback_query)
+
+            # Verify that the error was logged
+            mock_logger.assert_called()
+            assert "Invalid format selection" in mock_logger.call_args[0][0]
+
+        # Verify error message to user
+        mock_callback_query.answer.assert_called_once_with(
+            "Invalid format selection"
+        )
+
+    @pytest.mark.asyncio
+    async def test_invalid_callback_data_wrong_prefix(
+        self, mock_callback_query
     ):
-        await process_url(mock_message)
+        """Test handling of invalid callback data with wrong prefix."""
+        # Setup invalid callback data (wrong prefix)
+        mock_callback_query.data = (
+            "wrong:video:HD:12345"  # Starts with 'wrong' not 'fmt'
+        )
 
-        # Verify answer was called with format selection
-        mock_message.answer.assert_called_once()
-        args, kwargs = mock_message.answer.call_args
+        # Execute
+        # This would be filtered by the router before reaching our handler
+        # For test, we just verify it doesn't throw errors
+        await process_format_selection(mock_callback_query)
 
-        # Check message content
-        assert "Choose Download Format" in args[0]
+    @pytest.mark.asyncio
+    async def test_url_not_found(self, mock_callback_query):
+        """Test handling of URL not found in storage."""
+        # Setup
+        mock_callback_query.data = "fmt:video:HD:nonexistent_id"
 
-        # Check keyboard markup
-        assert "reply_markup" in kwargs
-        markup = kwargs["reply_markup"]
-        assert isinstance(markup, InlineKeyboardMarkup)
+        # Execute with URL not found
+        with patch("bot.handlers.download.get_url", return_value=None):
+            await process_format_selection(mock_callback_query)
 
-        # Check buttons
-        keyboard = markup.inline_keyboard
-        assert len(keyboard) > 0  # At least one row
+            # Verify error message
+            mock_callback_query.answer.assert_called_once_with(
+                "URL not found or expired"
+            )
 
-        # Check callback data format
-        first_button = keyboard[0][0]
-        assert first_button.callback_data.startswith("fmt:")
-        assert "test_url_id" in first_button.callback_data
+    @pytest.mark.asyncio
+    async def test_format_not_found(self, mock_callback_query):
+        """Test handling of format not found."""
+        # Setup
+        mock_callback_query.data = "fmt:invalid:format:test_id"
 
+        # Execute with format not found
+        with (
+            patch(
+                "bot.handlers.download.get_url",
+                return_value="https://example.com",
+            ),
+            patch("bot.handlers.download.get_format_by_id", return_value=None),
+        ):
+            await process_format_selection(mock_callback_query)
 
-@pytest.mark.asyncio
-async def test_process_url_non_youtube():
-    """Test processing a non-YouTube URL."""
-    # Mock user
-    mock_user = MagicMock(spec=User)
-    mock_user.id = 123456
+            # Verify error message
+            mock_callback_query.answer.assert_called_once_with(
+                "Selected format not found"
+            )
 
-    # Mock message with answer as AsyncMock
-    mock_message = MagicMock(spec=Message)
-    mock_message.answer = AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "https://example.com/some/video"
-
-    # Set up mocks for dependencies
-    with (
-        patch(
-            "bot.handlers.download.is_user_authorized",
-            AsyncMock(return_value=True),
-        ),
-        patch("bot.handlers.download.is_youtube_url", return_value=False),
+    @pytest.mark.asyncio
+    async def test_successful_format_selection_no_queue(
+        self, mock_callback_query
     ):
-        await process_url(mock_message)
+        """Test successful format selection with no queue."""
+        # Setup
+        mock_callback_query.data = "fmt:video:HD:test_id"
+        test_url = "https://www.youtube.com/watch?v=test123"
+        format_data = {
+            "label": "HD Video (720p)",
+            "format": "bestvideo[height<=720]+bestaudio/best[height<=720]",
+            "type": "video",
+        }
 
-        # Verify answer was called with unsupported URL message
-        mock_message.answer.assert_called_once()
-        args = mock_message.answer.call_args[0][0]
-        assert "Unsupported URL" in args
-        assert "valid YouTube link" in args
+        status_message = MagicMock()
+        mock_callback_query.message.edit_text.return_value = status_message
+
+        with (
+            patch("bot.handlers.download.get_url", return_value=test_url),
+            patch(
+                "bot.handlers.download.get_format_by_id",
+                return_value=format_data,
+            ),
+            patch("bot.handlers.download.store_format"),
+            patch("bot.handlers.download.get_bot"),
+            patch("bot.handlers.download.download_queue.is_processing", False),
+            patch(
+                "bot.handlers.download.download_queue.is_user_in_queue",
+                return_value=False,
+            ),
+            patch(
+                "bot.handlers.download.download_queue.add_task",
+                AsyncMock(return_value=1),
+            ),
+        ):
+            await process_format_selection(mock_callback_query)
+
+            # Verify callback was acknowledged
+            mock_callback_query.answer.assert_called_once()
+            assert (
+                "Processing your request"
+                in mock_callback_query.answer.call_args[0][0]
+            )
+
+            # Verify message was edited
+            mock_callback_query.message.edit_text.assert_called_once()
+            edited_text = mock_callback_query.message.edit_text.call_args[0][0]
+            assert "Download" in edited_text
+            assert format_data["label"] in edited_text
+            assert test_url in edited_text
+            assert "Starting download now" in edited_text
+
+    @pytest.mark.asyncio
+    async def test_format_selection_with_queue(self, mock_callback_query):
+        """Test format selection when already in queue."""
+        # Setup
+        mock_callback_query.data = "fmt:video:HD:test_id"
+        test_url = "https://www.youtube.com/watch?v=test123"
+        format_data = {
+            "label": "HD Video (720p)",
+            "format": "bestvideo[height<=720]+bestaudio/best[height<=720]",
+            "type": "video",
+        }
+
+        status_message = MagicMock()
+        mock_callback_query.message.edit_text.return_value = status_message
+
+        mock_bot = MagicMock()
+        mock_bot.edit_message_text = AsyncMock()
+
+        with (
+            patch("bot.handlers.download.get_url", return_value=test_url),
+            patch(
+                "bot.handlers.download.get_format_by_id",
+                return_value=format_data,
+            ),
+            patch("bot.handlers.download.store_format"),
+            patch("bot.handlers.download.get_bot", return_value=mock_bot),
+            patch("bot.handlers.download.download_queue.is_processing", True),
+            patch(
+                "bot.handlers.download.download_queue.is_user_in_queue",
+                return_value=True,
+            ),
+            patch(
+                "bot.handlers.download.download_queue.add_task",
+                AsyncMock(return_value=3),
+            ),
+        ):
+            await process_format_selection(mock_callback_query)
+
+            # Verify callback was acknowledged
+            mock_callback_query.answer.assert_called_once()
+
+            # Verify message was edited
+            mock_callback_query.message.edit_text.assert_called_once()
+            edited_text = mock_callback_query.message.edit_text.call_args[0][0]
+            assert "Download queued" in edited_text
+            assert "You already have downloads in the queue" in edited_text
+
+            # Verify queue position update
+            mock_bot.edit_message_text.assert_called_once()
+            queue_text = mock_bot.edit_message_text.call_args[0][0]
+            assert "Queue position: 3" in queue_text
 
 
-@pytest.mark.asyncio
-async def test_process_url_unauthorized():
-    """Test URL processing from an unauthorized user."""
-    # Mock user
-    mock_user = MagicMock(spec=User)
-    mock_user.id = 999999
+class TestStorageIntegration:
+    """Tests for integration with storage module."""
 
-    # Mock message with answer as AsyncMock
-    mock_message = MagicMock(spec=Message)
-    mock_message.answer = AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    def test_url_storage_lifecycle(self):
+        """Test the URL lifecycle in storage during processing."""
+        test_url = "https://example.com/test"
+        test_id = "test123"
 
-    # Mock is_user_authorized to return False
-    with patch(
-        "bot.handlers.download.is_user_authorized",
-        AsyncMock(return_value=False),
-    ):
-        await process_url(mock_message)
+        # Test with patched storage
+        with patch("bot.services.storage.URL_STORAGE", {}):
+            # Manually import to get the patched version
+            from bot.services.storage import (
+                URL_STORAGE,
+                clear_url,
+                get_format,
+                store_format,
+            )
 
-        # Check that answer was called once with access denied message
-        mock_message.answer.assert_called_once()
-        args = mock_message.answer.call_args[0][0]
-        assert "Access Denied" in args
+            # Store a URL manually
+            URL_STORAGE[test_id] = (test_url, None)
 
+            # Verify URL can be retrieved
+            assert get_url(test_id) == test_url
+            assert get_format(test_id) is None
 
-@pytest.mark.asyncio
-async def test_url_storage_cleanup():
-    """Test URL cleanup after processing."""
-    # Test the URL cleanup function
-    with patch(
-        "bot.services.storage.URL_STORAGE", {"test_id": ("test_url", None)}
-    ):
-        # Verify URL exists before cleanup
-        from bot.services.storage import URL_STORAGE, get_url
+            # Store format
+            store_format(test_id, "video:HD")
+            assert get_format(test_id) == "video:HD"
 
-        assert get_url("test_id") == "test_url"
-
-        # Call cleanup function
-        clear_url("test_id")
-
-        # Verify URL was removed
-        assert "test_id" not in URL_STORAGE
-        assert get_url("test_id") is None
+            # Clear URL
+            clear_url(test_id)
+            assert get_url(test_id) is None
+            assert test_id not in URL_STORAGE
