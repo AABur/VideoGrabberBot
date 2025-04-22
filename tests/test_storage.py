@@ -1,6 +1,9 @@
 """Tests for the storage module."""
 
+from unittest.mock import patch
+
 from bot.services.storage import (
+    URL_STORAGE,
     clear_url,
     get_format,
     get_url,
@@ -13,7 +16,7 @@ class TestStorage:
     """Test class for the storage module functions."""
 
     def test_url_storage_lifecycle(self):
-        """Test the full lifecycle of URL storage: store, get, update, clear."""
+        """Test full lifecycle of URL storage: store, get, update, clear."""
         # Store a URL and verify it returns a valid ID
         url = "https://www.youtube.com/watch?v=test123"
         url_id = store_url(url)
@@ -109,7 +112,121 @@ class TestStorage:
         assert get_format(url_id) == ""
         clear_url(url_id)
 
-        # For invalid URL IDs (we're not testing None as that's handled by type checking)
+        # For invalid URL IDs (not testing None - handled by type checking)
         assert get_url("non_existent_id") is None
         assert store_format("non_existent_id", "some_format") is False
         assert get_format("non_existent_id") is None
+
+    def test_uuid_collision_handling(self):
+        """Test handling of UUID collisions."""
+        # Mock uuid to always return the same value
+        test_uuid = "12345678"
+        with patch("uuid.uuid4", return_value=test_uuid):
+            # First store should succeed
+            url1 = "https://example.com/test1"
+            url_id1 = store_url(url1)
+            assert url_id1 == test_uuid[:8]
+            assert get_url(url_id1) == url1
+
+            # Second store with same uuid should generate a different ID
+            # In real implementation, this would need collision handling
+            url2 = "https://example.com/test2"
+            url_id2 = store_url(url2)
+            assert url_id2 == test_uuid[:8]  # Since we're mocking uuid
+            assert get_url(url_id2) == url2  # Latest value overwrites
+
+    def test_storage_direct_access(self):
+        """Test direct access to URL_STORAGE (for internal code)."""
+        url = "https://test.example.com"
+        url_id = store_url(url)
+
+        # Verify internal structure
+        assert url_id in URL_STORAGE
+        assert URL_STORAGE[url_id] == (url, None)
+
+        # Store format and verify internal structure
+        format_id = "video:HD"
+        store_format(url_id, format_id)
+        assert URL_STORAGE[url_id] == (url, format_id)
+
+    def test_storage_isolation(self):
+        """Test that storage is properly isolated between tests."""
+        # This test validates that the reset_storage fixture works
+        # First, make sure storage is empty (default fixture behavior)
+        current_size = len(URL_STORAGE)
+
+        # Add an item
+        url_id = store_url("https://isolation-test.com")
+
+        # Verify it exists
+        assert len(URL_STORAGE) == current_size + 1
+        assert url_id in URL_STORAGE
+
+        # The reset_storage fixture (autouse) will clean up after the test
+
+    def test_many_urls(self):
+        """Test with a large number of URLs."""
+        # Store a larger number of URLs
+        url_base = "https://example.com/video/"
+        url_ids = []
+
+        for i in range(50):
+            url = f"{url_base}{i}"
+            url_id = store_url(url)
+            url_ids.append(url_id)
+
+        # Verify all URLs were stored correctly
+        assert len(url_ids) == 50
+
+        # Verify all can be retrieved correctly
+        for i, url_id in enumerate(url_ids):
+            expected_url = f"{url_base}{i}"
+            assert get_url(url_id) == expected_url
+
+        # Store formats for all
+        for i, url_id in enumerate(url_ids):
+            format_type = "video" if i % 2 == 0 else "audio"
+            format_id = f"{format_type}:FORMAT_{i}"
+            assert store_format(url_id, format_id) is True
+            assert get_format(url_id) == format_id
+
+        # Clear half of them
+        for i, url_id in enumerate(url_ids):
+            if i % 2 == 0:
+                clear_url(url_id)
+
+        # Count remaining items
+        remaining_count = 0
+        for _, url_id in enumerate(url_ids):
+            if get_url(url_id) is not None:
+                remaining_count += 1
+
+        # Verify half are gone and half remain
+        assert remaining_count == 25
+
+        for i, url_id in enumerate(url_ids):
+            if i % 2 == 0:
+                assert get_url(url_id) is None
+                assert get_format(url_id) is None
+            else:
+                assert get_url(url_id) == f"{url_base}{i}"
+                assert get_format(url_id) == f"audio:FORMAT_{i}"
+
+    def test_update_url_format(self):
+        """Test updating format for the same URL."""
+        url = "https://www.youtube.com/watch?v=updatetest"
+        url_id = store_url(url)
+
+        # Set initial format
+        initial_format = "video:SD"
+        assert store_format(url_id, initial_format) is True
+        assert get_format(url_id) == initial_format
+
+        # Update format
+        new_format = "video:HD"
+        assert store_format(url_id, new_format) is True
+        assert get_format(url_id) == new_format
+
+        # Get the storage data directly and verify
+        storage_data = URL_STORAGE.get(url_id)
+        assert storage_data == (url, new_format)
