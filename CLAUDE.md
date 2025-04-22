@@ -109,7 +109,15 @@ This section contains rules and guidelines for working with Claude on this proje
 
 1. **Code Implementation Approval**: Never start working with code until explicit approval from the developer. Do not write code directly in chat without a specific request.
 
-2. **[Add future code generation rules here]**
+2. **Comments Style**: Do not add comments that describe changes, progress, or historical modifications. Avoid comments like "new function," "added test," "now we changed this," or "previously used X, now using Y." Comments should only describe the current state and purpose of the code, not its history or evolution.
+
+3. **[Add future code generation rules here]**
+
+### Version Control Rules
+
+1. **Commit Messages**: Don't add "Generated with Claude Code" or "Co-Authored-By: Claude" to commit messages.
+
+2. **PR Descriptions**: Do not include "Test plan" sections in PR descriptions.
 
 ### Documentation Rules
 
