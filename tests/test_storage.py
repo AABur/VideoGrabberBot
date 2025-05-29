@@ -12,8 +12,8 @@ from bot.services.storage import (
 )
 
 
-class TestStorage:
-    """Test class for the storage module functions."""
+class TestStorageBasics:
+    """Test basic storage functionality."""
 
     def test_url_storage_lifecycle(self):
         """Test full lifecycle of URL storage: store, get, update, clear."""
@@ -34,8 +34,8 @@ class TestStorage:
 
         # Store format and verify success
         format_id = "video:TEST_HD"
-        result = store_format(url_id, format_id)
-        assert result is True
+        format_stored = store_format(url_id, format_id)
+        assert format_stored is True
 
         # Retrieve format and verify
         retrieved_format = get_format(url_id)
@@ -92,8 +92,8 @@ class TestStorage:
         assert get_format(nonexistent_id) is None
 
         # Try to store a format for nonexistent URL
-        result = store_format(nonexistent_id, "video:TEST_HD")
-        assert result is False
+        format_stored = store_format(nonexistent_id, "video:TEST_HD")
+        assert format_stored is False
 
         # Clear nonexistent URL should not raise errors
         clear_url(nonexistent_id)  # Should not raise
@@ -116,6 +116,29 @@ class TestStorage:
         assert get_url("non_existent_id") is None
         assert store_format("non_existent_id", "some_format") is False
         assert get_format("non_existent_id") is None
+
+    def test_update_url_format(self):
+        """Test updating format for the same URL."""
+        url = "https://www.youtube.com/watch?v=updatetest"
+        url_id = store_url(url)
+
+        # Set initial format
+        initial_format = "video:SD"
+        assert store_format(url_id, initial_format) is True
+        assert get_format(url_id) == initial_format
+
+        # Update format
+        new_format = "video:HD"
+        assert store_format(url_id, new_format) is True
+        assert get_format(url_id) == new_format
+
+        # Get the storage data directly and verify
+        storage_data = URL_STORAGE.get(url_id)
+        assert storage_data == (url, new_format)
+
+
+class TestStorageAdvanced:
+    """Test advanced storage scenarios."""
 
     def test_uuid_collision_handling(self):
         """Test handling of UUID collisions."""
@@ -197,7 +220,7 @@ class TestStorage:
 
         # Count remaining items
         remaining_count = 0
-        for _, url_id in enumerate(url_ids):
+        for url_id in url_ids:
             if get_url(url_id) is not None:
                 remaining_count += 1
 
@@ -211,22 +234,3 @@ class TestStorage:
             else:
                 assert get_url(url_id) == f"{url_base}{i}"
                 assert get_format(url_id) == f"audio:FORMAT_{i}"
-
-    def test_update_url_format(self):
-        """Test updating format for the same URL."""
-        url = "https://www.youtube.com/watch?v=updatetest"
-        url_id = store_url(url)
-
-        # Set initial format
-        initial_format = "video:SD"
-        assert store_format(url_id, initial_format) is True
-        assert get_format(url_id) == initial_format
-
-        # Update format
-        new_format = "video:HD"
-        assert store_format(url_id, new_format) is True
-        assert get_format(url_id) == new_format
-
-        # Get the storage data directly and verify
-        storage_data = URL_STORAGE.get(url_id)
-        assert storage_data == (url, new_format)

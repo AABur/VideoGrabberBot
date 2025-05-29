@@ -14,6 +14,55 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
+def _clear_format_function_cache(func):
+    """Clear cache for a format function if it has one."""
+    if hasattr(func, "cache_clear"):
+        func.cache_clear()
+
+
+def _clear_all_format_caches():
+    """Clear all format function caches."""
+    function_names = ["get_available_formats", "get_format_options", "get_format_by_id"]
+    
+    for func_name in function_names:
+        _clear_single_format_cache(func_name)
+
+
+def _clear_single_format_cache(func_name):
+    """Clear cache for a single format function."""
+    try:
+        import importlib
+    except ImportError:
+        return
+    
+    try:
+        formats_module = importlib.import_module("bot.services.formats")
+    except ImportError:
+        return
+    
+    func = getattr(formats_module, func_name, None)
+    if func:
+        _clear_format_function_cache(func)
+
+
+class ModuleResetter:
+    """Class for resetting imported modules."""
+
+    def __init__(self):
+        """Initialize module resetter."""
+        import sys
+        self.sys = sys
+
+    def reset_module(self, module_name: str):
+        """Remove a module from sys.modules to force a fresh import."""
+        self.sys.modules.pop(module_name, None)
+
+    def reset(self, *module_names: str):
+        """Reset one or more modules by name."""
+        for module_name in module_names:
+            self.reset_module(module_name)
+
+
 @pytest.fixture(autouse=True)
 def reset_storage():
     """Reset URL storage between tests.
@@ -41,12 +90,10 @@ def reset_storage():
 
     # Save original storage
     original_storage = URL_STORAGE.copy()
-
     # Clear storage before test
     URL_STORAGE.clear()
 
     yield
-
     # Clear and restore storage after test
     URL_STORAGE.clear()
     URL_STORAGE.update(original_storage)
@@ -88,15 +135,14 @@ def mock_video_formats():
 
     # Use import and then patch the imported module's attribute
     # This ensures the patch affects all code accessing the value
-    import bot.config
+    from bot import config
 
-    original_formats = bot.config.VIDEO_FORMATS
-    bot.config.VIDEO_FORMATS = test_formats
+    original_formats = config.VIDEO_FORMATS
+    config.VIDEO_FORMATS = test_formats
 
     yield test_formats
-
     # Restore the original formats
-    bot.config.VIDEO_FORMATS = original_formats
+    config.VIDEO_FORMATS = original_formats
 
 
 @pytest.fixture
@@ -111,15 +157,14 @@ def mock_audio_formats():
 
     # Use import and then patch the imported module's attribute
     # This ensures the patch affects all code accessing the value
-    import bot.config
+    from bot import config
 
-    original_formats = bot.config.AUDIO_FORMAT
-    bot.config.AUDIO_FORMAT = test_formats
+    original_formats = config.AUDIO_FORMAT
+    config.AUDIO_FORMAT = test_formats
 
     yield test_formats
-
     # Restore the original formats
-    bot.config.AUDIO_FORMAT = original_formats
+    config.AUDIO_FORMAT = original_formats
 
 
 @pytest.fixture(autouse=True)
@@ -153,43 +198,11 @@ def clear_format_cache():
     - Mock configurations not being respected
     """
     # Before test, try to clear format caches if they exist
-    try:
-        from bot.services.formats import (
-            get_available_formats,
-            get_format_by_id,
-            get_format_options,
-        )
-
-        for func in [
-            get_available_formats,
-            get_format_options,
-            get_format_by_id,
-        ]:
-            if hasattr(func, "cache_clear"):
-                func.cache_clear()
-    except (ImportError, AttributeError):
-        # If the functions don't exist or don't have cache_clear, it's okay
-        pass
+    _clear_all_format_caches()
 
     yield
-
     # After test, try to clear caches again
-    try:
-        from bot.services.formats import (
-            get_available_formats,
-            get_format_by_id,
-            get_format_options,
-        )
-
-        for func in [
-            get_available_formats,
-            get_format_options,
-            get_format_by_id,
-        ]:
-            if hasattr(func, "cache_clear"):
-                func.cache_clear()
-    except (ImportError, AttributeError):
-        pass
+    _clear_all_format_caches()
 
 
 @pytest.fixture
@@ -334,16 +347,14 @@ def isolated_url_storage():
     - Does not preserve any URLs from before the test
     """
     # Save original module and its attributes
-    import bot.services.storage as storage_module
+    from bot.services import storage as storage_module
     from bot.services.storage import URL_STORAGE
 
     original_storage = URL_STORAGE.copy()
-
     # Replace storage with empty dict
     storage_module.URL_STORAGE = {}
 
     yield storage_module.URL_STORAGE
-
     # Restore original storage
     storage_module.URL_STORAGE = original_storage
 
@@ -411,19 +422,8 @@ def reset_modules():
     - bot.services.formats (for format changes)
     - bot.services.storage (for storage changes)
     """
-    import sys
-
-    def _reset_module(module_name: str):
-        """Remove a module from sys.modules to force a fresh import."""
-        if module_name in sys.modules:
-            del sys.modules[module_name]
-
-    def reset(*module_names: str):
-        """Reset one or more modules by name."""
-        for module_name in module_names:
-            _reset_module(module_name)
-
-    yield reset
+    resetter = ModuleResetter()
+    yield resetter.reset
 
     # Don't cleanup afterwards - each test should explicitly request
     # which modules to reset based on what they're testing

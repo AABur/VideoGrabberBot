@@ -244,7 +244,8 @@ class TestFormatSelectionHandler:
 
             # Verify message was edited
             mock_callback_query.message.edit_text.assert_called_once()
-            edited_text = mock_callback_query.message.edit_text.call_args[0][0]
+            edit_call_args = mock_callback_query.message.edit_text.call_args
+            edited_text = edit_call_args[0][0]
             assert "Download" in edited_text
             assert format_data["label"] in edited_text
             assert test_url in edited_text
@@ -293,13 +294,15 @@ class TestFormatSelectionHandler:
 
             # Verify message was edited
             mock_callback_query.message.edit_text.assert_called_once()
-            edited_text = mock_callback_query.message.edit_text.call_args[0][0]
+            edit_call_args = mock_callback_query.message.edit_text.call_args
+            edited_text = edit_call_args[0][0]
             assert "Download queued" in edited_text
             assert "You already have downloads in the queue" in edited_text
 
             # Verify queue position update
             mock_bot.edit_message_text.assert_called_once()
-            queue_text = mock_bot.edit_message_text.call_args[0][0]
+            bot_call_args = mock_bot.edit_message_text.call_args
+            queue_text = bot_call_args[0][0]
             assert "Queue position: 3" in queue_text
 
 

@@ -14,9 +14,10 @@ from bot.services.formats import (
 @pytest.fixture
 def reload_formats_module():
     """Reload formats module to pick up config changes."""
-    import bot.services.formats
-
-    importlib.reload(bot.services.formats)
+    import sys
+    formats_module = sys.modules.get("bot.services.formats")
+    if formats_module:
+        importlib.reload(formats_module)
 
 
 class TestFormats:
@@ -123,7 +124,8 @@ class TestFormats:
     ):
         """Test getting format by ID."""
         # Test with valid video format ID
-        video_format_id = f"video:{list(mock_video_formats.keys())[0]}"
+        first_video_key = list(mock_video_formats.keys())[0]
+        video_format_id = f"video:{first_video_key}"
         format_data = get_format_by_id(video_format_id)
         assert format_data is not None
         assert format_data["type"] == "video"
@@ -132,7 +134,8 @@ class TestFormats:
         assert format_data["format"] == original_data["format"]
 
         # Test with valid audio format ID
-        audio_format_id = f"audio:{list(mock_audio_formats.keys())[0]}"
+        first_audio_key = list(mock_audio_formats.keys())[0]
+        audio_format_id = f"audio:{first_audio_key}"
         format_data = get_format_by_id(audio_format_id)
         assert format_data is not None
         assert format_data["type"] == "audio"
@@ -175,48 +178,51 @@ class TestFormats:
 
     def test_empty_formats(self, clear_format_cache, reset_modules):
         """Test behavior with empty format configurations."""
+        import sys
         # Temporarily patch config with empty formats
-        import bot.config
+        from bot import config
 
         # Store original values
-        original_video_formats = bot.config.VIDEO_FORMATS
-        original_audio_format = bot.config.AUDIO_FORMAT
+        original_video_formats = config.VIDEO_FORMATS
+        original_audio_format = config.AUDIO_FORMAT
 
         # Set empty formats
-        bot.config.VIDEO_FORMATS = {}
-        bot.config.AUDIO_FORMAT = {}
+        config.VIDEO_FORMATS = {}
+        config.AUDIO_FORMAT = {}
 
         # Reload formats module to apply empty configs
         reset_modules("bot.services.formats")
-        import bot.services.formats
+        formats_module = sys.modules.get("bot.services.formats")
+        if formats_module:
+            importlib.reload(formats_module)
 
-        importlib.reload(bot.services.formats)
+            # Make sure to clear any caches
+            if hasattr(formats_module.get_available_formats, "cache_clear"):
+                formats_module.get_available_formats.cache_clear()
+            if hasattr(formats_module.get_format_options, "cache_clear"):
+                formats_module.get_format_options.cache_clear()
 
-        # Make sure to clear any caches
-        if hasattr(bot.services.formats.get_available_formats, "cache_clear"):
-            bot.services.formats.get_available_formats.cache_clear()
-        if hasattr(bot.services.formats.get_format_options, "cache_clear"):
-            bot.services.formats.get_format_options.cache_clear()
+            # Check behavior with empty formats
+            formats = formats_module.get_available_formats()
+            assert len(formats) == 0
 
-        # Check behavior with empty formats
-        formats = bot.services.formats.get_available_formats()
-        assert len(formats) == 0
-
-        options = bot.services.formats.get_format_options()
-        assert len(options) == 0
+            options = formats_module.get_format_options()
+            assert len(options) == 0
 
         # Restore original values
-        bot.config.VIDEO_FORMATS = original_video_formats
-        bot.config.AUDIO_FORMAT = original_audio_format
+        config.VIDEO_FORMATS = original_video_formats
+        config.AUDIO_FORMAT = original_audio_format
 
         # Reload module to restore original state for other tests
-        importlib.reload(bot.services.formats)
+        formats_module = sys.modules.get("bot.services.formats")
+        if formats_module:
+            importlib.reload(formats_module)
 
-        # Clear caches again to ensure fresh state
-        if hasattr(bot.services.formats.get_available_formats, "cache_clear"):
-            bot.services.formats.get_available_formats.cache_clear()
-        if hasattr(bot.services.formats.get_format_options, "cache_clear"):
-            bot.services.formats.get_format_options.cache_clear()
+            # Clear caches again to ensure fresh state
+            if hasattr(formats_module.get_available_formats, "cache_clear"):
+                formats_module.get_available_formats.cache_clear()
+            if hasattr(formats_module.get_format_options, "cache_clear"):
+                formats_module.get_format_options.cache_clear()
 
     def test_format_id_construction(
         self,

@@ -52,7 +52,8 @@ async def test_full_download_workflow(integration_setup, mock_message, mock_call
 
             # Verify message was edited to show download status
             mock_callback_query.message.edit_text.assert_called_once()
-            edit_args = mock_callback_query.message.edit_text.call_args[0][0]
+            edit_call_args = mock_callback_query.message.edit_text.call_args
+            edit_args = edit_call_args[0][0]
             assert "Download" in edit_args
 
             # Verify task was added to queue
@@ -229,6 +230,7 @@ async def test_queue_notification_message(integration_setup, mock_message, mock_
         mock_callback_query.answer.assert_called_once()
 
         # Verify message was edited with the notification about queuing
-        edit_text_args = mock_callback_query.message.edit_text.call_args[0][0]
+        edit_call_args = mock_callback_query.message.edit_text.call_args
+        edit_text_args = edit_call_args[0][0]
         assert "queued" in edit_text_args
         assert "notified when processing begins" in edit_text_args

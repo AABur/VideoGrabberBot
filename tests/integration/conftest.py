@@ -9,7 +9,7 @@ import pytest_asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.types import CallbackQuery, Chat, Message, User
 
-from bot.config import ADMIN_USER_ID
+from bot import config
 from bot.handlers.commands import router as commands_router
 from bot.handlers.download import download_router
 from bot.services.queue import download_queue
@@ -24,13 +24,12 @@ async def temp_db(monkeypatch):
         temp_dir_path = Path(temp_dir)
 
         # Patch DB_PATH and TEMP_DIR in the config module
-        import bot.config
-        import bot.utils.db
+        from bot.utils import db as db_module
 
-        monkeypatch.setattr(bot.utils.db, "DB_PATH", temp_db_path)
-        monkeypatch.setattr(bot.config, "DB_PATH", temp_db_path)
-        monkeypatch.setattr(bot.config, "TEMP_DIR", temp_dir_path)
-        monkeypatch.setattr(bot.config, "DATA_DIR", temp_dir_path)
+        monkeypatch.setattr(db_module, "DB_PATH", temp_db_path)
+        monkeypatch.setattr(config, "DB_PATH", temp_db_path)
+        monkeypatch.setattr(config, "TEMP_DIR", temp_dir_path)
+        monkeypatch.setattr(config, "DATA_DIR", temp_dir_path)
 
         # Initialize database
         from bot.utils.db import init_db
@@ -81,7 +80,7 @@ async def authorized_user():
     user_id = 123456789
     username = "test_user"
 
-    await add_user(user_id, username, ADMIN_USER_ID)
+    await add_user(user_id, username, config.ADMIN_USER_ID)
 
     # Create a mock user object
     user = MagicMock(spec=User)

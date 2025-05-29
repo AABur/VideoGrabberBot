@@ -15,20 +15,16 @@ async def test_queue_add_task():
 
     # Mock _process_queue to prevent actual execution
     queue._process_queue = AsyncMock()
-
     # Add a task
     task = DownloadTask(chat_id=123, url="https://example.com", format_string="test_format")
-
     position = await queue.add_task(task)
 
     # Should be first in queue
     assert position == 1
     assert queue.is_user_in_queue(123)
     assert not queue.is_user_in_queue(456)
-
     # Add another task
     task2 = DownloadTask(chat_id=456, url="https://example2.com", format_string="test_format")
-
     position = await queue.add_task(task2)
 
     # Should be second in queue
@@ -123,16 +119,13 @@ async def test_clear_user_tasks():
 
     # Add tasks for two different users
     task1 = DownloadTask(chat_id=123, url="https://example.com/1", format_string="test_format")
-
     task2 = DownloadTask(chat_id=123, url="https://example.com/2", format_string="test_format")
-
     task3 = DownloadTask(chat_id=456, url="https://example.com/3", format_string="test_format")
 
     # Add tasks to queue directly (bypassing async method for test)
     queue.queue.put_nowait(task1)
     queue.queue.put_nowait(task2)
     queue.queue.put_nowait(task3)
-
     # Clear tasks for user 123
     removed = queue.clear_user_tasks(123)
 

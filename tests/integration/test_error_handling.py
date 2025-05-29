@@ -9,6 +9,29 @@ from bot.services.downloader import DownloadError
 from bot.services.queue import DownloadTask, download_queue
 
 
+class MockDownloadWithError:
+    """Mock class for download function that raises errors."""
+
+    def __init__(self, notify_admin_mock):
+        """Initialize with notify_admin mock."""
+        self.notify_admin_mock = notify_admin_mock
+
+    async def __call__(self, *args, **kwargs):
+        """Mock download function that handles errors."""
+        # Extract the bot and chat_id from args (positional arguments)
+        bot_arg = args[0]
+        chat_id_arg = args[1]
+
+        # Before raising the exception, send error message to user
+        await bot_arg.send_message(chat_id_arg, "❌ <b>Download failed</b>\n\nCritical test error")
+
+        # Also call notify_admin like the real function would
+        await self.notify_admin_mock(bot_arg, "Download failed with critical error")
+
+        # Raise the exception
+        raise DownloadError("Critical test error")
+
+
 @pytest.mark.asyncio
 async def test_download_error_handling(integration_setup, mock_message, mock_callback_query):
     """Test error handling during download process."""
@@ -118,24 +141,11 @@ async def test_multiple_download_failures(integration_setup, mock_bot):
 async def test_admin_notification_on_error(integration_setup, mock_bot):
     """Test that admin is notified on critical errors."""
 
-    # Instead of just mocking the download function with a side effect, we need
-    # to implement the error handling that would occur in the real function
-    async def mock_download_with_error(*args, **kwargs):
-        # Extract the bot and chat_id from args (positional arguments)
-        bot_arg = args[0]
-        chat_id_arg = args[1]
-
-        # Before raising the exception, send error message to user
-        await bot_arg.send_message(chat_id_arg, "❌ <b>Download failed</b>\n\nCritical test error")
-
-        # Also call notify_admin like the real function would
-        await notify_admin_mock(bot_arg, "Download failed with critical error")
-
-        # Raise the exception
-        raise DownloadError("Critical test error")
-
     # Mock notify_admin function to track calls
     notify_admin_mock = AsyncMock()
+    
+    # Create mock download with error that handles admin notification
+    mock_download_with_error = MockDownloadWithError(notify_admin_mock)
 
     # Create a task directly
     task = DownloadTask(

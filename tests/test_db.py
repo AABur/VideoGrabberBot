@@ -24,11 +24,9 @@ async def temp_db(monkeypatch):
     # Create temp directory and file
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_db_path = Path(temp_dir) / "test_bot.db"
-
         # Patch DB_PATH in the db module
-        import bot.utils.db
-
-        monkeypatch.setattr(bot.utils.db, "DB_PATH", temp_db_path)
+        from bot.utils import db as db_module
+        monkeypatch.setattr(db_module, "DB_PATH", temp_db_path)
 
         # Initialize database
         await init_db()
@@ -57,8 +55,8 @@ async def test_add_user_exception(temp_db):
     """Test handling exception when adding a user."""
     # Mock aiosqlite.connect to raise an exception
     with patch("aiosqlite.connect", side_effect=Exception("Database error")):
-        result = await add_user(123456789, "testuser", 987654321)
-        assert result is False
+        success = await add_user(123456789, "testuser", 987654321)
+        assert success is False
 
 
 @pytest.mark.asyncio
@@ -101,8 +99,8 @@ async def test_deactivate_user(temp_db):
     assert await is_user_authorized(123456789) is True
 
     # Deactivate the user
-    result = await deactivate_user(123456789)
-    assert result is True
+    success = await deactivate_user(123456789)
+    assert success is True
 
     # Verify user is no longer authorized
     assert await is_user_authorized(123456789) is False
@@ -113,8 +111,8 @@ async def test_deactivate_user_exception(temp_db):
     """Test exception handling when deactivating a user."""
     # Mock aiosqlite.connect to raise an exception
     with patch("aiosqlite.connect", side_effect=Exception("Database error")):
-        result = await deactivate_user(123456789)
-        assert result is False
+        success = await deactivate_user(123456789)
+        assert success is False
 
 
 @pytest.mark.asyncio
@@ -172,8 +170,8 @@ async def test_use_invite_and_exceptions():
         # Also mock add_user to avoid db operations
         with patch("bot.utils.db.add_user", AsyncMock(return_value=True)):
             # Test use invite
-            result = await use_invite("test-invite-id", 123456789)
-            assert result is True
+            success = await use_invite("test-invite-id", 123456789)
+            assert success is True
 
             # Verify correct calls
             assert mock_conn.execute.call_count == 2  # Check and update
@@ -191,22 +189,22 @@ async def test_use_invite_and_exceptions():
         mock_connect.return_value = mock_conn
 
         # Test use invite
-        result = await use_invite("invalid-invite", 123456789)
-        assert result is False
+        success = await use_invite("invalid-invite", 123456789)
+        assert success is False
 
     # Exception case
     with patch("aiosqlite.connect", side_effect=Exception("Database error")):
-        result = await use_invite("test-invite-id", 123456789)
-        assert result is False
+        success = await use_invite("test-invite-id", 123456789)
+        assert success is False
 
 
 @pytest.mark.asyncio
 async def test_error_handling(temp_db):
     """Test error handling in database operations."""
     # Test with invalid user ID
-    result = await add_user("invalid_id", "testuser", 987654321)
-    assert result is False
+    success = await add_user("invalid_id", "testuser", 987654321)
+    assert success is False
 
     # Test with non-existent invite
-    result = await use_invite("non_existent_invite", 123456789)
-    assert result is False
+    success = await use_invite("non_existent_invite", 123456789)
+    assert success is False
