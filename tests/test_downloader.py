@@ -103,8 +103,8 @@ async def test_download_youtube_video_with_status_message():
             patch("tempfile.mkdtemp", return_value=str(temp_dir_path)),
             patch("yt_dlp.YoutubeDL", return_value=mock_ydl_context),
             patch("pathlib.Path.glob", return_value=[dummy_file]),
-            patch("bot.services.downloader.types.Message"),
-            patch("bot.services.downloader.types.Chat"),
+            patch("bot.services.downloader.Message"),
+            patch("bot.services.downloader.Chat"),
         ):
             # Call the function with status_message_id
             await download_youtube_video(
