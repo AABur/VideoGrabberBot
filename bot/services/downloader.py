@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Optional
 
 import yt_dlp
-from aiogram import Bot, types
-from aiogram.types import FSInputFile
+from aiogram import Bot
+from aiogram.types import Chat, FSInputFile, Message
 from loguru import logger
 
 from bot.config import TEMP_DIR
@@ -18,8 +18,6 @@ from bot.utils.logging import notify_admin
 
 class DownloadError(Exception):
     """Exception raised for errors during download process."""
-
-    pass
 
 
 async def download_youtube_video(
@@ -60,9 +58,9 @@ async def download_youtube_video(
                 chat_id=chat_id,
                 message_id=status_message_id,
             )
-            status_message = types.Message(
+            status_message = Message(
                 message_id=status_message_id,
-                chat=types.Chat(id=chat_id),
+                chat=Chat(id=chat_id),
                 bot=bot,
             )
         else:
@@ -84,7 +82,7 @@ async def download_youtube_video(
         # Download video
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             logger.debug(f"Extracting info: {url}")
-            info = ydl.extract_info(url, download=False)
+            video_info = ydl.extract_info(url, download=False)
 
             logger.debug(f"Starting download with options: {ydl_opts}")
             ydl.download([url])
@@ -110,7 +108,7 @@ async def download_youtube_video(
             await bot.send_document(
                 chat_id,
                 document=FSInputFile(file_path),
-                caption=f"📥 <b>{info.get('title', 'Video')}</b>\n\nDownloaded from YouTube",
+                caption=f"📥 <b>{video_info.get('title', 'Video')}</b>\n\nDownloaded from YouTube",
             )
 
             # Update status message
@@ -136,12 +134,17 @@ async def download_youtube_video(
 
     finally:
         # Clean up temporary files
-        try:
-            if os.path.exists(temp_download_dir):
-                shutil.rmtree(temp_download_dir)
-                logger.debug(f"Cleaned up temporary directory: {temp_download_dir}")
-        except Exception as e:
-            logger.error(f"Failed to clean up temporary directory: {str(e)}")
+        _cleanup_temp_directory(temp_download_dir)
+
+
+def _cleanup_temp_directory(temp_dir: str) -> None:
+    """Clean up temporary directory safely."""
+    try:
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+            logger.debug(f"Cleaned up temporary directory: {temp_dir}")
+    except Exception as e:
+        logger.error(f"Failed to clean up temporary directory: {str(e)}")
 
 
 def is_youtube_url(url: str) -> bool:
@@ -154,12 +157,11 @@ def is_youtube_url(url: str) -> bool:
     Returns:
         True if URL is from YouTube, False otherwise
     """
-    return any(
-        domain in url.lower()
-        for domain in [
-            "youtube.com",
-            "youtu.be",
-            "m.youtube.com",
-            "youtube-nocookie.com",
-        ]
+    youtube_domains = (
+        "youtube.com",
+        "youtu.be", 
+        "m.youtube.com",
+        "youtube-nocookie.com",
     )
+    url_lower = url.lower()
+    return any(domain in url_lower for domain in youtube_domains)
