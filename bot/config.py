@@ -66,6 +66,4 @@ VIDEO_FORMATS: Dict[str, Dict[str, str]] = {
     "FHD": {"label": "Full HD (1080p)", "format": "best[height<=1080]"},
     "ORIGINAL": {"label": "Original (Max Quality)", "format": "best"},
 }
-AUDIO_FORMAT: Dict[str, Dict[str, str]] = {
-    "MP3": {"label": "MP3 (320kbps)", "format": "bestaudio/best"}
-}
+AUDIO_FORMAT: Dict[str, Dict[str, str]] = {"MP3": {"label": "MP3 (320kbps)", "format": "bestaudio/best"}}

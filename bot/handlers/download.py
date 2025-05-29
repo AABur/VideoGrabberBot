@@ -63,9 +63,7 @@ async def process_url(message: Message) -> None:
                 row = []
 
             # Use shorter callback data
-            button = InlineKeyboardButton(
-                text=label, callback_data=f"fmt:{format_id}:{url_id}"
-            )
+            button = InlineKeyboardButton(text=label, callback_data=f"fmt:{format_id}:{url_id}")
             row.append(button)
 
         # Add the last row if it's not empty
@@ -75,16 +73,13 @@ async def process_url(message: Message) -> None:
         markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
 
         await message.answer(
-            "🎬 <b>Choose Download Format</b>\n\n"
-            "Select the format you want to download:",
+            "🎬 <b>Choose Download Format</b>\n\nSelect the format you want to download:",
             reply_markup=markup,
         )
         logger.info(f"Sent format selection keyboard to user {user_id}")
 
     else:
-        await message.answer(
-            "⚠️ <b>Unsupported URL</b>\n\nPlease provide a valid YouTube link."
-        )
+        await message.answer("⚠️ <b>Unsupported URL</b>\n\nPlease provide a valid YouTube link.")
 
 
 @download_router.callback_query(F.data.startswith("fmt:"))
@@ -103,9 +98,7 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     logger.debug(f"Parsed parts: {parts}")
 
     if len(parts) < 3:
-        logger.error(
-            f"Invalid format selection: parts length is {len(parts)}, expected at least 3"
-        )
+        logger.error(f"Invalid format selection: parts length is {len(parts)}, expected at least 3")
         await callback.answer("Invalid format selection")
         return
 
@@ -115,9 +108,7 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     format_id = ":".join(parts[1:-1])  # Reassemble format_id
 
     user_id = callback.from_user.id
-    logger.debug(
-        f"Parsed values: cmd={cmd}, format_id={format_id}, url_id={url_id}"
-    )
+    logger.debug(f"Parsed values: cmd={cmd}, format_id={format_id}, url_id={url_id}")
 
     # Get URL from storage
     url = get_url(url_id)
@@ -133,9 +124,7 @@ async def process_format_selection(callback: CallbackQuery) -> None:
         await callback.answer("Selected format not found")
         return
 
-    logger.info(
-        f"User {user_id} selected format: {format_data['label']} for URL: {url}"
-    )
+    logger.info(f"User {user_id} selected format: {format_data['label']} for URL: {url}")
 
     # Store format selection
     store_format(url_id, format_id)
@@ -144,20 +133,14 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     bot = get_bot()
 
     # Acknowledge the callback
-    await callback.answer(
-        f"Processing your request in {format_data['label']} format..."
-    )
+    await callback.answer(f"Processing your request in {format_data['label']} format...")
 
     # Check if queue is processing and user is already in queue
     is_processing = download_queue.is_processing
-    is_user_in_queue = download_queue.is_user_in_queue(
-        callback.message.chat.id
-    )
+    is_user_in_queue = download_queue.is_user_in_queue(callback.message.chat.id)
 
     # Prepare status message
-    status_text = (
-        f"🔄 <b>Download {'' if not is_processing else 'queued'}</b>\n\n"
-    )
+    status_text = f"🔄 <b>Download {'' if not is_processing else 'queued'}</b>\n\n"
     status_text += f"Format: <b>{format_data['label']}</b>\n"
     status_text += f"URL: {url}\n\n"
 

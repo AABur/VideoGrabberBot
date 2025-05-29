@@ -15,9 +15,7 @@ from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
-async def test_command_interaction_flow(
-    integration_setup, mock_message, authorized_user
-):
+async def test_command_interaction_flow(integration_setup, mock_message, authorized_user):
     """Test the flow of a user interacting with multiple commands."""
     # User starts bot interaction with /start
     mock_message.text = "/start"
@@ -78,9 +76,7 @@ async def test_admin_user_commands(integration_setup, mock_message):
     # Try adding a user that already exists
     mock_message.text = "/adduser 987654321"
 
-    with patch(
-        "bot.handlers.commands.add_user", AsyncMock(return_value=False)
-    ):
+    with patch("bot.handlers.commands.add_user", AsyncMock(return_value=False)):
         await command_adduser(mock_message)
 
         # Verify message about existing user
@@ -90,9 +86,7 @@ async def test_admin_user_commands(integration_setup, mock_message):
 
 
 @pytest.mark.asyncio
-async def test_cancel_command_integration(
-    integration_setup, mock_message, authorized_user
-):
+async def test_cancel_command_integration(integration_setup, mock_message, authorized_user):
     """Test the /cancel command with active downloads in the queue."""
     # Set up message
     mock_message.from_user = authorized_user

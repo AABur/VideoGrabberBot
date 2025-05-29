@@ -59,9 +59,7 @@ async def command_help(message: Message) -> None:
 
     # Check if user is authorized
     if not await is_user_authorized(user_id):
-        await message.answer(
-            "⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot."
-        )
+        await message.answer("⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot.")
         return
 
     await message.answer(
@@ -93,9 +91,7 @@ async def command_invite(message: Message) -> None:
 
     # Check if user is authorized
     if not await is_user_authorized(user_id):
-        await message.answer(
-            "⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot."
-        )
+        await message.answer("⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot.")
         return
 
     # Generate unique invite
@@ -114,9 +110,7 @@ async def command_invite(message: Message) -> None:
         )
         logger.info(f"Invite created by user: {user_id}, code: {invite_code}")
     else:
-        await message.answer(
-            "❌ <b>Error</b>\n\nCould not generate invite link. Please try again later."
-        )
+        await message.answer("❌ <b>Error</b>\n\nCould not generate invite link. Please try again later.")
         logger.error(f"Failed to create invite for user: {user_id}")
 
 
@@ -132,10 +126,7 @@ async def command_adduser(message: Message) -> None:
 
     # Check if user is admin
     if user_id != ADMIN_USER_ID:
-        await message.answer(
-            "⚠️ <b>Admin Only</b>\n\n"
-            "This command is only available to the bot administrator."
-        )
+        await message.answer("⚠️ <b>Admin Only</b>\n\nThis command is only available to the bot administrator.")
         logger.warning(f"Admin command attempt by non-admin: {user_id}")
         return
 
@@ -194,9 +185,7 @@ async def command_cancel(message: Message) -> None:
 
     # Check if user is authorized
     if not await is_user_authorized(user_id):
-        await message.answer(
-            "⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot."
-        )
+        await message.answer("⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot.")
         return
 
     # Import here to avoid circular imports
@@ -204,10 +193,7 @@ async def command_cancel(message: Message) -> None:
 
     # Check if user has tasks in queue
     if not download_queue.is_user_in_queue(message.chat.id):
-        await message.answer(
-            "ℹ️ <b>No Active Downloads</b>\n\n"
-            "You don't have any downloads in the queue to cancel."
-        )
+        await message.answer("ℹ️ <b>No Active Downloads</b>\n\nYou don't have any downloads in the queue to cancel.")
         return
 
     # Clear user tasks

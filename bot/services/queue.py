@@ -44,9 +44,7 @@ class DownloadQueue:
         """
         await self.queue.put(task)
         queue_size = self.queue.qsize()
-        logger.info(
-            f"Task added to queue: {task.url}, format: {task.format_string}, position: {queue_size}"
-        )
+        logger.info(f"Task added to queue: {task.url}, format: {task.format_string}, position: {queue_size}")
 
         # Start worker if not already running
         if self._worker_task is None or self._worker_task.done():
@@ -62,9 +60,7 @@ class DownloadQueue:
 
             try:
                 if self.current_task:  # Type guard to help mypy
-                    logger.info(
-                        f"Processing task: {self.current_task.url}, format: {self.current_task.format_string}"
-                    )
+                    logger.info(f"Processing task: {self.current_task.url}, format: {self.current_task.format_string}")
 
                     # Import here to avoid circular imports
                     from bot.services.downloader import download_youtube_video

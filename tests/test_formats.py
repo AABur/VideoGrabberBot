@@ -15,6 +15,7 @@ from bot.services.formats import (
 def reload_formats_module():
     """Reload formats module to pick up config changes."""
     import bot.services.formats
+
     importlib.reload(bot.services.formats)
 
 
@@ -74,9 +75,7 @@ class TestFormats:
 
         # Check that options are not empty
         assert len(options) > 0
-        assert len(options) == len(mock_video_formats) + len(
-            mock_audio_formats
-        )
+        assert len(options) == len(mock_video_formats) + len(mock_audio_formats)
 
         # Check that each option is a tuple of (callback_data, label)
         for option in options:
@@ -190,6 +189,7 @@ class TestFormats:
         # Reload formats module to apply empty configs
         reset_modules("bot.services.formats")
         import bot.services.formats
+
         importlib.reload(bot.services.formats)
 
         # Make sure to clear any caches

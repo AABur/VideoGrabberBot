@@ -107,9 +107,7 @@ def mock_audio_formats():
     This ensures tests don't rely on the actual configuration values which
     might change over time.
     """
-    test_formats = {
-        "TEST_MP3": {"label": "Test MP3 (320kbps)", "format": "testaudio"}
-    }
+    test_formats = {"TEST_MP3": {"label": "Test MP3 (320kbps)", "format": "testaudio"}}
 
     # Use import and then patch the imported module's attribute
     # This ensures the patch affects all code accessing the value
@@ -321,10 +319,10 @@ def isolated_url_storage():
     def test_something(isolated_url_storage):
         # storage is completely clean
         assert len(isolated_url_storage) == 0
-        
+
         # can directly manipulate the storage
         isolated_url_storage["test_id"] = ("test_url", None)
-        
+
         # normal API still works
         assert get_url("test_id") == "test_url"
     ```
@@ -375,39 +373,39 @@ def reset_modules():
 
     This fixture helps manage module-level state by removing specified modules
     from sys.modules, forcing a fresh import on next use.
-    
+
     Importance:
     - Essential for tests that modify module-level variables
     - Prevents side effects from cached or modified modules
     - Allows tests to work with "fresh" modules regardless of import order
     - Critical for modules with global state (like formats, config, storage)
-    
+
     Implementation details:
     - Returns a function that can reset multiple modules at once
     - Removes modules from sys.modules to force fresh imports
     - Doesn't clean up automatically - resets only what you specify
     - Works with any module, not just project modules
-    
+
     Usage:
     ```python
     def test_with_modified_module(reset_modules):
         # Modify a module's globals
         import bot.config
         bot.config.VIDEO_FORMATS = {}
-        
+
         # Reset the module when done
         reset_modules("bot.config")
-        
+
         # Next import will be fresh with original values
         import bot.config  # Fresh import with original VIDEO_FORMATS
     ```
-    
+
     When to use:
     - When you need to modify module-level variables
     - When caching is causing test interference
     - When you need a completely fresh module state
     - As an alternative to monkeypatching when you want a full module reset
-    
+
     Typical modules to reset:
     - bot.config (for configuration changes)
     - bot.services.formats (for format changes)

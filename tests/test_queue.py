@@ -17,9 +17,7 @@ async def test_queue_add_task():
     queue._process_queue = AsyncMock()
 
     # Add a task
-    task = DownloadTask(
-        chat_id=123, url="https://example.com", format_string="test_format"
-    )
+    task = DownloadTask(chat_id=123, url="https://example.com", format_string="test_format")
 
     position = await queue.add_task(task)
 
@@ -29,9 +27,7 @@ async def test_queue_add_task():
     assert not queue.is_user_in_queue(456)
 
     # Add another task
-    task2 = DownloadTask(
-        chat_id=456, url="https://example2.com", format_string="test_format"
-    )
+    task2 = DownloadTask(chat_id=456, url="https://example2.com", format_string="test_format")
 
     position = await queue.add_task(task2)
 
@@ -50,9 +46,7 @@ async def test_queue_processing():
     mock_bot = AsyncMock()
 
     # Mock download function
-    with patch(
-        "bot.services.downloader.download_youtube_video", AsyncMock()
-    ) as mock_download:
+    with patch("bot.services.downloader.download_youtube_video", AsyncMock()) as mock_download:
         # Add tasks
         task1 = DownloadTask(
             chat_id=123,
@@ -96,9 +90,7 @@ async def test_queue_error_handling():
             "bot.services.downloader.download_youtube_video",
             AsyncMock(side_effect=Exception("Test error")),
         ) as mock_download,
-        patch(
-            "bot.services.queue.logger.error", MagicMock()
-        ) as mock_logger_error,
+        patch("bot.services.queue.logger.error", MagicMock()) as mock_logger_error,
     ):
         # Add a task
         task = DownloadTask(
@@ -130,17 +122,11 @@ async def test_clear_user_tasks():
     queue = DownloadQueue()
 
     # Add tasks for two different users
-    task1 = DownloadTask(
-        chat_id=123, url="https://example.com/1", format_string="test_format"
-    )
+    task1 = DownloadTask(chat_id=123, url="https://example.com/1", format_string="test_format")
 
-    task2 = DownloadTask(
-        chat_id=123, url="https://example.com/2", format_string="test_format"
-    )
+    task2 = DownloadTask(chat_id=123, url="https://example.com/2", format_string="test_format")
 
-    task3 = DownloadTask(
-        chat_id=456, url="https://example.com/3", format_string="test_format"
-    )
+    task3 = DownloadTask(chat_id=456, url="https://example.com/3", format_string="test_format")
 
     # Add tasks to queue directly (bypassing async method for test)
     queue.queue.put_nowait(task1)
@@ -178,15 +164,9 @@ async def test_get_queue_position():
     queue = DownloadQueue()
 
     # Add tasks for different users
-    task1 = DownloadTask(
-        chat_id=123, url="https://example.com/1", format_string="test_format"
-    )
-    task2 = DownloadTask(
-        chat_id=456, url="https://example.com/2", format_string="test_format"
-    )
-    task3 = DownloadTask(
-        chat_id=123, url="https://example.com/3", format_string="test_format"
-    )
+    task1 = DownloadTask(chat_id=123, url="https://example.com/1", format_string="test_format")
+    task2 = DownloadTask(chat_id=456, url="https://example.com/2", format_string="test_format")
+    task3 = DownloadTask(chat_id=123, url="https://example.com/3", format_string="test_format")
 
     # Add tasks to queue directly
     queue.queue.put_nowait(task1)

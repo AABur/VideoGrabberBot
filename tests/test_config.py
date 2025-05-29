@@ -37,9 +37,14 @@ def test_video_formats():
     assert "ORIGINAL" in VIDEO_FORMATS
 
     # Check format structure
-    for format_key, format_data in VIDEO_FORMATS.items():
-        assert "label" in format_data
-        assert "format" in format_data
+    assert "label" in VIDEO_FORMATS["SD"]
+    assert "format" in VIDEO_FORMATS["SD"]
+    assert "label" in VIDEO_FORMATS["HD"]
+    assert "format" in VIDEO_FORMATS["HD"]
+    assert "label" in VIDEO_FORMATS["FHD"]
+    assert "format" in VIDEO_FORMATS["FHD"]
+    assert "label" in VIDEO_FORMATS["ORIGINAL"]
+    assert "format" in VIDEO_FORMATS["ORIGINAL"]
 
     # Check specific format settings
     assert VIDEO_FORMATS["SD"]["format"] == "best[height<=480]"
@@ -56,9 +61,8 @@ def test_audio_format():
     assert "MP3" in AUDIO_FORMAT
 
     # Check format structure
-    for format_key, format_data in AUDIO_FORMAT.items():
-        assert "label" in format_data
-        assert "format" in format_data
+    assert "label" in AUDIO_FORMAT["MP3"]
+    assert "format" in AUDIO_FORMAT["MP3"]
 
     # Check specific MP3 format settings
     assert AUDIO_FORMAT["MP3"]["format"] == "bestaudio/best"
@@ -85,9 +89,7 @@ def test_token_validation():
 
     # Test the validation function
     assert validate_token(TELEGRAM_TOKEN) == TELEGRAM_TOKEN
-    with pytest.raises(
-        ValueError, match="TELEGRAM_TOKEN is not set in .env file"
-    ):
+    with pytest.raises(ValueError, match="TELEGRAM_TOKEN is not set in .env file"):
         validate_token("")
 
 
@@ -100,15 +102,11 @@ def test_admin_id_validation():
 
     # Test the validation function
     assert validate_admin_id(ADMIN_USER_ID) == ADMIN_USER_ID
-    with pytest.raises(
-        ValueError, match="ADMIN_USER_ID is not set in .env file"
-    ):
+    with pytest.raises(ValueError, match="ADMIN_USER_ID is not set in .env file"):
         validate_admin_id(0)
 
 
-@patch.dict(
-    os.environ, {"TELEGRAM_TOKEN": "mock_token", "ADMIN_USER_ID": "123456"}
-)
+@patch.dict(os.environ, {"TELEGRAM_TOKEN": "mock_token", "ADMIN_USER_ID": "123456"})
 def test_env_variables():
     """Test environment variables are correctly used."""
     # We can't easily reload the config module, but we can test

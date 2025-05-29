@@ -50,9 +50,7 @@ async def download_youtube_video(
     temp_download_dir = tempfile.mkdtemp(dir=temp_dir)
     temp_download_path = Path(temp_download_dir)
 
-    logger.info(
-        f"Starting download: {url} with format: {format_string} for chat_id: {chat_id}"
-    )
+    logger.info(f"Starting download: {url} with format: {format_string} for chat_id: {chat_id}")
 
     try:
         # If we have a status message, update it instead of creating a new one
@@ -129,9 +127,7 @@ async def download_youtube_video(
         logger.error(error_message, exc_info=True)
 
         # Notify user of the error
-        await bot.send_message(
-            chat_id, f"❌ <b>Download failed</b>\n\n{error_message}"
-        )
+        await bot.send_message(chat_id, f"❌ <b>Download failed</b>\n\n{error_message}")
 
         # Notify admin
         await notify_admin(bot, f"Download failed: {url}\nError: {str(e)}")
@@ -143,9 +139,7 @@ async def download_youtube_video(
         try:
             if os.path.exists(temp_download_dir):
                 shutil.rmtree(temp_download_dir)
-                logger.debug(
-                    f"Cleaned up temporary directory: {temp_download_dir}"
-                )
+                logger.debug(f"Cleaned up temporary directory: {temp_download_dir}")
         except Exception as e:
             logger.error(f"Failed to clean up temporary directory: {str(e)}")
 

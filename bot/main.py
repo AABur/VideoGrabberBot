@@ -19,9 +19,7 @@ async def startup() -> None:
         types.BotCommand(command="start", description="Start the bot"),
         types.BotCommand(command="help", description="Show help information"),
         types.BotCommand(command="invite", description="Generate invite link"),
-        types.BotCommand(
-            command="cancel", description="Cancel active downloads"
-        ),
+        types.BotCommand(command="cancel", description="Cancel active downloads"),
     ])
 
     logger.info("Bot has been started successfully")

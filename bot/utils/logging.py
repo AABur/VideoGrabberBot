@@ -53,9 +53,7 @@ def setup_logger(log_file: Optional[Union[str, Path]] = None) -> None:
     logger.info(f"Logger initialized. Log file: {log_file}")
 
 
-async def notify_admin(
-    bot: Bot, message: str, level: str = "ERROR", **kwargs: Any
-) -> None:
+async def notify_admin(bot: Bot, message: str, level: str = "ERROR", **kwargs: Any) -> None:
     """
     Send notification message to admin.
 

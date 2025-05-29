@@ -63,9 +63,7 @@ async def test_download_youtube_video_success():
             patch("pathlib.Path.glob", return_value=[dummy_file]),
         ):
             # Call the function
-            await download_youtube_video(
-                bot, 12345, "https://www.youtube.com/watch?v=test"
-            )
+            await download_youtube_video(bot, 12345, "https://www.youtube.com/watch?v=test")
 
             # Verify the calls
             bot.send_message.assert_called_once()
@@ -118,9 +116,7 @@ async def test_download_youtube_video_with_status_message():
 
             # Verify edit_message_text was called instead of send_message
             bot.send_message.assert_not_called()
-            assert (
-                bot.edit_message_text.call_count == 3
-            )  # Initial + progress + completion
+            assert bot.edit_message_text.call_count == 3  # Initial + progress + completion
             bot.send_document.assert_called_once()
 
 
@@ -150,9 +146,7 @@ async def test_download_youtube_video_failure():
         ):
             # Call the function and verify it raises the expected exception
             with pytest.raises(DownloadError):
-                await download_youtube_video(
-                    bot, 12345, "https://www.youtube.com/watch?v=test"
-                )
+                await download_youtube_video(bot, 12345, "https://www.youtube.com/watch?v=test")
 
             # Verify error message was sent to user
             # We expect 2 calls to send_message from our function:
@@ -162,10 +156,7 @@ async def test_download_youtube_video_failure():
 
             # Check that the last call includes error message
             args, kwargs = bot.send_message.call_args_list[-1]
-            assert (
-                "Download failed" in kwargs.get("text", "")
-                or "Download failed" in args[1]
-            )
+            assert "Download failed" in kwargs.get("text", "") or "Download failed" in args[1]
 
 
 @pytest.mark.asyncio
@@ -196,9 +187,7 @@ async def test_download_youtube_video_no_files():
         ):
             # Call the function and verify it raises the expected exception
             with pytest.raises(DownloadError) as exc_info:
-                await download_youtube_video(
-                    bot, 12345, "https://www.youtube.com/watch?v=test"
-                )
+                await download_youtube_video(bot, 12345, "https://www.youtube.com/watch?v=test")
 
             # Check error message
             assert "no files found" in str(exc_info.value).lower()
@@ -244,9 +233,7 @@ async def test_download_youtube_video_cleanup_failure():
             patch("bot.services.downloader.logger.error") as mock_logger_error,
         ):
             # Call the function - should complete without raising exception
-            await download_youtube_video(
-                bot, 12345, "https://www.youtube.com/watch?v=test"
-            )
+            await download_youtube_video(bot, 12345, "https://www.youtube.com/watch?v=test")
 
             # Verify the function logged the cleanup error
             mock_logger_error.assert_called_once()

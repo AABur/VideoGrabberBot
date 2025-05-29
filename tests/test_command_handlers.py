@@ -293,9 +293,7 @@ async def test_invite_command_failure():
             "bot.handlers.commands.is_user_authorized",
             AsyncMock(return_value=True),
         ),
-        patch(
-            "bot.handlers.commands.create_invite", AsyncMock(return_value=None)
-        ),
+        patch("bot.handlers.commands.create_invite", AsyncMock(return_value=None)),
         patch("bot.handlers.commands.logger.error", MagicMock()),
     ):
         await command_invite(mock_message)

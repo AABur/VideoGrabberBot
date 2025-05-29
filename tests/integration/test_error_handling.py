@@ -4,15 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from bot.handlers.download import process_format_selection, process_url
+from bot.handlers.download import process_format_selection
 from bot.services.downloader import DownloadError
 from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
-async def test_download_error_handling(
-    integration_setup, mock_message, mock_callback_query
-):
+async def test_download_error_handling(integration_setup, mock_message, mock_callback_query):
     """Test error handling during download process."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_error_video"
@@ -21,18 +19,16 @@ async def test_download_error_handling(
     mock_message.answer.reset_mock()
     mock_callback_query.answer.reset_mock()
     mock_callback_query.message.edit_text.reset_mock()
-    
+
     # Direct manipulation approach - create format ID and URL ID
     format_id = "video:SD"
     url_id = "test_error_url_id"
     # Prepare the callback_data manually
     callback_data = f"fmt:{format_id}:{url_id}"
     mock_callback_query.data = callback_data
-    
+
     # Create a download error for testing
-    download_error = AsyncMock(
-        side_effect=DownloadError("Test download error")
-    )
+    download_error = AsyncMock(side_effect=DownloadError("Test download error"))
 
     # Setup the mock bot
     mock_bot = integration_setup["bot"]
@@ -51,9 +47,7 @@ async def test_download_error_handling(
                 "type": "video",
             },
         ),
-        patch(
-            "bot.services.downloader.download_youtube_video", download_error
-        ),
+        patch("bot.services.downloader.download_youtube_video", download_error),
         patch("bot.telegram_api.client.get_bot", return_value=mock_bot),
     ):
         # Process format selection (this adds task to queue)
@@ -62,7 +56,7 @@ async def test_download_error_handling(
         # Make sure mocks are actually called
         assert mock_callback_query.answer.called, "Callback answer not called"
         assert mock_callback_query.message.edit_text.called, "Message edit_text not called"
-        
+
         # Process the queue (which should handle the error)
         await download_queue._process_queue()
 
@@ -107,9 +101,7 @@ async def test_multiple_download_failures(integration_setup, mock_bot):
     assert download_queue.queue.qsize() == 2
 
     # Process the queue with both failing tasks
-    with patch(
-        "bot.services.downloader.download_youtube_video", download_error
-    ):
+    with patch("bot.services.downloader.download_youtube_video", download_error):
         await download_queue._process_queue()
 
         # Verify queue is empty after error handling
@@ -134,9 +126,7 @@ async def test_admin_notification_on_error(integration_setup, mock_bot):
         chat_id_arg = args[1]
 
         # Before raising the exception, send error message to user
-        await bot_arg.send_message(
-            chat_id_arg, "❌ <b>Download failed</b>\n\nCritical test error"
-        )
+        await bot_arg.send_message(chat_id_arg, "❌ <b>Download failed</b>\n\nCritical test error")
 
         # Also call notify_admin like the real function would
         await notify_admin_mock(bot_arg, "Download failed with critical error")

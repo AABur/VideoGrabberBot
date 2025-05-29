@@ -85,9 +85,7 @@ async def add_user(
     try:
         async with aiosqlite.connect(DB_PATH) as db:
             # Check if user already exists
-            cursor = await db.execute(
-                "SELECT id FROM users WHERE id = ?", (user_id,)
-            )
+            cursor = await db.execute("SELECT id FROM users WHERE id = ?", (user_id,))
             existing_user = await cursor.fetchone()
 
             if existing_user:
@@ -214,9 +212,7 @@ async def get_all_users() -> List[Dict[str, Union[int, str, bool]]]:
     try:
         async with aiosqlite.connect(DB_PATH) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(
-                "SELECT id, username, added_at, added_by, is_active FROM users"
-            )
+            cursor = await db.execute("SELECT id, username, added_at, added_by, is_active FROM users")
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
     except Exception as e:
@@ -236,9 +232,7 @@ async def deactivate_user(user_id: int) -> bool:
     """
     try:
         async with aiosqlite.connect(DB_PATH) as db:
-            await db.execute(
-                "UPDATE users SET is_active = FALSE WHERE id = ?", (user_id,)
-            )
+            await db.execute("UPDATE users SET is_active = FALSE WHERE id = ?", (user_id,))
             await db.commit()
             logger.info(f"Deactivated user: {user_id}")
             return True

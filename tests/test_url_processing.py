@@ -87,9 +87,7 @@ class TestProcessUrlHandler:
                 AsyncMock(return_value=True),
             ),
             patch("bot.handlers.download.is_youtube_url", return_value=True),
-            patch(
-                "bot.handlers.download.store_url", return_value="test_url_id"
-            ),
+            patch("bot.handlers.download.store_url", return_value="test_url_id"),
             patch(
                 "bot.handlers.download.get_format_options",
                 return_value=test_formats,
@@ -149,9 +147,7 @@ class TestFormatSelectionHandler:
     async def test_invalid_format_not_enough_parts(self, mock_callback_query):
         """Test handling of invalid callback data with too few parts."""
         # Setup invalid callback data (missing parts)
-        mock_callback_query.data = (
-            "fmt:missing_parts"  # Only 2 parts, needs at least 3
-        )
+        mock_callback_query.data = "fmt:missing_parts"  # Only 2 parts, needs at least 3
 
         # Execute
         with patch("bot.handlers.download.logger.error") as mock_logger:
@@ -162,19 +158,13 @@ class TestFormatSelectionHandler:
             assert "Invalid format selection" in mock_logger.call_args[0][0]
 
         # Verify error message to user
-        mock_callback_query.answer.assert_called_once_with(
-            "Invalid format selection"
-        )
+        mock_callback_query.answer.assert_called_once_with("Invalid format selection")
 
     @pytest.mark.asyncio
-    async def test_invalid_callback_data_wrong_prefix(
-        self, mock_callback_query
-    ):
+    async def test_invalid_callback_data_wrong_prefix(self, mock_callback_query):
         """Test handling of invalid callback data with wrong prefix."""
         # Setup invalid callback data (wrong prefix)
-        mock_callback_query.data = (
-            "wrong:video:HD:12345"  # Starts with 'wrong' not 'fmt'
-        )
+        mock_callback_query.data = "wrong:video:HD:12345"  # Starts with 'wrong' not 'fmt'
 
         # Execute
         # This would be filtered by the router before reaching our handler
@@ -192,9 +182,7 @@ class TestFormatSelectionHandler:
             await process_format_selection(mock_callback_query)
 
             # Verify error message
-            mock_callback_query.answer.assert_called_once_with(
-                "URL not found or expired"
-            )
+            mock_callback_query.answer.assert_called_once_with("URL not found or expired")
 
     @pytest.mark.asyncio
     async def test_format_not_found(self, mock_callback_query):
@@ -213,14 +201,10 @@ class TestFormatSelectionHandler:
             await process_format_selection(mock_callback_query)
 
             # Verify error message
-            mock_callback_query.answer.assert_called_once_with(
-                "Selected format not found"
-            )
+            mock_callback_query.answer.assert_called_once_with("Selected format not found")
 
     @pytest.mark.asyncio
-    async def test_successful_format_selection_no_queue(
-        self, mock_callback_query
-    ):
+    async def test_successful_format_selection_no_queue(self, mock_callback_query):
         """Test successful format selection with no queue."""
         # Setup
         mock_callback_query.data = "fmt:video:HD:test_id"
@@ -256,10 +240,7 @@ class TestFormatSelectionHandler:
 
             # Verify callback was acknowledged
             mock_callback_query.answer.assert_called_once()
-            assert (
-                "Processing your request"
-                in mock_callback_query.answer.call_args[0][0]
-            )
+            assert "Processing your request" in mock_callback_query.answer.call_args[0][0]
 
             # Verify message was edited
             mock_callback_query.message.edit_text.assert_called_once()
