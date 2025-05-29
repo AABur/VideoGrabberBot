@@ -71,15 +71,66 @@
 - [ ] Ensure backward compatibility with existing code
 - [ ] Verify with tests
 
-## Этап 2. Handle Dependency Management
+## Этап 2. Docker Implementation and Deployment
 
-Подэтап 2.1. Resolve circular imports
+Подэтап 2.1. Basic Docker setup
+- [ ] Create Dockerfile for VideoGrabberBot
+- [ ] Add .dockerignore file to exclude unnecessary files
+- [ ] Configure Python environment and dependencies installation
+- [ ] Set up proper working directory and file structure
+- [ ] Test basic container build and run
+
+Подэтап 2.2. Environment configuration
+- [ ] Configure environment variables for bot token and admin ID
+- [ ] Create .env.example file with required variables
+- [ ] Update config.py to support Docker environment variables
+- [ ] Add support for configurable data directories
+- [ ] Implement proper secret management
+
+Подэтап 2.3. Data persistence and volumes
+- [ ] Configure Docker volumes for database persistence (/app/data)
+- [ ] Set up volume for temporary download files (/app/data/temp)
+- [ ] Configure volume for logs (/app/logs)
+- [ ] Update application paths to work with mounted volumes
+- [ ] Test data persistence across container restarts
+
+Подэтап 2.4. Docker Compose configuration
+- [ ] Create docker-compose.yml for easy deployment
+- [ ] Configure service dependencies and networking
+- [ ] Add health checks for container monitoring
+- [ ] Set up restart policies and resource limits
+- [ ] Configure logging drivers and log rotation
+
+Подэтап 2.5. Production optimization
+- [ ] Create multi-stage Dockerfile for smaller image size
+- [ ] Optimize layer caching for faster builds
+- [ ] Add security best practices (non-root user, minimal base image)
+- [ ] Configure proper signal handling for graceful shutdown
+- [ ] Add container labels and metadata
+
+Подэтап 2.6. Deployment automation
+- [ ] Create deployment scripts (deploy.sh, stop.sh, backup.sh)
+- [ ] Add Makefile with common Docker operations
+- [ ] Update README.md with Docker installation and usage instructions
+- [ ] Create backup and restore procedures for data
+- [ ] Add monitoring and alerting configuration
+
+Подэтап 2.7. Testing and validation
+- [ ] Update existing tests to work in containerized environment
+- [ ] Add integration tests for Docker deployment
+- [ ] Test all bot functionality in container (downloads, commands, etc.)
+- [ ] Verify database operations and file persistence
+- [ ] Performance testing and resource usage optimization
+
+## Этап 3. Handle Dependency Management
+
+Подэтап 3.1. Resolve circular imports
 - [ ] Audit all import statements in the project
 - [ ] Identify modules with circular dependencies
 - [ ] Refactor to use dependency injection where appropriate
 - [ ] Consider adding a service locator pattern
 
-Подэтап 2.2. Improve module initialization
+Подэтап 3.2. Improve module initialization
 - [ ] Evaluate current initialization sequence
 - [ ] Restructure initialization to avoid side effects
 - [ ] Add proper error handling during initialization
