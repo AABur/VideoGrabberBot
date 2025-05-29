@@ -1,4 +1,4 @@
-.PHONY: help run tests test check format lint lint-all mypy
+.PHONY: help run tests test check format lint lint-all mypy docker-build docker-run docker-stop docker-logs docker-status docker-clean docker-restart
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -53,3 +53,29 @@ mypy: ## Run type checking with mypy
 
 # Run all checks (format, lint, type check)
 check: format lint mypy ## Run all checks (format, lint, type check)
+
+# Docker targets
+docker-build: ## Build Docker image
+	docker build -t videograbberbot .
+
+docker-run: ## Run bot in Docker container (detached)
+	docker run -d --name videograbberbot videograbberbot
+
+docker-stop: ## Stop and remove Docker container
+	docker stop videograbberbot || true
+	docker rm videograbberbot || true
+
+docker-logs: ## Show Docker container logs
+	docker logs -f videograbberbot
+
+docker-status: ## Show Docker images and containers status
+	@echo "=== Docker Images ==="
+	@docker images | grep -E "(REPOSITORY|videograbberbot)" || echo "No videograbberbot images found"
+	@echo ""
+	@echo "=== Running Containers ==="
+	@docker ps | grep -E "(CONTAINER|videograbberbot)" || echo "No videograbberbot containers running"
+
+docker-clean: docker-stop ## Stop container and remove image
+	docker rmi videograbberbot || true
+
+docker-restart: docker-stop docker-build docker-run ## Full restart (stop, build, run)
