@@ -102,6 +102,8 @@ This section contains rules and guidelines for working with Claude on this proje
    - Do not add comments that describe changes, progress, or historical modifications
    - Avoid comments like "new function," "added test," "now we changed this," or "previously used X, now using Y"
    - Comments should only describe the current state and purpose of the code, not its history or evolution
+   - If unable to fix a linting error after 3 attempts, stop and discuss the problem with the developer
+   - If fixing code requires modifying tests, stop and explain the situation to the developer
 
 3. **Rule Management**:
    - All rules must be added to CLAUDE.md
