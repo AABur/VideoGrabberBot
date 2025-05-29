@@ -15,7 +15,7 @@
 
 Подэтап 1.3. Fix downloader service linting issues
 - [x] Fix 5 of 8 linting errors (WPS420, WPS110, WPS335, WPS458, WPS505)
-- [ ] Fix test imports after code changes (separate commit required)
+- [x] Fix test imports after code changes (separate commit required)
 - [ ] Refactor download_youtube_video function to reduce complexity:
   - [ ] WPS210: Reduce local variables (11 > 8)
   - [ ] WPS213: Reduce expressions (15 > 9) 
