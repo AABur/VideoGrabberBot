@@ -1,8 +1,8 @@
 [flake8]
 # Base configuration for flake8 with wemake-python-styleguide
-max-line-length = 79
+max-line-length = 120
 select = C,E,F,W,B,I,WPS
-exclude = 
+exclude =
     .git
     __pycache__
     .venv
@@ -24,7 +24,7 @@ max-cognitive-score = 15
 max-cognitive-average = 10
 
 # Ignoring some errors from wemake-python-styleguide to make it work with the existing codebase
-ignore = 
+ignore =
     # Allow fixtures without return type annotations in tests
     WPS442
     # Allow multiple await expressions in coroutines (useful for async code)
@@ -49,6 +49,8 @@ ignore =
     WPS226
     # Allow module level mutable constants in tests
     WPS407
+    # Allow module short names in tests
+    WPS111
 
 # Per-file ignores for specific parts of the codebase
 per-file-ignores =

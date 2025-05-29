@@ -18,10 +18,10 @@ dev = [
     "mypy>=1.15.0",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
-    "pytest-cov>=5.0.0", 
+    "pytest-cov>=5.0.0",
     "pytest-mock>=3.14.0",
-    "pytest-xdist>=3.5.0",      # Parallel test execution
-    "pytest-timeout>=2.2.0",    # Test timeouts
+    "pytest-xdist>=3.5.0",             # Parallel test execution
+    "pytest-timeout>=2.2.0",           # Test timeouts
     "ruff>=0.11.2",
     "wemake-python-styleguide>=1.1.0",
 ]
@@ -46,12 +46,12 @@ asyncio_default_fixture_loop_scope = "function"
 # Improve test execution and reporting
 # (Note: xvs option was renamed for clarity)
 addopts = [
-    "--strict-markers",         # Ensure all markers are registered
-    "--strict-config",          # Ensure no unknown config options
-    "--no-header",              # Reduce clutter in output
-    "--tb=native",              # Better traceback format
-    "--showlocals",             # Show local variables in tracebacks
-    "--doctest-modules",        # Test doctests in modules
+    "--strict-markers",  # Ensure all markers are registered
+    "--strict-config",   # Ensure no unknown config options
+    "--no-header",       # Reduce clutter in output
+    "--tb=native",       # Better traceback format
+    "--showlocals",      # Show local variables in tracebacks
+    "--doctest-modules", # Test doctests in modules
 ]
 
 # Define markers for better organization
@@ -86,12 +86,8 @@ cache_dir = ".pytest_cache"
 
 [tool.coverage.run]
 source = ["bot"]
-omit = [
-    "*/__init__.py",
-    "*/tests/*",
-    "scripts/*",
-]
-branch = true  # Enable branch coverage
+omit = ["*/__init__.py", "*/tests/*", "scripts/*"]
+branch = true                                      # Enable branch coverage
 
 [tool.coverage.report]
 exclude_lines = [
@@ -105,7 +101,7 @@ exclude_lines = [
 ]
 precision = 2
 show_missing = true
-fail_under = 85  # Enforce minimum coverage percentage
+fail_under = 85 # Enforce minimum coverage percentage
 
 [tool.mypy]
 python_version = "3.13"
@@ -140,7 +136,13 @@ disable_error_code = ["call-arg"]
 module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
-disable_error_code = ["arg-type", "index", "operator", "method-assign", "union-attr"]
+disable_error_code = [
+    "arg-type",
+    "index",
+    "operator",
+    "method-assign",
+    "union-attr",
+]
 
 # Ignore mypy errors in scripts and main entry point files
 [[tool.mypy.overrides]]
@@ -158,20 +160,20 @@ disallow_incomplete_defs = false
 preview = true
 fix = true
 target-version = "py313"
-line-length = 79
+line-length = 120
 
 [tool.ruff.format]
 quote-style = "double"
 docstring-code-format = false
 
 [tool.ruff.lint]
-# Basic Ruff configuration 
+# Basic Ruff configuration
 select = [
-  "E",    # pycodestyle
-  "F",    # pyflakes
-  "B",    # flake8-bugbear
-  "W",    # pycodestyle warnings
-  "I",    # isort
+    "E", # pycodestyle
+    "F", # pyflakes
+    "B", # flake8-bugbear
+    "W", # pycodestyle warnings
+    "I", # isort
 ]
 external = ["WPS"]
 
@@ -182,7 +184,7 @@ exclude = [
     ".venv",
     "__pycache__",
     ".pytest_cache",
-    ".mypy_cache"
+    ".mypy_cache",
 ]
 
 [tool.ruff.lint.isort]
