@@ -10,6 +10,25 @@ from loguru import logger
 from bot.config import ADMIN_USER_ID, DATA_DIR
 
 
+def _log_admin_message(level: str, message: str, kwargs: dict) -> None:
+    """Log admin notification message."""
+    if level == "ERROR":
+        logger.error(f"Admin notification: {message}", **kwargs)
+    else:
+        logger.log(level, f"Admin notification: {message}", **kwargs)
+
+
+def _format_admin_message(level: str, message: str, kwargs: dict) -> str:
+    """Format message for Telegram admin notification."""
+    parts = [f"⚠️ {level} ⚠️", "", message]
+    
+    if kwargs:
+        parts.extend(["", "Additional data:"])
+        parts.extend(f"- {key}: {data_value}" for key, data_value in kwargs.items())
+    
+    return "\n".join(parts)
+
+
 def setup_logger(log_file: Optional[Union[str, Path]] = None) -> None:
     """
     Configure Loguru logger.
@@ -64,21 +83,18 @@ async def notify_admin(bot: Bot, message: str, level: str = "ERROR", **kwargs: A
         **kwargs: Additional data to include in the log
     """
     try:
-        if level == "ERROR":
-            logger.error(f"Admin notification: {message}", **kwargs)
-        else:
-            logger.log(level, f"Admin notification: {message}", **kwargs)
+        _log_admin_message(level, message, kwargs)
+    except Exception as e:
+        logger.error(f"Failed to log admin message: {e}")
+        return
 
-        # Format message for Telegram
-        formatted_message = f"⚠️ {level} ⚠️\n\n{message}"
+    try:
+        formatted_message = _format_admin_message(level, message, kwargs)
+    except Exception as e:
+        logger.error(f"Failed to format admin message: {e}")
+        return
 
-        # Add additional data if provided
-        if kwargs:
-            formatted_message += "\n\nAdditional data:\n"
-            for key, value in kwargs.items():
-                formatted_message += f"- {key}: {value}\n"
-
-        # Send message to admin
+    try:
         await bot.send_message(ADMIN_USER_ID, formatted_message)
     except Exception as e:
         logger.error(f"Failed to notify admin: {e}")

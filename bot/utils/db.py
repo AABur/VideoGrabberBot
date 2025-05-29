@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import aiosqlite
 from loguru import logger
@@ -95,7 +95,7 @@ async def add_user(
                     (username, user_id),
                 )
                 logger.info(f"Updated existing user: {user_id} ({username})")
-                result = False
+                user_added = False
             else:
                 # Add new user
                 await db.execute(
@@ -103,10 +103,10 @@ async def add_user(
                     (user_id, username, added_by),
                 )
                 logger.info(f"Added new user: {user_id} ({username})")
-                result = True
+                user_added = True
 
             await db.commit()
-            return result
+            return user_added
     except Exception as e:
         logger.error(f"Error adding user {user_id}: {e}")
         return False
@@ -147,6 +147,11 @@ async def create_invite(created_by: int) -> Optional[str]:
     """
     try:
         invite_id = str(uuid.uuid4())
+    except Exception as e:
+        logger.error(f"Error generating invite ID: {e}")
+        return None
+
+    try:
         async with aiosqlite.connect(DB_PATH) as db:
             await db.execute(
                 "INSERT INTO invites (id, created_by) VALUES (?, ?)",
@@ -202,7 +207,7 @@ async def use_invite(invite_id: str, user_id: int) -> bool:
         return False
 
 
-async def get_all_users() -> List[Dict[str, Union[int, str, bool]]]:
+async def get_all_users() -> List[Dict[str, Any]]:
     """
     Get all users from the database.
 
