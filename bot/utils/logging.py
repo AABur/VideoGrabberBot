@@ -21,11 +21,11 @@ def _log_admin_message(level: str, message: str, kwargs: dict) -> None:
 def _format_admin_message(level: str, message: str, kwargs: dict) -> str:
     """Format message for Telegram admin notification."""
     parts = [f"⚠️ {level} ⚠️", "", message]
-    
+
     if kwargs:
         parts.extend(["", "Additional data:"])
         parts.extend(f"- {key}: {data_value}" for key, data_value in kwargs.items())
-    
+
     return "\n".join(parts)
 
 

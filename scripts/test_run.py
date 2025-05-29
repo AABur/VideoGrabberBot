@@ -28,15 +28,16 @@ from bot.utils.logging import setup_logger  # noqa: E402
 
 async def test_runner():
     """Run the bot in test mode with minimal setup."""
-    print("Starting VideoGrabberBot in test mode...")
-    print("Press Ctrl+C to stop the bot.")
-
-    # Setup logging
+    # Setup logging first
     setup_logger()
+
+    from loguru import logger
+
+    logger.info("Starting VideoGrabberBot in test mode...")
+    logger.info("Press Ctrl+C to stop the bot.")
 
     # Initialize database
     await init_db()
-
     # Run the main bot function
     await main()
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         # Run the async loop
         asyncio.run(test_runner())
     except KeyboardInterrupt:
-        print("\nBot stopped by user.")
+        logging.info("\nBot stopped by user.")
     except Exception as e:
-        print(f"Error running bot: {e}")
+        logging.error(f"Error running bot: {e}")
         sys.exit(1)

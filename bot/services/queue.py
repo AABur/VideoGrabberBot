@@ -44,50 +44,16 @@ class DownloadQueue:
         """
         await self.queue.put(task)
         queue_size = self.queue.qsize()
-        logger.info(f"Task added to queue: {task.url}, format: {task.format_string}, position: {queue_size}")
+
+        url = task.url
+        format_str = task.format_string
+        logger.info(f"Task added to queue: {url}, format: {format_str}, position: {queue_size}")
 
         # Start worker if not already running
         if self._worker_task is None or self._worker_task.done():
             self._worker_task = asyncio.create_task(self._process_queue())
 
         return queue_size
-
-    async def _process_queue(self) -> None:
-        """Process tasks in the queue sequentially."""
-        while not self.queue.empty():
-            self.is_processing = True
-            self.current_task = await self.queue.get()
-
-            try:
-                if self.current_task:  # Type guard to help mypy
-                    logger.info(f"Processing task: {self.current_task.url}, format: {self.current_task.format_string}")
-
-                    # Import here to avoid circular imports
-                    from bot.services.downloader import download_youtube_video
-
-                    additional_data = self.current_task.additional_data or {}
-                    bot = additional_data.get("bot")
-                    if not bot:
-                        logger.error("Bot instance not provided in task data")
-                        continue
-
-                    # Download the video
-                    await download_youtube_video(
-                        bot,
-                        self.current_task.chat_id,
-                        self.current_task.url,
-                        self.current_task.format_string,
-                    )
-
-                    logger.info(f"Task completed: {self.current_task.url}")
-
-            except Exception as e:
-                logger.error(f"Error processing task: {str(e)}", exc_info=True)
-            finally:
-                self.queue.task_done()
-                self.current_task = None
-
-        self.is_processing = False
 
     def get_queue_position(self, chat_id: int, url: str) -> Optional[int]:
         """
@@ -160,6 +126,59 @@ class DownloadQueue:
         self.queue = new_queue
         logger.info(f"Removed {removed_count} tasks for chat_id: {chat_id}")
         return removed_count
+
+    async def _process_queue(self) -> None:
+        """Process tasks in the queue sequentially."""
+        while not self.queue.empty():
+            self.is_processing = True
+            self.current_task = await self.queue.get()
+
+            try:
+                await self._process_single_task()
+            except Exception as e:
+                task_url = self.current_task.url if self.current_task else "unknown"
+                logger.error(f"Error processing task {task_url}: {str(e)}", exc_info=True)
+            finally:
+                self.queue.task_done()
+                self.current_task = None
+
+        self.is_processing = False
+
+    async def _process_single_task(self) -> None:
+        """Process a single task from the queue."""
+        if not self.current_task:
+            return
+
+        task_url = self.current_task.url
+        format_str = self.current_task.format_string
+        logger.info(f"Processing task: {task_url}, format: {format_str}")
+
+        bot = self._get_bot_instance()
+        if not bot:
+            return
+
+        # Import here to avoid circular imports
+        from bot.services.downloader import download_youtube_video
+
+        await download_youtube_video(
+            bot,
+            self.current_task.chat_id,
+            self.current_task.url,
+            self.current_task.format_string,
+        )
+
+        logger.info(f"Task completed: {task_url}")
+
+    def _get_bot_instance(self) -> Optional[Any]:
+        """Get bot instance from task data."""
+        if not self.current_task:
+            return None
+
+        additional_data = self.current_task.additional_data or {}
+        bot = additional_data.get("bot")
+        if not bot:
+            logger.error("Bot instance not provided in task data")
+        return bot
 
 
 # Global queue instance

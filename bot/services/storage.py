@@ -2,10 +2,10 @@
 """Temporary storage for handling URL data."""
 
 import uuid
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 # URL_STORAGE format: {url_id: (url, format_id)}
-URL_STORAGE: Dict[str, Tuple[str, Optional[str]]] = {}
+URL_STORAGE: Dict[str, Any] = {}
 
 
 def store_url(url: str) -> str:
@@ -33,8 +33,8 @@ def get_url(url_id: str) -> Optional[str]:
     Returns:
         URL or None if not found
     """
-    data = URL_STORAGE.get(url_id)
-    return data[0] if data else None
+    url_data = URL_STORAGE.get(url_id)
+    return url_data[0] if url_data else None
 
 
 def store_format(url_id: str, format_id: str) -> bool:
@@ -48,11 +48,13 @@ def store_format(url_id: str, format_id: str) -> bool:
     Returns:
         True if success, False if URL not found
     """
-    if url_id in URL_STORAGE:
-        url = URL_STORAGE[url_id][0]
-        URL_STORAGE[url_id] = (url, format_id)
-        return True
-    return False
+    existing_data = URL_STORAGE.get(url_id)
+    if existing_data is None:
+        return False
+
+    url = existing_data[0]
+    URL_STORAGE[url_id] = (url, format_id)
+    return True
 
 
 def get_format(url_id: str) -> Optional[str]:
@@ -65,8 +67,8 @@ def get_format(url_id: str) -> Optional[str]:
     Returns:
         Format ID or None if not found
     """
-    data = URL_STORAGE.get(url_id)
-    return data[1] if data else None
+    format_data = URL_STORAGE.get(url_id)
+    return format_data[1] if format_data else None
 
 
 def clear_url(url_id: str) -> None:
@@ -76,5 +78,4 @@ def clear_url(url_id: str) -> None:
     Args:
         url_id: URL ID
     """
-    if url_id in URL_STORAGE:
-        del URL_STORAGE[url_id]
+    URL_STORAGE.pop(url_id, None)

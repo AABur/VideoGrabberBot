@@ -5,11 +5,12 @@ import os
 import sys
 
 # Add project root to the path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+project_root = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, os.path.abspath(project_root))
 
-from loguru import logger
+from loguru import logger  # noqa: E402
 
-from bot.main import main
+from bot.main import main  # noqa: E402
 
 if __name__ == "__main__":
     logger.info("Starting bot in test mode...")

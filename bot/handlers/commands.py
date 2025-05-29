@@ -145,9 +145,9 @@ async def command_adduser(message: Message) -> None:
     # Check if target is a numeric user ID
     if target.isdigit():
         target_id = int(target)
-        result = await add_user(target_id, added_by=user_id)
+        user_added = await add_user(target_id, added_by=user_id)
 
-        if result:
+        if user_added:
             await message.answer(
                 "✅ <b>User Added</b>\n\n"
                 f"User with ID <code>{target_id}</code> has been added to the authorized users list."
@@ -199,8 +199,8 @@ async def command_cancel(message: Message) -> None:
     # Clear user tasks
     removed = download_queue.clear_user_tasks(message.chat.id)
 
+    download_word = "download" if removed == 1 else "downloads"
     await message.answer(
-        f"✅ <b>Downloads Cancelled</b>\n\n"
-        f"Successfully cancelled {removed} download{'s' if removed != 1 else ''} from the queue."
+        f"✅ <b>Downloads Cancelled</b>\n\nSuccessfully cancelled {removed} {download_word} from the queue."
     )
     logger.info(f"User {user_id} cancelled {removed} downloads")
