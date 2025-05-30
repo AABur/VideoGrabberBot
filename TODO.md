@@ -64,13 +64,6 @@
 - ✅ Code maintainability and readability significantly improved
 - ✅ Consistent coding standards enforced throughout project
 
-Подэтап 1.7. Future optimization opportunities (storage.py)
-- [ ] Implement time-based expiration for temporary data
-- [ ] Improve error handling and edge cases
-- [ ] Add automatic cleanup mechanism
-- [ ] Ensure backward compatibility with existing code
-- [ ] Verify with tests
-
 ## Этап 2. Docker Implementation and Deployment
 
 Подэтап 2.1. Basic Docker setup
@@ -99,70 +92,243 @@
 - [x] Current Makefile workflow sufficient for development and personal use
 - [ ] Future consideration for Synology NAS deployment if needed
 
-Подэтап 2.5. Production optimization
+## Этап 3. Synology NAS Deployment
+
+Подэтап 3.1. Synology NAS preparation
+- [ ] Research Synology Docker package capabilities and limitations
+- [ ] Plan data storage and backup strategy on NAS
+- [ ] Configure network settings and port forwarding if needed
+- [ ] Set up proper user permissions and security
+
+Подэтап 3.2. NAS deployment and configuration  
+- [ ] Deploy VideoGrabberBot container on Synology NAS
+- [ ] Configure persistent storage and volume mapping
+- [ ] Set up environment variables and bot token securely
+- [ ] Test all functionality in NAS environment
+
+Подэтап 3.3. Family access and management
+- [ ] Configure multi-user access for family members
+- [ ] Set up monitoring and logging on NAS
+- [ ] Create simple management procedures for family
+- [ ] Document troubleshooting for common issues
+
+## Этап 4. Dependency Management
+
+Подэтап 4.1. Resolve circular imports
+- [ ] Audit all import statements in the project
+- [ ] Identify modules with circular dependencies
+- [ ] Refactor to use dependency injection where appropriate
+- [ ] Consider adding a service locator pattern
+
+Подэтап 4.2. Improve module initialization
+- [ ] Evaluate current initialization sequence
+- [ ] Restructure initialization to avoid side effects
+- [ ] Add proper error handling during initialization
+
+## Этап 5. Enhanced Error Handling
+
+Подэтап 5.1. Add comprehensive error handling
+- [ ] Create custom exception classes
+- [ ] Implement contextual error messages
+- [ ] Add retry mechanism for network operations
+- [ ] Improve user-facing error messages
+
+Подэтап 5.2. Enhance logging
+- [ ] Review current logging levels and messages
+- [ ] Add structured logging for better analysis
+- [ ] Implement log rotation and management
+
+## Этап 6. Performance Optimizations
+
+Подэтап 6.1. Optimize download queue
+- [ ] Implement more efficient task scheduling
+- [ ] Add priority queue support
+- [ ] Implement concurrency limits
+- [ ] Add download progress tracking
+
+Подэтап 6.2. Optimize database operations
+- [ ] Review and optimize database queries
+- [ ] Implement connection pooling
+- [ ] Add caching for frequently used data
+
+## Этап 7. Documentation
+
+Подэтап 7.1. Update project documentation
+- [ ] Review and update README.md
+- [ ] Add detailed API documentation
+- [ ] Create user guide for bot commands
+- [ ] Document architecture and design decisions
+
+## Этап 8. Future Optimization Opportunities (Post-Production)
+
+Подэтап 8.1. Docker Production optimization (deferred until after NAS deployment)
 - [ ] Create multi-stage Dockerfile for smaller image size
 - [ ] Optimize layer caching for faster builds
 - [ ] Add security best practices (non-root user, minimal base image)
 - [ ] Configure proper signal handling for graceful shutdown
 - [ ] Add container labels and metadata
 
-Подэтап 2.6. Deployment automation
+**Обоснование для Docker Production optimization:**
+
+### 🏭 Подэтап 2.5: Production optimization
+
+**Что это:** Оптимизация Docker образа для production использования.
+
+**Задачи:**
+- **Multi-stage Dockerfile** - уменьшение размера финального образа
+- **Layer caching** - ускорение повторных сборок
+- **Security** - уже частично сделано (non-root user, slim image)
+- **Signal handling** - graceful shutdown при остановке контейнера
+- **Container metadata** - labels для управления
+
+**Плюсы:**
+- Меньший размер образа (быстрая передача)
+- Лучшая безопасность
+- Оптимизированные сборки
+
+**Минусы для вас:**
+- Ваш образ уже компактный (~200MB)
+- Сложность vs выгода минимальна для домашнего NAS
+- Multi-stage builds добавляют complexity
+
+Подэтап 8.2. Deployment automation (deferred until after NAS deployment)
 - [ ] Create deployment scripts (deploy.sh, stop.sh, backup.sh)
 - [ ] Add Makefile with common Docker operations
 - [ ] Update README.md with Docker installation and usage instructions
 - [ ] Create backup and restore procedures for data
 - [ ] Add monitoring and alerting configuration
 
-Подэтап 2.7. Testing and validation
+**Обоснование для Deployment automation:**
+
+### 🚀 Подэтап 2.6: Deployment automation
+
+**Что это:** Автоматизация развертывания и управления.
+
+**Задачи:**
+- **Deployment scripts** - `deploy.sh`, `stop.sh`, `backup.sh`
+- **Makefile расширение** - уже сделано!
+- **README обновление** - инструкции по Docker
+- **Backup процедуры** - для базы данных
+- **Monitoring setup** - health checks, alerts
+
+**Плюсы:**
+- Упрощение деплоя на Synology NAS
+- Автоматические backup
+- Стандартизированные процедуры
+
+**Реальная польза для вас:**
+- ✅ **backup.sh** - полезно для автобэкапа базы
+- ✅ **README обновление** - нужно для документации
+- ❓ **Monitoring** - Synology уже предоставляет
+
+Подэтап 8.3. Testing and validation (deferred until after NAS deployment)
 - [ ] Update existing tests to work in containerized environment
 - [ ] Add integration tests for Docker deployment
 - [ ] Test all bot functionality in container (downloads, commands, etc.)
 - [ ] Verify database operations and file persistence
 - [ ] Performance testing and resource usage optimization
 
-## Этап 3. Handle Dependency Management
+**Обоснование для Testing and validation:**
 
-Подэтап 3.1. Resolve circular imports
-- [ ] Audit all import statements in the project
-- [ ] Identify modules with circular dependencies
-- [ ] Refactor to use dependency injection where appropriate
-- [ ] Consider adding a service locator pattern
+### 🧪 Подэтап 2.7: Testing and validation
 
-Подэтап 3.2. Improve module initialization
-- [ ] Evaluate current initialization sequence
-- [ ] Restructure initialization to avoid side effects
-- [ ] Add proper error handling during initialization
+**Что это:** Тестирование Docker среды.
 
-## Этап 3. Enhance Error Handling
+**Задачи:**
+- **Container integration tests** - тесты в Docker среде
+- **Functionality testing** - все команды работают в контейнере
+- **Data persistence tests** - проверка volumes
+- **Performance testing** - ресурсы, скорость
 
-Подэтап 3.1. Add comprehensive error handling
-- [ ] Create custom exception classes
-- [ ] Implement contextual error messages
-- [ ] Add retry mechanism for network operations
-- [ ] Improve user-facing error messages
+**Плюсы:**
+- Уверенность в работе Docker среды
+- Автоматическая проверка при изменениях
+- Catch проблем до деплоя
 
-Подэтап 3.2. Enhance logging
-- [ ] Review current logging levels and messages
-- [ ] Add structured logging for better analysis
-- [ ] Implement log rotation and management
+**Для вашего случая:**
+- ✅ **Functionality testing** - уже сделали вручную
+- ❓ **Integration tests** - возможно избыточно
+- ✅ **Performance** - важно для NAS ресурсов
 
-## Этап 4. Performance Optimizations
+**Рекомендация для Synology NAS:**
+- **Действительно нужные подэтапы:** backup scripts и README
+- **Можно пропустить:** multi-stage builds, integration tests
+- **После NAS деплоя:** оценить реальные потребности
 
-Подэтап 4.1. Optimize download queue
-- [ ] Implement more efficient task scheduling
-- [ ] Add priority queue support
-- [ ] Implement concurrency limits
-- [ ] Add download progress tracking
+Подэтап 8.4. Storage.py optimization (deferred)
+- [ ] Implement time-based expiration for temporary data
+- [ ] Improve error handling and edge cases
+- [ ] Add automatic cleanup mechanism
+- [ ] Ensure backward compatibility with existing code
+- [ ] Verify with tests
 
-Подэтап 4.2. Optimize database operations
-- [ ] Review and optimize database queries
-- [ ] Implement connection pooling
-- [ ] Add caching for frequently used data
+**Обоснование для storage.py оптимизации:**
 
-## Этап 5. Documentation
+### 🔍 Текущая реализация:
+**storage.py** - это временное хранилище для связи URL с выбранными форматами в процессе диалога с пользователем.
 
-Подэтап 5.1. Update project documentation
-- [ ] Review and update README.md
-- [ ] Add detailed API documentation
-- [ ] Create user guide for bot commands
-- [ ] Document architecture and design decisions
+**Как работает:**
+1. Пользователь отправляет YouTube URL  
+2. Бот создает уникальный ID и сохраняет URL в `URL_STORAGE` словаре
+3. Показывает кнопки выбора формата (HD, FHD, etc.)
+4. Когда пользователь выбирает формат, сохраняется `format_id` 
+5. Запускается загрузка с сохраненными данными
+
+### ❗ Проблемы текущей реализации:
+
+1. **Memory leak** - данные накапливаются и никогда не удаляются автоматически
+2. **Нет expiration** - старые URL остаются в памяти навсегда
+3. **Thread safety** - словарь не thread-safe для concurrent операций
+4. **Restart persistence** - при перезапуске бота все данные теряются
+
+### 🎯 Предлагаемые улучшения:
+
+## ✅ Плюсы оптимизации:
+
+**1. Time-based expiration:**
+- Автоматическое удаление старых URL (например, через 30 минут)
+- Предотвращение утечек памяти
+- Очистка "заброшенных" диалогов
+
+**2. Automatic cleanup mechanism:**
+- Периодическая очистка по schedule/timer
+- Cleanup при достижении лимита записей
+- Graceful handling старых данных
+
+**3. Better error handling:**
+- Валидация данных перед сохранением
+- Обработка edge cases (дубликаты, невалидные ID)
+- Более информативные ошибки
+
+**4. Thread safety:**
+- Использование `threading.Lock` или `asyncio.Lock`
+- Безопасные concurrent операции
+
+## ❌ Минусы/сложности:
+
+**1. Increased complexity:**
+- Больше кода для поддержки
+- Дополнительные зависимости (timers, locks)
+- Сложнее отладка
+
+**2. Potential race conditions:**
+- Cleanup может удалить данные во время использования
+- Нужна аккуратная синхронизация
+
+**3. Resource overhead:**
+- Background tasks для cleanup
+- Дополнительные проверки времени
+
+## 🤔 Реальная необходимость:
+
+**Для семейного бота:**
+- Обычно 1-5 пользователей одновременно
+- Редкое использование (несколько раз в день)
+- Перезапуски бота редки
+
+**Вопросы:**
+1. Видели ли вы проблемы с памятью при использовании?
+2. Часто ли пользователи "бросают" диалог выбора формата?
+3. Планируете ли одновременное использование несколькими пользователями?
+
+**Мое мнение:** Для семейного использования это может быть over-engineering. Но если хотите изучить best practices - хорошая задача для обучения.
