@@ -58,8 +58,8 @@ check: format lint mypy ## Run all checks (format, lint, type check)
 docker-build: ## Build Docker image
 	docker build -t videograbberbot .
 
-docker-run: ## Run bot in Docker container (detached)
-	docker run -d --name videograbberbot videograbberbot
+docker-run: ## Run bot in Docker container (detached) with volume and env
+	docker run -d --name videograbberbot --env-file .env -v $(shell pwd)/data:/app/data videograbberbot
 
 docker-stop: ## Stop and remove Docker container
 	docker stop videograbberbot || true
