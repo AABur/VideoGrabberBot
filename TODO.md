@@ -95,11 +95,9 @@
 - [x] Test data persistence across container restarts
 
 Подэтап 2.4. Docker Compose configuration
-- [ ] Create docker-compose.yml for easy deployment
-- [ ] Configure service dependencies and networking
-- [ ] Add health checks for container monitoring
-- [ ] Set up restart policies and resource limits
-- [ ] Configure logging drivers and log rotation
+- [x] Evaluated and decided to skip - not needed for single container setup
+- [x] Current Makefile workflow sufficient for development and personal use
+- [ ] Future consideration for Synology NAS deployment if needed
 
 Подэтап 2.5. Production optimization
 - [ ] Create multi-stage Dockerfile for smaller image size
