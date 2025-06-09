@@ -82,6 +82,7 @@ This section contains rules and guidelines for working with Claude on this proje
 
 1. **Language**:
    - All project artifacts (code, comments, documentation, commit messages) must be in English
+   - Use Russian when communicating with user
 
 2. **Message Tags**:
    - Use special tags in messages for Claude to recognize specific instructions:
