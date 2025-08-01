@@ -1,4 +1,4 @@
-.PHONY: help run tests test check format lint lint-all mypy docker-build docker-run docker-stop docker-logs docker-status docker-clean docker-restart
+.PHONY: help run tests test check format lint lint-all mypy deps-check clean docker-build docker-run docker-stop docker-logs docker-status docker-clean docker-restart
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -50,6 +50,27 @@ lint-all: format lint lint-wps ## Run all linting (format, ruff lint, wemake-pyt
 # Type check
 mypy: ## Run type checking with mypy
 	$(MYPY) .
+
+# Check dependencies installation
+deps-check: ## Check if all dependencies are properly installed
+	@echo "Checking uv installation..."
+	@which uv > /dev/null || (echo "Error: uv is not installed" && exit 1)
+	@echo "Checking Python environment..."
+	@$(PY) --version
+	@echo "Checking project dependencies..."
+	@uv pip check || echo "Warning: Some dependencies may have issues"
+	@echo "Dependencies check completed"
+
+# Clean temporary files
+clean: ## Clean temporary files and cache
+	@echo "Cleaning temporary files..."
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	@find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+	@rm -rf .pytest_cache/ .coverage htmlcov/ .mypy_cache/ .ruff_cache/ 2>/dev/null || true
+	@rm -rf data/temp/* 2>/dev/null || true
+	@echo "Cleanup completed"
 
 # Run all checks (format, lint, type check)
 check: format lint mypy ## Run all checks (format, lint, type check)

@@ -3,7 +3,7 @@ name = "VideoGrabberBot"
 version = "0.1.0"
 description = "Telegram bot for downloading videos and audio from YouTube"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
     "aiogram>=3.19.0",
@@ -104,7 +104,7 @@ show_missing = true
 fail_under = 85 # Enforce minimum coverage percentage
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_any_generics = true
@@ -159,7 +159,7 @@ disallow_incomplete_defs = false
 # Ruff config
 preview = true
 fix = true
-target-version = "py313"
+target-version = "py311"
 line-length = 120
 
 [tool.ruff.format]

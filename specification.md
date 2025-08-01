@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS settings (
 
 ### Runtime Dependencies
 
-- Python 3.13+
+- Python 3.11+
 - aiogram 3.19.0+
 - yt-dlp 2025.3.27+
 - aiosqlite 0.21.0+
@@ -211,6 +211,7 @@ CREATE TABLE IF NOT EXISTS settings (
 - pytest-cov 5.0.0+
 - pytest-mock 3.14.0+
 - ruff 0.11.2+
+- wemake-python-styleguide 1.1.0+
 
 ### Configuration
 
@@ -231,12 +232,13 @@ data/                  # Data directory (created automatically)
 ### Direct Deployment
 
 1. Clone the repository
-2. Install Python 3.13+
+2. Install Python 3.11+
 3. Install uv package manager
-4. Create and activate virtual environment
+4. Set up environment with `uv venv` and activate
 5. Install dependencies with `uv pip install -e .`
-6. Create .env file with required configuration
-7. Run with `uv run python run.py`
+6. For development: `uv pip install -e ".[dev]"`
+7. Create .env file with required configuration
+8. Run with `uv run python run.py`
 
 ### Hosting Requirements
 

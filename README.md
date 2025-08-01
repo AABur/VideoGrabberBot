@@ -3,7 +3,7 @@
 A Telegram bot for downloading videos and audio from YouTube with format selection options.
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.13%2B-blue" alt="Python 3.13+">
+  <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/framework-aiogram-blue" alt="Aiogram">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License MIT">
 </p>
@@ -36,7 +36,7 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
 
 ### Requirements
 
-- Python 3.13+
+- Python 3.11+
 - Telegram Bot API token (from [BotFather](https://t.me/botfather))
 - [uv](https://github.com/astral-sh/uv) - Python package installer and environment manager
 
@@ -124,6 +124,9 @@ make tests
 
 # Run the bot
 make run
+
+# Run all checks (format, lint, type check)
+make check
 ```
 
 ## Project Structure

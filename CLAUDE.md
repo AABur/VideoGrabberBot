@@ -10,12 +10,13 @@
 ## Commands
 - Run all unit tests: `uv run pytest`
 - Run single unit test: `uv run pytest tests/test_file.py`
-- Run tests with coverage: `uv run pytest --cov=src --cov-report=term-missing`
+- Run tests with coverage: `uv run pytest --cov=bot --cov-report=term-missing`
 - Type check: `uv run mypy .`
 - Lint code with Ruff: `uv run ruff check .`
 - Format code: `uv run ruff format .`
 - Lint code with wemake-python-styleguide: `uv run flake8 . --select=WPS`
 - Complete linting: `uv run ruff check && uv run ruff format && uv run flake8 . --select=WPS`
+- Run all checks (format, lint, type check): `make check`
 
 ## Development Workflow
 - **Creating Tests**: When creating tests for existing code, never modify the code itself
@@ -24,7 +25,7 @@
 - **Task-Driven Development**: For complex tasks, first create a TODO_*.md file with a step-by-step plan, then follow this plan working on each step sequentially
 - Run tests and linter after making significant changes to verify functionality
 - After important functionality is added, update README.md accordingly
-- Testing strategy and guidelines are detailed in TESTING.md
+- Maintain minimum test coverage of 85%
 
 ## Code Style
 - **Imports**: Standard lib → Third-party → Local (alphabetical within groups)
