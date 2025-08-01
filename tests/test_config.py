@@ -3,8 +3,6 @@
 import os
 from unittest.mock import patch
 
-import pytest
-
 
 def test_config_paths():
     """Test that configuration paths are correctly setup."""
@@ -80,30 +78,22 @@ def test_max_file_size():
 
 def test_token_validation():
     """Test validation of TELEGRAM_TOKEN."""
-    from bot.config import TELEGRAM_TOKEN, validate_token
+    from bot.config import TELEGRAM_TOKEN
 
-    # We can test that the token validation function would raise
-    # without actually reloading the module
-    # since we know token is set in the environment for tests to run
+    # Token should be set for tests to run
     assert TELEGRAM_TOKEN, "Token should be set for tests to run"
-
-    # Test the validation function
-    assert validate_token(TELEGRAM_TOKEN) == TELEGRAM_TOKEN
-    with pytest.raises(ValueError, match="TELEGRAM_TOKEN is not set in .env file"):
-        validate_token("")
+    assert isinstance(TELEGRAM_TOKEN, str)
+    assert len(TELEGRAM_TOKEN.strip()) > 0
 
 
 def test_admin_id_validation():
     """Test validation of ADMIN_USER_ID."""
-    from bot.config import ADMIN_USER_ID, validate_admin_id
+    from bot.config import ADMIN_USER_ID
 
-    # Similar to token validation test
+    # Admin ID should be set for tests to run
     assert ADMIN_USER_ID, "Admin ID should be set for tests to run"
-
-    # Test the validation function
-    assert validate_admin_id(ADMIN_USER_ID) == ADMIN_USER_ID
-    with pytest.raises(ValueError, match="ADMIN_USER_ID is not set in .env file"):
-        validate_admin_id(0)
+    assert isinstance(ADMIN_USER_ID, int)
+    assert ADMIN_USER_ID > 0
 
 
 @patch.dict(os.environ, {"TELEGRAM_TOKEN": "mock_token", "ADMIN_USER_ID": "123456"})

@@ -4,7 +4,7 @@
 
 class VideoGrabberBotError(Exception):
     """Base exception for VideoGrabberBot."""
-    
+
     def __init__(self, message: str, context: dict = None) -> None:
         """Initialize exception with message and optional context."""
         super().__init__(message)

@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from bot.config import config
 from bot.utils.exceptions import QueueFullError
 
 # Type hint for Task
@@ -26,9 +27,6 @@ class DownloadTask:
 
 class DownloadQueue:
     """Manages a queue of download tasks."""
-    
-    MAX_QUEUE_SIZE = 50  # Maximum number of tasks in queue
-    MAX_USER_TASKS = 5   # Maximum tasks per user
 
     def __init__(self) -> None:
         """Initialize download queue."""
@@ -48,26 +46,26 @@ class DownloadQueue:
 
         Returns:
             Current queue size after adding the task
-            
+
         Raises:
             QueueFullError: If queue is full or user has too many tasks
         """
         async with self._lock:
             # Check global queue limit
-            if len(self._queue_items) >= self.MAX_QUEUE_SIZE:
+            if len(self._queue_items) >= config.MAX_QUEUE_SIZE:
                 raise QueueFullError(
-                    f"Queue is full (maximum {self.MAX_QUEUE_SIZE} tasks)",
-                    context={"queue_size": len(self._queue_items), "limit": self.MAX_QUEUE_SIZE}
+                    f"Queue is full (maximum {config.MAX_QUEUE_SIZE} tasks)",
+                    context={"queue_size": len(self._queue_items), "limit": config.MAX_QUEUE_SIZE},
                 )
-            
+
             # Check per-user limit
             user_task_count = sum(1 for t in self._queue_items if t.chat_id == task.chat_id)
-            if user_task_count >= self.MAX_USER_TASKS:
+            if user_task_count >= config.MAX_USER_TASKS:
                 raise QueueFullError(
-                    f"Too many tasks for user (maximum {self.MAX_USER_TASKS} per user)",
-                    context={"user_id": task.chat_id, "user_tasks": user_task_count, "limit": self.MAX_USER_TASKS}
+                    f"Too many tasks for user (maximum {config.MAX_USER_TASKS} per user)",
+                    context={"user_id": task.chat_id, "user_tasks": user_task_count, "limit": config.MAX_USER_TASKS},
                 )
-            
+
             await self.queue.put(task)
             self._queue_items.append(task)
             queue_size = len(self._queue_items)
@@ -76,7 +74,7 @@ class DownloadQueue:
         format_str = task.format_string
         logger.info(
             f"Task added to queue: {url}, format: {format_str}, position: {queue_size}",
-            extra={"user_id": task.chat_id, "queue_size": queue_size}
+            extra={"user_id": task.chat_id, "queue_size": queue_size},
         )
 
         # Start worker if not already running

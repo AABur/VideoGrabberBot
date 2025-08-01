@@ -9,14 +9,13 @@ from aiogram.types import (
 )
 from loguru import logger
 
-from bot.services.downloader import (
-    is_youtube_url,
-)
+from bot.services.downloader import is_youtube_url
 from bot.services.formats import get_format_by_id, get_format_options
 from bot.services.queue import DownloadTask, download_queue
 from bot.services.storage import get_url, store_format, store_url
 from bot.telegram_api.client import get_bot
 from bot.utils.db import is_user_authorized
+from bot.utils.exceptions import QueueFullError
 
 # Create router for download handlers
 download_router = Router()
@@ -191,8 +190,7 @@ async def _process_download_request(
     callback: CallbackQuery, format_data: dict, format_id: str, url: str, url_id: str
 ) -> None:
     """Process the download request and add to queue."""
-    from bot.utils.exceptions import QueueFullError
-    
+
     # Store format selection and get bot
     store_format(url_id, format_id)
     bot = get_bot()
@@ -229,11 +227,11 @@ async def _process_download_request(
             )
 
         # Note: We don't clear the URL here since it will be done by the queue processor
-        
+
     except QueueFullError as e:
         # Handle queue full error with user-friendly message
-        context = getattr(e, 'context', {})
-        if 'user_tasks' in context:
+        context = getattr(e, "context", {})
+        if "user_tasks" in context:
             error_message = (
                 "❌ <b>Too Many Downloads</b>\n\n"
                 f"You have reached the maximum of {context.get('limit', 5)} downloads in queue.\n"
@@ -245,9 +243,9 @@ async def _process_download_request(
                 f"The download queue is currently full (maximum {context.get('limit', 50)} downloads).\n"
                 "Please try again in a few minutes."
             )
-        
+
         await callback.message.edit_text(error_message)
         logger.warning(
             f"Queue full error for user {callback.from_user.id}: {str(e)}",
-            extra={"user_id": callback.from_user.id, **context}
+            extra={"user_id": callback.from_user.id, **context},
         )

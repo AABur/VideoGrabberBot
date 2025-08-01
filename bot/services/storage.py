@@ -5,31 +5,31 @@ import time
 import uuid
 from typing import Dict, Optional, Tuple
 
+from bot.config import config
+
 # URL_STORAGE format: {url_id: (url, format_id, timestamp)}
 URL_STORAGE: Dict[str, Tuple[str, Optional[str], float]] = {}
-
-# TTL configuration
-TTL_SECONDS = 3600  # 1 hour
-MAX_STORAGE_SIZE = 1000  # Maximum number of entries
 
 
 def _cleanup_expired_entries() -> None:
     """Remove expired entries from storage."""
     current_time = time.time()
-    expired_keys = [key for key, (_, _, timestamp) in URL_STORAGE.items() if current_time - timestamp > TTL_SECONDS]
+    expired_keys = [
+        key for key, (_, _, timestamp) in URL_STORAGE.items() if current_time - timestamp > config.TTL_SECONDS
+    ]
     for key in expired_keys:
         URL_STORAGE.pop(key, None)
 
 
 def _enforce_size_limit() -> None:
     """Enforce maximum storage size by removing oldest entries."""
-    if len(URL_STORAGE) <= MAX_STORAGE_SIZE:
+    if len(URL_STORAGE) <= config.MAX_STORAGE_SIZE:
         return
 
     # Sort by timestamp and keep only the newest entries
     sorted_items = sorted(URL_STORAGE.items(), key=lambda x: x[1][2], reverse=True)
     URL_STORAGE.clear()
-    for key, item_value in sorted_items[:MAX_STORAGE_SIZE]:
+    for key, item_value in sorted_items[: config.MAX_STORAGE_SIZE]:
         URL_STORAGE[key] = item_value
 
 
