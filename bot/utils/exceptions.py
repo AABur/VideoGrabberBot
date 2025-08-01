@@ -1,11 +1,13 @@
 # bot/utils/exceptions.py
 """Custom exceptions for VideoGrabberBot."""
 
+from typing import Optional, Any, Dict
+
 
 class VideoGrabberBotError(Exception):
     """Base exception for VideoGrabberBot."""
 
-    def __init__(self, message: str, context: dict = None) -> None:
+    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None) -> None:
         """Initialize exception with message and optional context."""
         super().__init__(message)
         self.context = context or {}

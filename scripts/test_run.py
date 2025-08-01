@@ -26,7 +26,7 @@ from bot.utils.db import init_db  # noqa: E402
 from bot.utils.logging import setup_logger  # noqa: E402
 
 
-async def test_runner():
+async def test_runner() -> None:
     """Run the bot in test mode with minimal setup."""
     # Setup logging first
     setup_logger()

@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from aiogram import Bot
 from loguru import logger
@@ -10,7 +10,7 @@ from loguru import logger
 from bot.config import ADMIN_USER_ID, DATA_DIR
 
 
-def _log_admin_message(level: str, message: str, kwargs: dict) -> None:
+def _log_admin_message(level: str, message: str, kwargs: Dict[str, Any]) -> None:
     """Log admin notification message."""
     if level == "ERROR":
         logger.error(f"Admin notification: {message}", **kwargs)
@@ -18,7 +18,7 @@ def _log_admin_message(level: str, message: str, kwargs: dict) -> None:
         logger.log(level, f"Admin notification: {message}", **kwargs)
 
 
-def _format_admin_message(level: str, message: str, kwargs: dict) -> str:
+def _format_admin_message(level: str, message: str, kwargs: Dict[str, Any]) -> str:
     """Format message for Telegram admin notification."""
     parts = [f"⚠️ {level} ⚠️", "", message]
 

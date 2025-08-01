@@ -8,9 +8,10 @@ from aiogram.types import (
     Message,
 )
 from loguru import logger
+from typing import Any, Dict, List, Optional, Tuple
 
 from bot.services.downloader import is_youtube_url
-from bot.services.formats import get_format_by_id, get_format_options
+from bot.services.formats import FormatData, get_format_by_id, get_format_options
 from bot.services.queue import DownloadTask, download_queue
 from bot.services.storage import get_url, store_format, store_url
 from bot.telegram_api.client import get_bot
@@ -21,10 +22,10 @@ from bot.utils.exceptions import QueueFullError
 download_router = Router()
 
 
-def _create_format_keyboard(format_options: list, url_id: str) -> InlineKeyboardMarkup:
+def _create_format_keyboard(format_options: List[Tuple[str, str]], url_id: str) -> InlineKeyboardMarkup:
     """Create inline keyboard with format options."""
     keyboard = []
-    row: list[InlineKeyboardButton] = []
+    row: List[InlineKeyboardButton] = []
 
     for i, (format_id, label) in enumerate(format_options):
         # Create a new row after every 2 buttons
@@ -102,7 +103,7 @@ def _parse_callback_data(callback_data: str) -> tuple[str, str, str]:
     return cmd, format_id, url_id
 
 
-def _build_status_message(format_data: dict, url: str, is_processing: bool, is_user_in_queue: bool) -> str:
+def _build_status_message(format_data: FormatData, url: str, is_processing: bool, is_user_in_queue: bool) -> str:
     """Build status message for download."""
     # Header
     download_status = "queued" if is_processing else ""
@@ -127,6 +128,11 @@ def _build_status_message(format_data: dict, url: str, is_processing: bool, is_u
 async def _validate_callback_data(callback: CallbackQuery) -> tuple[str, str, str] | None:
     """Validate callback data and return parsed values or None if invalid."""
     logger.debug(f"Received callback data: {callback.data}")
+    
+    if not callback.data:
+        logger.error("Missing callback data")
+        await callback.answer("Invalid callback data")
+        return None
 
     try:
         cmd, format_id, url_id = _parse_callback_data(callback.data)
@@ -139,7 +145,7 @@ async def _validate_callback_data(callback: CallbackQuery) -> tuple[str, str, st
     return cmd, format_id, url_id
 
 
-async def _get_url_and_format(callback: CallbackQuery, format_id: str, url_id: str) -> tuple[str, dict] | None:
+async def _get_url_and_format(callback: CallbackQuery, format_id: str, url_id: str) -> Optional[Tuple[str, FormatData]]:
     """Get URL and format data, return None if not found."""
     # Get URL from storage
     url = get_url(url_id)
@@ -187,7 +193,7 @@ async def process_format_selection(callback: CallbackQuery) -> None:
 
 
 async def _process_download_request(
-    callback: CallbackQuery, format_data: dict, format_id: str, url: str, url_id: str
+    callback: CallbackQuery, format_data: FormatData, format_id: str, url: str, url_id: str
 ) -> None:
     """Process the download request and add to queue."""
 

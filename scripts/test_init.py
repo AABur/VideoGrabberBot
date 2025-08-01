@@ -13,7 +13,7 @@ from bot.utils.db import init_db
 from bot.utils.logging import setup_logger
 
 
-async def test_initialization():
+async def test_initialization() -> None:
     """Test basic initialization of logging and database."""
     setup_logger()  # Настроить логирование
     await init_db()  # Инициализировать базу данных

@@ -7,7 +7,7 @@ import shutil
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import yt_dlp
 from aiogram import Bot
@@ -41,7 +41,7 @@ async def _create_or_update_status_message(
     return await bot.send_message(chat_id, status_text)
 
 
-def _create_ydl_options(format_string: str, temp_download_path: Path) -> dict:
+def _create_ydl_options(format_string: str, temp_download_path: Path) -> Dict[str, Any]:
     """Create yt-dlp options dictionary."""
     return {
         "format": format_string,
@@ -52,7 +52,7 @@ def _create_ydl_options(format_string: str, temp_download_path: Path) -> dict:
     }
 
 
-def _sync_download_video_file(url: str, ydl_opts: dict, temp_download_path: Path) -> tuple[Path, dict]:
+def _sync_download_video_file(url: str, ydl_opts: Dict[str, Any], temp_download_path: Path) -> tuple[Path, Dict[str, Any]]:
     """Synchronous download function to be run in thread pool."""
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -123,7 +123,7 @@ def _sync_download_video_file(url: str, ydl_opts: dict, temp_download_path: Path
         raise DownloadError("Unexpected error during download", context={"url": url, "original_error": str(e)}) from e
 
 
-async def _download_video_file(url: str, ydl_opts: dict, temp_download_path: Path) -> tuple[Path, dict]:
+async def _download_video_file(url: str, ydl_opts: Dict[str, Any], temp_download_path: Path) -> tuple[Path, Dict[str, Any]]:
     """Download video and return file path and video info (async wrapper)."""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -140,7 +140,7 @@ async def _download_video_file(url: str, ydl_opts: dict, temp_download_path: Pat
 
 
 async def _send_downloaded_file(
-    bot: Bot, chat_id: int, file_path: Path, video_info: dict, status_message: Message
+    bot: Bot, chat_id: int, file_path: Path, video_info: Dict[str, Any], status_message: Message
 ) -> None:
     """Send downloaded file to user."""
     # Update status message
