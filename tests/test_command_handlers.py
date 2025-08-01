@@ -86,7 +86,7 @@ async def test_cancel_command_with_active_downloads():
     # Setup download queue mock
     mock_queue = MagicMock()
     mock_queue.is_user_in_queue.return_value = True
-    mock_queue.clear_user_tasks.return_value = 2  # 2 downloads cancelled
+    mock_queue.clear_user_tasks = AsyncMock(return_value=2)  # 2 downloads cancelled
 
     # Mock dependencies
     with (

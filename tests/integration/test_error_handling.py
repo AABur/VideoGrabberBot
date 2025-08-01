@@ -143,7 +143,7 @@ async def test_admin_notification_on_error(integration_setup, mock_bot):
 
     # Mock notify_admin function to track calls
     notify_admin_mock = AsyncMock()
-    
+
     # Create mock download with error that handles admin notification
     mock_download_with_error = MockDownloadWithError(notify_admin_mock)
 

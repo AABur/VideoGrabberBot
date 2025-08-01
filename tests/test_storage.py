@@ -132,9 +132,11 @@ class TestStorageBasics:
         assert store_format(url_id, new_format) is True
         assert get_format(url_id) == new_format
 
-        # Get the storage data directly and verify
+        # Get the storage data directly and verify (format: url, format_id, timestamp)
         storage_data = URL_STORAGE.get(url_id)
-        assert storage_data == (url, new_format)
+        assert storage_data[0] == url
+        assert storage_data[1] == new_format
+        assert isinstance(storage_data[2], float)  # timestamp
 
 
 class TestStorageAdvanced:
@@ -163,14 +165,20 @@ class TestStorageAdvanced:
         url = "https://test.example.com"
         url_id = store_url(url)
 
-        # Verify internal structure
+        # Verify internal structure (format: url, format_id, timestamp)
         assert url_id in URL_STORAGE
-        assert URL_STORAGE[url_id] == (url, None)
+        storage_data = URL_STORAGE[url_id]
+        assert storage_data[0] == url
+        assert storage_data[1] is None
+        assert isinstance(storage_data[2], float)  # timestamp
 
         # Store format and verify internal structure
         format_id = "video:HD"
         store_format(url_id, format_id)
-        assert URL_STORAGE[url_id] == (url, format_id)
+        storage_data = URL_STORAGE[url_id]
+        assert storage_data[0] == url
+        assert storage_data[1] == format_id
+        assert isinstance(storage_data[2], float)  # timestamp
 
     def test_storage_isolation(self):
         """Test that storage is properly isolated between tests."""

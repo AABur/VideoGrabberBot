@@ -26,6 +26,7 @@ async def temp_db(monkeypatch):
         temp_db_path = Path(temp_dir) / "test_bot.db"
         # Patch DB_PATH in the db module
         from bot.utils import db as db_module
+
         monkeypatch.setattr(db_module, "DB_PATH", temp_db_path)
 
         # Initialize database

@@ -122,12 +122,12 @@ async def test_clear_user_tasks():
     task2 = DownloadTask(chat_id=123, url="https://example.com/2", format_string="test_format")
     task3 = DownloadTask(chat_id=456, url="https://example.com/3", format_string="test_format")
 
-    # Add tasks to queue directly (bypassing async method for test)
-    queue.queue.put_nowait(task1)
-    queue.queue.put_nowait(task2)
-    queue.queue.put_nowait(task3)
+    # Add tasks to queue using proper method
+    await queue.add_task(task1)
+    await queue.add_task(task2)
+    await queue.add_task(task3)
     # Clear tasks for user 123
-    removed = queue.clear_user_tasks(123)
+    removed = await queue.clear_user_tasks(123)
 
     # Should have removed 2 tasks
     assert removed == 2
@@ -144,7 +144,7 @@ async def test_clear_user_tasks_empty_queue():
     queue = DownloadQueue()
 
     # Clear tasks for non-existent user
-    removed = queue.clear_user_tasks(123)
+    removed = await queue.clear_user_tasks(123)
 
     # Should have removed 0 tasks
     assert removed == 0
@@ -161,10 +161,10 @@ async def test_get_queue_position():
     task2 = DownloadTask(chat_id=456, url="https://example.com/2", format_string="test_format")
     task3 = DownloadTask(chat_id=123, url="https://example.com/3", format_string="test_format")
 
-    # Add tasks to queue directly
-    queue.queue.put_nowait(task1)
-    queue.queue.put_nowait(task2)
-    queue.queue.put_nowait(task3)
+    # Add tasks to queue using proper method
+    await queue.add_task(task1)
+    await queue.add_task(task2)
+    await queue.add_task(task3)
 
     # Check positions
     assert queue.get_queue_position(123, "https://example.com/1") == 1

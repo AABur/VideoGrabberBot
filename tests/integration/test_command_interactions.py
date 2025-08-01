@@ -105,9 +105,11 @@ async def test_cancel_command_integration(integration_setup, mock_message, autho
         format_string="best[height<=720]",
     )
 
-    # Add tasks to queue
-    download_queue.queue.put_nowait(task1)
-    download_queue.queue.put_nowait(task2)
+    # Add tasks to queue without starting worker (for test)
+    await download_queue.queue.put(task1)
+    await download_queue.queue.put(task2)
+    download_queue._queue_items.append(task1)
+    download_queue._queue_items.append(task2)
 
     # Verify tasks were added
     assert download_queue.queue.qsize() == 2

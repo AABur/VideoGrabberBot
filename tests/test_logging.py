@@ -128,6 +128,7 @@ def test_setup_logger_default_path(monkeypatch):
     file_sink = mock_logger.add_calls[1][0]
     assert str(mock_data_dir / "bot.log") == str(file_sink)
 
+
 @pytest.mark.asyncio
 async def test_notify_admin_success(monkeypatch):
     """Test that admin notifications are sent successfully."""

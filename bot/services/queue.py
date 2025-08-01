@@ -3,7 +3,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
@@ -31,6 +31,8 @@ class DownloadQueue:
         self.is_processing = False
         self.current_task: Optional[DownloadTask] = None
         self._worker_task: Optional[Task[None]] = None
+        self._lock = asyncio.Lock()
+        self._queue_items: List[DownloadTask] = []  # Track queue items safely
 
     async def add_task(self, task: DownloadTask) -> int:
         """
@@ -42,8 +44,10 @@ class DownloadQueue:
         Returns:
             Current queue size after adding the task
         """
-        await self.queue.put(task)
-        queue_size = self.queue.qsize()
+        async with self._lock:
+            await self.queue.put(task)
+            self._queue_items.append(task)
+            queue_size = len(self._queue_items)
 
         url = task.url
         format_str = task.format_string
@@ -66,14 +70,10 @@ class DownloadQueue:
         Returns:
             Position in queue (1-based) or None if not found
         """
-        if self.queue.empty():
+        if not self._queue_items:
             return None
 
-        # Create a list from queue items (without removing them)
-        # Mypy doesn't know about _queue attribute, but it exists
-        queue_items = list(self.queue._queue)  # type: ignore
-
-        for i, task in enumerate(queue_items):
+        for i, task in enumerate(self._queue_items):
             if task.chat_id == chat_id and task.url == url:
                 return i + 1
 
@@ -89,14 +89,9 @@ class DownloadQueue:
         Returns:
             True if user has tasks in queue, False otherwise
         """
-        if self.queue.empty():
-            return False
+        return any(task.chat_id == chat_id for task in self._queue_items)
 
-        # Check if user has a task in the queue
-        queue_items = list(self.queue._queue)  # type: ignore
-        return any(task.chat_id == chat_id for task in queue_items)
-
-    def clear_user_tasks(self, chat_id: int) -> int:
+    async def clear_user_tasks(self, chat_id: int) -> int:
         """
         Remove all tasks for a specific user.
 
@@ -106,32 +101,37 @@ class DownloadQueue:
         Returns:
             Number of tasks removed
         """
-        if self.queue.empty():
-            return 0
+        async with self._lock:
+            if not self._queue_items:
+                return 0
 
-        # Create a new queue without the specified user's tasks
-        new_queue: asyncio.Queue[DownloadTask] = asyncio.Queue()
-        removed_count = 0
+            # Create a new queue without the specified user's tasks
+            new_queue: asyncio.Queue[DownloadTask] = asyncio.Queue()
+            new_queue_items = []
+            removed_count = 0
 
-        # Move items to the new queue, skipping those from the specified user
-        old_queue_items = list(self.queue._queue)  # type: ignore
-        self.queue = asyncio.Queue()
+            for task in self._queue_items:
+                if task.chat_id == chat_id:
+                    removed_count += 1
+                else:
+                    await new_queue.put(task)
+                    new_queue_items.append(task)
 
-        for task in old_queue_items:
-            if task.chat_id == chat_id:
-                removed_count += 1
-            else:
-                new_queue.put_nowait(task)
-
-        self.queue = new_queue
-        logger.info(f"Removed {removed_count} tasks for chat_id: {chat_id}")
-        return removed_count
+            self.queue = new_queue
+            self._queue_items = new_queue_items
+            logger.info(f"Removed {removed_count} tasks for chat_id: {chat_id}")
+            return removed_count
 
     async def _process_queue(self) -> None:
         """Process tasks in the queue sequentially."""
         while not self.queue.empty():
             self.is_processing = True
             self.current_task = await self.queue.get()
+
+            # Remove from tracking list
+            async with self._lock:
+                if self.current_task in self._queue_items:
+                    self._queue_items.remove(self.current_task)
 
             try:
                 await self._process_single_task()

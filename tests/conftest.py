@@ -23,7 +23,7 @@ def _clear_format_function_cache(func):
 def _clear_all_format_caches():
     """Clear all format function caches."""
     function_names = ["get_available_formats", "get_format_options", "get_format_by_id"]
-    
+
     for func_name in function_names:
         _clear_single_format_cache(func_name)
 
@@ -34,12 +34,12 @@ def _clear_single_format_cache(func_name):
         import importlib
     except ImportError:
         return
-    
+
     try:
         formats_module = importlib.import_module("bot.services.formats")
     except ImportError:
         return
-    
+
     func = getattr(formats_module, func_name, None)
     if func:
         _clear_format_function_cache(func)
@@ -51,6 +51,7 @@ class ModuleResetter:
     def __init__(self):
         """Initialize module resetter."""
         import sys
+
         self.sys = sys
 
     def reset_module(self, module_name: str):

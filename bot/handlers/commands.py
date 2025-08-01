@@ -197,7 +197,7 @@ async def command_cancel(message: Message) -> None:
         return
 
     # Clear user tasks
-    removed = download_queue.clear_user_tasks(message.chat.id)
+    removed = await download_queue.clear_user_tasks(message.chat.id)
 
     download_word = "download" if removed == 1 else "downloads"
     await message.answer(

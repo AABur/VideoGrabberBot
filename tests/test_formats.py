@@ -15,6 +15,7 @@ from bot.services.formats import (
 def reload_formats_module():
     """Reload formats module to pick up config changes."""
     import sys
+
     formats_module = sys.modules.get("bot.services.formats")
     if formats_module:
         importlib.reload(formats_module)
@@ -179,6 +180,7 @@ class TestFormats:
     def test_empty_formats(self, clear_format_cache, reset_modules):
         """Test behavior with empty format configurations."""
         import sys
+
         # Temporarily patch config with empty formats
         from bot import config
 

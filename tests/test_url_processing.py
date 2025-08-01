@@ -317,6 +317,9 @@ class TestStorageIntegration:
         # Test with patched storage
         with patch("bot.services.storage.URL_STORAGE", {}):
             # Manually import to get the patched version
+            # Store a URL manually (format: url, format_id, timestamp)
+            import time
+
             from bot.services.storage import (
                 URL_STORAGE,
                 clear_url,
@@ -324,8 +327,7 @@ class TestStorageIntegration:
                 store_format,
             )
 
-            # Store a URL manually
-            URL_STORAGE[test_id] = (test_url, None)
+            URL_STORAGE[test_id] = (test_url, None, time.time())
 
             # Verify URL can be retrieved
             assert get_url(test_id) == test_url
