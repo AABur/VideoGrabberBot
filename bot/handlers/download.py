@@ -191,6 +191,8 @@ async def _process_download_request(
     callback: CallbackQuery, format_data: dict, format_id: str, url: str, url_id: str
 ) -> None:
     """Process the download request and add to queue."""
+    from bot.utils.exceptions import QueueFullError
+    
     # Store format selection and get bot
     store_format(url_id, format_id)
     bot = get_bot()
@@ -198,31 +200,54 @@ async def _process_download_request(
     # Acknowledge the callback
     await callback.answer(f"Processing your request in {format_data['label']} format...")
 
-    # Check queue status
-    is_processing = download_queue.is_processing
-    is_user_in_queue = download_queue.is_user_in_queue(callback.message.chat.id)
+    try:
+        # Check queue status
+        is_processing = download_queue.is_processing
+        is_user_in_queue = download_queue.is_user_in_queue(callback.message.chat.id)
 
-    # Build and send status message
-    status_text = _build_status_message(format_data, url, is_processing, is_user_in_queue)
-    status_message = await callback.message.edit_text(status_text)
+        # Build and send status message
+        status_text = _build_status_message(format_data, url, is_processing, is_user_in_queue)
+        status_message = await callback.message.edit_text(status_text)
 
-    # Create and add task to queue
-    task = DownloadTask(
-        chat_id=callback.message.chat.id,
-        url=url,
-        format_string=format_data["format"],
-        status_message_id=status_message.message_id,
-        additional_data={"bot": bot, "url_id": url_id},
-    )
-    queue_position = await download_queue.add_task(task)
-
-    # Update message with queue position if needed
-    if queue_position > 1:
-        updated_status = f"{status_text}\n\nQueue position: {queue_position}"
-        await bot.edit_message_text(
-            updated_status,
+        # Create and add task to queue
+        task = DownloadTask(
             chat_id=callback.message.chat.id,
-            message_id=status_message.message_id,
+            url=url,
+            format_string=format_data["format"],
+            status_message_id=status_message.message_id,
+            additional_data={"bot": bot, "url_id": url_id},
         )
+        queue_position = await download_queue.add_task(task)
 
-    # Note: We don't clear the URL here since it will be done by the queue processor
+        # Update message with queue position if needed
+        if queue_position > 1:
+            updated_status = f"{status_text}\n\nQueue position: {queue_position}"
+            await bot.edit_message_text(
+                updated_status,
+                chat_id=callback.message.chat.id,
+                message_id=status_message.message_id,
+            )
+
+        # Note: We don't clear the URL here since it will be done by the queue processor
+        
+    except QueueFullError as e:
+        # Handle queue full error with user-friendly message
+        context = getattr(e, 'context', {})
+        if 'user_tasks' in context:
+            error_message = (
+                "❌ <b>Too Many Downloads</b>\n\n"
+                f"You have reached the maximum of {context.get('limit', 5)} downloads in queue.\n"
+                "Please wait for some downloads to complete before adding more."
+            )
+        else:
+            error_message = (
+                "❌ <b>Queue Full</b>\n\n"
+                f"The download queue is currently full (maximum {context.get('limit', 50)} downloads).\n"
+                "Please try again in a few minutes."
+            )
+        
+        await callback.message.edit_text(error_message)
+        logger.warning(
+            f"Queue full error for user {callback.from_user.id}: {str(e)}",
+            extra={"user_id": callback.from_user.id, **context}
+        )

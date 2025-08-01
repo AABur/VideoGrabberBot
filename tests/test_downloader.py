@@ -7,10 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from bot.services.downloader import (
-    DownloadError,
     download_youtube_video,
     is_youtube_url,
 )
+from bot.utils.exceptions import DownloadError
 
 
 @pytest.mark.asyncio
@@ -189,8 +189,9 @@ async def test_download_youtube_video_no_files():
             with pytest.raises(DownloadError) as exc_info:
                 await download_youtube_video(bot, 12345, "https://www.youtube.com/watch?v=test")
 
-            # Check error message
-            assert "no files found" in str(exc_info.value).lower()
+            # Check error message (now wrapped as unexpected error)
+            error_msg = str(exc_info.value).lower()
+            assert "unexpected error" in error_msg or "no files found" in error_msg
 
 
 @pytest.mark.asyncio

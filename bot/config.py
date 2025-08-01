@@ -60,6 +60,7 @@ TEMP_DIR.mkdir(exist_ok=True)
 
 # Download configuration
 MAX_FILE_SIZE: int = 2 * 1024 * 1024 * 1024  # 2GB
+DOWNLOAD_TIMEOUT: int = 300  # 5 minutes
 VIDEO_FORMATS: Dict[str, Dict[str, str]] = {
     "SD": {"label": "SD (480p)", "format": "best[height<=480]"},
     "HD": {"label": "HD (720p)", "format": "best[height<=720]"},
