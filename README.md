@@ -72,6 +72,137 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
    uv run python run.py
    ```
 
+## Docker Deployment
+
+For containerized deployment, you can use Docker and Docker Compose.
+
+### Prerequisites
+
+- Docker Engine 20.10+
+- Docker Compose 2.0+
+
+### Quick Start with Docker
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/AABur/VideoGrabberBot.git
+   cd VideoGrabberBot
+   ```
+
+2. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env file with your bot token and admin user ID
+   ```
+
+3. **Build and run with Docker Compose**:
+   ```bash
+   docker-compose -f docker-compose.dev.yml up -d
+   ```
+
+   **Or use the deployment script**:
+   ```bash
+   ./deploy.sh dev start
+   ```
+
+4. **Check logs**:
+   ```bash
+   docker-compose -f docker-compose.dev.yml logs -f videograbber-bot
+   # Or using the deployment script:
+   ./deploy.sh dev logs
+   ```
+
+### Docker Commands
+
+```bash
+# Build the image
+docker build -t videograbber-bot .
+
+# Run with docker-compose (development)
+docker-compose -f docker-compose.dev.yml up -d
+
+# Run with docker-compose (production)
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f videograbber-bot
+
+# Stop the container
+docker-compose -f docker-compose.dev.yml down
+
+# Stop and remove volumes (WARNING: This will delete all data)
+docker-compose -f docker-compose.dev.yml down -v
+
+# Update the container
+docker-compose -f docker-compose.dev.yml pull && docker-compose -f docker-compose.dev.yml up -d
+
+# Check container health
+docker-compose -f docker-compose.dev.yml ps
+```
+
+### Production Deployment
+
+For production deployment, use the production compose file:
+
+```bash
+# Copy environment file
+cp .env.example .env
+# Edit .env with production values
+
+# Deploy with production configuration
+docker-compose -f docker-compose.prod.yml up -d
+
+# Monitor logs
+docker-compose -f docker-compose.prod.yml logs -f videograbber-bot
+
+# Alternative: Use deployment script
+./deploy.sh prod start
+./deploy.sh prod logs
+```
+
+### Deployment Script
+
+The project includes a convenient deployment script (`deploy.sh`) for managing Docker containers:
+
+```bash
+# Development environment
+./deploy.sh dev build      # Build image
+./deploy.sh dev start      # Start services
+./deploy.sh dev stop       # Stop services
+./deploy.sh dev restart    # Restart services
+./deploy.sh dev logs       # View logs
+./deploy.sh dev status     # Check status
+
+# Production environment
+./deploy.sh prod build     # Build image
+./deploy.sh prod start     # Start services
+./deploy.sh prod stop      # Stop services
+./deploy.sh prod restart   # Restart services
+./deploy.sh prod logs      # View logs
+./deploy.sh prod status    # Check status
+```
+
+The production configuration includes:
+- Enhanced resource limits
+- Better logging configuration
+- Host volume mounts for persistent data
+- Optimized health checks
+
+### Data Persistence
+
+Docker volumes are used to persist bot data:
+- `bot_data`: Contains database and downloaded files
+- `bot_logs`: Contains application logs
+
+To backup data:
+```bash
+# Create backup of bot data
+docker run --rm -v videograbberbot_bot_data:/data -v $(pwd):/backup ubuntu tar czf /backup/bot_data_backup.tar.gz -C /data .
+
+# Restore from backup
+docker run --rm -v videograbberbot_bot_data:/data -v $(pwd):/backup ubuntu tar xzf /backup/bot_data_backup.tar.gz -C /data
+```
+
 ## Development
 
 ### Commands
@@ -133,17 +264,23 @@ make check
 
 ```
 VideoGrabberBot/
-├── bot/                # Main bot code
-│   ├── handlers/       # Telegram message handlers
-│   ├── services/       # Core functionality
-│   ├── telegram_api/   # Telegram API client
-│   └── utils/          # Utility functions
-├── tests/              # Test suite
-│   └── integration/    # Integration tests
-├── data/               # Database and temp files
-├── .flake8             # wemake-python-styleguide configuration
-├── Makefile            # Development workflow commands
-└── CLAUDE.md           # Development guidelines
+├── bot/                    # Main bot code
+│   ├── handlers/           # Telegram message handlers
+│   ├── services/           # Core functionality
+│   ├── telegram_api/       # Telegram API client
+│   └── utils/              # Utility functions
+├── tests/                  # Test suite
+│   └── integration/        # Integration tests
+├── data/                   # Database and temp files
+├── Dockerfile              # Container image definition
+├── docker-compose.dev.yml  # Development container orchestration
+├── docker-compose.prod.yml # Production container orchestration
+├── .dockerignore           # Files to exclude from Docker context
+├── .env.example            # Environment variables template
+├── deploy.sh               # Deployment automation script
+├── .flake8                 # wemake-python-styleguide configuration
+├── Makefile                # Development workflow commands
+└── CLAUDE.md               # Development guidelines
 ```
 
 ## Code Quality

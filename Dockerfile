@@ -10,16 +10,22 @@ RUN apt-get update && apt-get install -y \
 RUN useradd --create-home --shell /bin/bash bot
 
 # Install uv package manager
-RUN pip install uv
+RUN pip install --no-cache-dir uv
 
 # Set working directory
 WORKDIR /app
 
-# Copy all source code first
+# Copy dependency files first for better layer caching
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies only (with all sub-dependencies)
+RUN uv pip install --system --no-cache-dir aiogram aiosqlite loguru python-dotenv yt-dlp
+
+# Copy source code
 COPY . .
 
-# Install dependencies and package
-RUN uv pip install --system -e .
+# Install package in development mode
+RUN uv pip install --system --no-cache-dir -e . --no-deps
 
 # Create directories for data and set permissions
 RUN mkdir -p /app/data /app/data/temp /app/logs && \
