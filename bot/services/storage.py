@@ -33,6 +33,24 @@ def _enforce_size_limit() -> None:
         URL_STORAGE[key] = item_value
 
 
+def _get_storage_data(url_id: str, index: int) -> Optional[str]:
+    """Get data from storage by URL ID and tuple index.
+
+    Args:
+        url_id: URL ID
+        index: Index in storage tuple (0=url, 1=format_id)
+
+    Returns:
+        Data at specified index or None if not found
+    """
+    _cleanup_expired_entries()
+    storage_data = URL_STORAGE.get(url_id)
+    if storage_data:
+        value = storage_data[index]
+        return value if isinstance(value, str) else None
+    return None
+
+
 def store_url(url: str) -> str:
     """
     Store URL in temporary storage and return unique ID.
@@ -61,9 +79,7 @@ def get_url(url_id: str) -> Optional[str]:
     Returns:
         URL or None if not found
     """
-    _cleanup_expired_entries()
-    url_data = URL_STORAGE.get(url_id)
-    return url_data[0] if url_data else None
+    return _get_storage_data(url_id, 0)
 
 
 def store_format(url_id: str, format_id: str) -> bool:
@@ -97,9 +113,7 @@ def get_format(url_id: str) -> Optional[str]:
     Returns:
         Format ID or None if not found
     """
-    _cleanup_expired_entries()
-    format_data = URL_STORAGE.get(url_id)
-    return format_data[1] if format_data else None
+    return _get_storage_data(url_id, 1)
 
 
 def clear_url(url_id: str) -> None:

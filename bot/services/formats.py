@@ -22,25 +22,29 @@ def get_available_formats() -> Dict[str, FormatData]:
     Returns:
         Dict of format types and their details.
     """
-    formats: Dict[str, FormatData] = {}
-
-    # Add video formats
-    for format_id, format_data in VIDEO_FORMATS.items():
-        formats[f"video:{format_id}"] = {
+    # Use dictionary comprehension for better performance
+    video_formats: Dict[str, FormatData] = {
+        f"video:{format_id}": {
             "label": format_data["label"],
             "format": format_data["format"],
             "type": "video",
         }
+        for format_id, format_data in VIDEO_FORMATS.items()
+    }
 
-    # Add audio formats
-    for format_id, format_data in AUDIO_FORMAT.items():
-        formats[f"audio:{format_id}"] = {
+    audio_formats: Dict[str, FormatData] = {
+        f"audio:{format_id}": {
             "label": format_data["label"],
             "format": format_data["format"],
             "type": "audio",
         }
+        for format_id, format_data in AUDIO_FORMAT.items()
+    }
 
-    return formats
+    result: Dict[str, FormatData] = {}
+    result.update(video_formats)
+    result.update(audio_formats)
+    return result
 
 
 @lru_cache(maxsize=1)

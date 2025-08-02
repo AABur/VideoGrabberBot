@@ -97,11 +97,9 @@ class DownloadQueue:
         if not self._queue_items:
             return None
 
-        for i, task in enumerate(self._queue_items):
-            if task.chat_id == chat_id and task.url == url:
-                return i + 1
-
-        return None
+        return next(
+            (i + 1 for i, task in enumerate(self._queue_items) if task.chat_id == chat_id and task.url == url), None
+        )
 
     def is_user_in_queue(self, chat_id: int) -> bool:
         """

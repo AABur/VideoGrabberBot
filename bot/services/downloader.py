@@ -28,6 +28,29 @@ from bot.utils.logging import notify_admin
 MB_SIZE = 1024 * 1024  # 1 MB in bytes
 
 
+def _validate_file_size(file_size: int, url: str, file_path: Optional[Path] = None) -> None:
+    """Validate file size and raise error if too large.
+
+    Args:
+        file_size: Size of file in bytes
+        url: URL for context in error message
+        file_path: Optional file path to delete if oversized
+
+    Raises:
+        VideoTooLargeError: If file size exceeds limit
+    """
+    if file_size > config.MAX_FILE_SIZE:
+        if file_path:
+            file_path.unlink()  # Delete oversized file
+
+        actual_mb = file_size // MB_SIZE
+        limit_mb = config.MAX_FILE_SIZE // MB_SIZE
+        raise VideoTooLargeError(
+            f"File size ({actual_mb} MB) exceeds limit ({limit_mb} MB)",
+            context={"url": url, "file_size": file_size, "limit": config.MAX_FILE_SIZE},
+        )
+
+
 async def _create_or_update_status_message(
     bot: Bot, chat_id: int, url: str, status_message_id: Optional[int]
 ) -> Message:
@@ -79,13 +102,7 @@ def _sync_download_video_file(
             # Check expected file size if available
             if video_info and video_info.get("filesize"):
                 expected_size = video_info["filesize"]
-                if expected_size > config.MAX_FILE_SIZE:
-                    expected_mb = expected_size // MB_SIZE
-                    limit_mb = config.MAX_FILE_SIZE // MB_SIZE
-                    raise VideoTooLargeError(
-                        f"Video file size ({expected_mb} MB) exceeds limit ({limit_mb} MB)",
-                        context={"url": url, "file_size": expected_size, "limit": config.MAX_FILE_SIZE},
-                    )
+                _validate_file_size(expected_size, url)
 
             logger.debug(f"Starting download with options: {ydl_opts}")
 
@@ -107,14 +124,7 @@ def _sync_download_video_file(
             file_size = file_path.stat().st_size
 
             # Check actual file size
-            if file_size > config.MAX_FILE_SIZE:
-                file_path.unlink()  # Delete oversized file
-                actual_mb = file_size // MB_SIZE
-                limit_mb = config.MAX_FILE_SIZE // MB_SIZE
-                raise VideoTooLargeError(
-                    f"Downloaded file size ({actual_mb} MB) exceeds limit ({limit_mb} MB)",
-                    context={"url": url, "file_size": file_size, "limit": config.MAX_FILE_SIZE},
-                )
+            _validate_file_size(file_size, url, file_path)
 
             logger.info(f"Download completed: {file_path} ({file_size} bytes)")
             return file_path, video_info
