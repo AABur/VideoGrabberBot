@@ -48,28 +48,25 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
    cd VideoGrabberBot
    ```
 
-2. **Set up environment with uv**:
+2. **Initialize the project**:
    ```bash
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   uv pip install -e .
+   # For regular usage
+   make init
+   
+   # For development (includes dev dependencies)
+   make init-dev
    ```
 
-3. **For development, install dev dependencies**:
-   ```bash
-   uv pip install -e ".[dev]"
-   ```
-
-4. **Configure the bot**:
-   Create a `.env` file with:
+3. **Configure the bot**:
+   Edit the created `.env` file with your tokens:
    ```
    TELEGRAM_TOKEN=your_telegram_token
    ADMIN_USER_ID=your_telegram_user_id
    ```
 
-5. **Run the bot**:
+4. **Run the bot**:
    ```bash
-   uv run python run.py
+   make run
    ```
 
 ## Docker Deployment
@@ -95,49 +92,43 @@ For containerized deployment, you can use Docker and Docker Compose.
    # Edit .env file with your bot token and admin user ID
    ```
 
-3. **Build and run with Docker Compose**:
+3. **Build and run**:
    ```bash
-   docker-compose -f docker-compose.dev.yml up -d
-   ```
-
-   **Or use the deployment script**:
-   ```bash
-   ./deploy.sh dev start
+   # Development environment
+   make docker-dev
+   
+   # Production environment
+   make docker-prod
    ```
 
 4. **Check logs**:
    ```bash
-   docker-compose -f docker-compose.dev.yml logs -f videograbber-bot
-   # Or using the deployment script:
-   ./deploy.sh dev logs
+   make docker-logs
    ```
 
 ### Docker Commands
 
 ```bash
-# Build the image
-docker build -t videograbber-bot .
+# Start development environment
+make docker-dev
 
-# Run with docker-compose (development)
-docker-compose -f docker-compose.dev.yml up -d
+# Start production environment
+make docker-prod
 
-# Run with docker-compose (production)
-docker-compose -f docker-compose.prod.yml up -d
+# Build Docker image
+make docker-build
 
 # View logs
-docker-compose -f docker-compose.dev.yml logs -f videograbber-bot
+make docker-logs
 
-# Stop the container
-docker-compose -f docker-compose.dev.yml down
+# Check container status
+make docker-status
 
-# Stop and remove volumes (WARNING: This will delete all data)
-docker-compose -f docker-compose.dev.yml down -v
+# Stop containers
+make docker-stop
 
-# Update the container
-docker-compose -f docker-compose.dev.yml pull && docker-compose -f docker-compose.dev.yml up -d
-
-# Check container health
-docker-compose -f docker-compose.dev.yml ps
+# Clean up Docker resources
+make docker-clean
 ```
 
 ### Production Deployment
@@ -205,59 +196,53 @@ docker run --rm -v videograbberbot_bot_data:/data -v $(pwd):/backup ubuntu tar x
 
 ## Development
 
-### Commands
+### Setup
 
 ```bash
-# Run the bot
-uv run python run.py
+# Initialize development environment
+make init-dev
 
-# Run all tests
-uv run pytest
-
-# Run tests with coverage
-uv run pytest --cov=bot --cov-report=term-missing --cov-report=html
-
-# Run a specific test
-uv run pytest tests/test_file.py::test_function_name
-
-# Type checking
-uv run mypy .
-
-# Format code
-uv run ruff format .
-
-# Lint code with Ruff
-uv run ruff check .
-
-# Lint code with wemake-python-styleguide
-uv run flake8 . --select=WPS
-
-# Complete linting sequence (format & lint with both linters)
-uv run ruff check && uv run ruff format && uv run flake8 . --select=WPS
+# Check dependencies
+make deps-check
 ```
 
-### Makefile Commands
+### Available Commands
 
-The project includes a Makefile for simplified development workflow:
+All development tasks are available through Makefile. Run `make help` to see all available commands:
 
 ```bash
-# Format and lint code (Ruff only)
-make lint
+# Project initialization
+make init          # Initialize project after cloning
+make init-dev      # Initialize with dev dependencies
 
-# Run all linting tools (format, ruff check, and wemake-python-styleguide)
-make lint-all
+# Running
+make run           # Run the bot
 
-# Run type checking
-make mypy
+# Testing  
+make tests         # Run all tests with coverage
+make test          # Run specific test (e.g., make test test_config.py)
 
-# Run all tests with coverage
-make tests
+# Code quality
+make format        # Format code with ruff
+make lint          # Lint code with ruff  
+make lint-wps      # Lint with wemake-python-styleguide
+make lint-all      # Run all linting tools
+make mypy          # Type checking
+make check         # Run all checks (format, lint, type check)
 
-# Run the bot
-make run
+# Docker
+make docker-dev    # Start development environment
+make docker-prod   # Start production environment
+make docker-build  # Build Docker image
+make docker-logs   # View logs
+make docker-status # Check status
+make docker-stop   # Stop containers
+make docker-clean  # Clean up
 
-# Run all checks (format, lint, type check)
-make check
+# Utilities
+make clean         # Clean temporary files
+make deps-check    # Check dependencies
+make help          # Show all available commands
 ```
 
 ## Project Structure

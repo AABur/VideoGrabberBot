@@ -1,4 +1,4 @@
-.PHONY: help run tests test check format lint lint-all mypy deps-check clean docker-build docker-run docker-stop docker-logs docker-status docker-clean docker-restart
+.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-dev docker-prod docker-build docker-logs docker-status docker-stop docker-clean
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -14,6 +14,27 @@ help: ## Show this help message
 	@echo ''
 	@echo 'Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+
+# Setup commands
+init: ## Initialize project after cloning (install dependencies)
+	@echo "Initializing project..."
+	@echo "Checking uv installation..."
+	@which uv > /dev/null || (echo "Error: uv is not installed. Please install uv first: https://github.com/astral-sh/uv" && exit 1)
+	@echo "Installing project dependencies..."
+	@uv pip install -e .
+	@echo "Creating .env file from template..."
+	@if [ ! -f .env ]; then cp .env.example .env && echo ".env file created. Please edit it with your tokens."; else echo ".env file already exists."; fi
+	@echo "Project initialized! Edit .env file and run 'make run' to start."
+
+init-dev: ## Initialize development environment (install dev dependencies)
+	@echo "Initializing development environment..."
+	@echo "Checking uv installation..."
+	@which uv > /dev/null || (echo "Error: uv is not installed. Please install uv first: https://github.com/astral-sh/uv" && exit 1)
+	@echo "Installing project with dev dependencies..."
+	@uv pip install -e ".[dev]"
+	@echo "Creating .env file from template..."
+	@if [ ! -f .env ]; then cp .env.example .env && echo ".env file created. Please edit it with your tokens."; else echo ".env file already exists."; fi
+	@echo "Development environment initialized! Edit .env file and run 'make run' to start."
 
 # Run the bot
 run: ## Run the bot
@@ -76,27 +97,34 @@ clean: ## Clean temporary files and cache
 check: format lint mypy ## Run all checks (format, lint, type check)
 
 # Docker targets
+docker-dev: ## Start development Docker environment
+	@echo "Starting development Docker environment..."
+	@./deploy.sh dev start
+
+docker-prod: ## Start production Docker environment  
+	@echo "Starting production Docker environment..."
+	@./deploy.sh prod start
+
 docker-build: ## Build Docker image
-	docker build -t videograbberbot .
+	@echo "Building Docker image..."
+	@./deploy.sh dev build
 
-docker-run: ## Run bot in Docker container (detached) with volume and env
-	docker run -d --name videograbberbot --env-file .env -v $(shell pwd)/data:/app/data videograbberbot
+docker-logs: ## Show Docker container logs (development)
+	@./deploy.sh dev logs
 
-docker-stop: ## Stop and remove Docker container
-	docker stop videograbberbot || true
-	docker rm videograbberbot || true
-
-docker-logs: ## Show Docker container logs
-	docker logs -f videograbberbot
-
-docker-status: ## Show Docker images and containers status
-	@echo "=== Docker Images ==="
-	@docker images | grep -E "(REPOSITORY|videograbberbot)" || echo "No videograbberbot images found"
+docker-status: ## Show Docker containers status
+	@echo "Development environment:"
+	@./deploy.sh dev status
 	@echo ""
-	@echo "=== Running Containers ==="
-	@docker ps | grep -E "(CONTAINER|videograbberbot)" || echo "No videograbberbot containers running"
+	@echo "Production environment:"
+	@./deploy.sh prod status
 
-docker-clean: docker-stop ## Stop container and remove image
-	docker rmi videograbberbot || true
+docker-stop: ## Stop Docker containers (both dev and prod)
+	@echo "Stopping development environment..."
+	@./deploy.sh dev stop || true
+	@echo "Stopping production environment..."
+	@./deploy.sh prod stop || true
 
-docker-restart: docker-stop docker-build docker-run ## Full restart (stop, build, run)
+docker-clean: docker-stop ## Stop containers and clean up
+	@echo "Cleaning up Docker resources..."
+	@docker system prune -f
