@@ -1,6 +1,8 @@
 services:
   videograbber-bot:
-    image: videograbber-bot:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: videograbber-bot-prod
     restart: always
     
@@ -16,8 +18,8 @@ services:
     
     volumes:
       # Persistent data storage
-      - /var/lib/videograbber-bot/data:/app/data
-      - /var/log/videograbber-bot:/app/logs
+      - bot_data_prod:/app/data
+      - bot_logs_prod:/app/logs
     
     networks:
       - bot_network
@@ -45,6 +47,12 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+volumes:
+  bot_data_prod:
+    driver: local
+  bot_logs_prod:
+    driver: local
 
 networks:
   bot_network:

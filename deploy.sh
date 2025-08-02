@@ -11,11 +11,11 @@ ACTION=${2:-start}
 case $ENVIRONMENT in
     dev|development)
         COMPOSE_FILE="docker-compose.dev.yml"
-        CONTAINER_NAME="videograbber-bot"
+        SERVICE_NAME="videograbber-bot"
         ;;
     prod|production)
         COMPOSE_FILE="docker-compose.prod.yml"
-        CONTAINER_NAME="videograbber-bot-prod"
+        SERVICE_NAME="videograbber-bot"
         ;;
     *)
         echo "Usage: $0 [dev|prod] [build|start|stop|restart|logs|status]"
@@ -52,8 +52,8 @@ case $ACTION in
         echo "Services restarted successfully!"
         ;;
     logs)
-        echo "Showing logs for $CONTAINER_NAME..."
-        docker compose -f $COMPOSE_FILE logs -f $CONTAINER_NAME
+        echo "Showing logs for $SERVICE_NAME..."
+        docker compose -f $COMPOSE_FILE logs -f $SERVICE_NAME
         ;;
     status)
         echo "Checking service status..."
