@@ -1,5 +1,7 @@
 """Download handler for processing video links."""
 
+from typing import List, Optional, Tuple
+
 from aiogram import F, Router  # noqa: WPS347
 from aiogram.types import (
     CallbackQuery,
@@ -8,7 +10,6 @@ from aiogram.types import (
     Message,
 )
 from loguru import logger
-from typing import Any, Dict, List, Optional, Tuple
 
 from bot.services.downloader import is_youtube_url
 from bot.services.formats import FormatData, get_format_by_id, get_format_options
@@ -128,7 +129,7 @@ def _build_status_message(format_data: FormatData, url: str, is_processing: bool
 async def _validate_callback_data(callback: CallbackQuery) -> tuple[str, str, str] | None:
     """Validate callback data and return parsed values or None if invalid."""
     logger.debug(f"Received callback data: {callback.data}")
-    
+
     if not callback.data:
         logger.error("Missing callback data")
         await callback.answer("Invalid callback data")

@@ -1,7 +1,7 @@
 # bot/utils/exceptions.py
 """Custom exceptions for VideoGrabberBot."""
 
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
 
 
 class VideoGrabberBotError(Exception):

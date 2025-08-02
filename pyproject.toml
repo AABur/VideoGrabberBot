@@ -86,7 +86,7 @@ cache_dir = ".pytest_cache"
 
 [tool.coverage.run]
 source = ["bot"]
-omit = ["*/__init__.py", "*/tests/*", "scripts/*"]
+omit = ["*/__init__.py", "*/tests/*"]
 branch = true                                      # Enable branch coverage
 
 [tool.coverage.report]
@@ -144,12 +144,7 @@ disable_error_code = [
     "union-attr",
 ]
 
-# Ignore mypy errors in scripts and main entry point files
-[[tool.mypy.overrides]]
-module = "scripts.*"
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-
+# Ignore mypy errors in main entry point file
 [[tool.mypy.overrides]]
 module = "run"
 disallow_untyped_defs = false

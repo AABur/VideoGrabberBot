@@ -52,7 +52,9 @@ def _create_ydl_options(format_string: str, temp_download_path: Path) -> Dict[st
     }
 
 
-def _sync_download_video_file(url: str, ydl_opts: Dict[str, Any], temp_download_path: Path) -> tuple[Path, Dict[str, Any]]:
+def _sync_download_video_file(
+    url: str, ydl_opts: Dict[str, Any], temp_download_path: Path
+) -> tuple[Path, Dict[str, Any]]:
     """Synchronous download function to be run in thread pool."""
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -123,7 +125,9 @@ def _sync_download_video_file(url: str, ydl_opts: Dict[str, Any], temp_download_
         raise DownloadError("Unexpected error during download", context={"url": url, "original_error": str(e)}) from e
 
 
-async def _download_video_file(url: str, ydl_opts: Dict[str, Any], temp_download_path: Path) -> tuple[Path, Dict[str, Any]]:
+async def _download_video_file(
+    url: str, ydl_opts: Dict[str, Any], temp_download_path: Path
+) -> tuple[Path, Dict[str, Any]]:
     """Download video and return file path and video info (async wrapper)."""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor(max_workers=2) as executor:
