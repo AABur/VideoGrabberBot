@@ -48,17 +48,22 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
    cd VideoGrabberBot
    ```
 
-2. **Initialize the project**:
+2. **Set up environment**:
    ```bash
-   # For regular usage
-   make init
+   # Install uv if you haven't already
+   # https://github.com/astral-sh/uv
    
-   # For development (includes dev dependencies)
-   make init-dev
+   # Install dependencies
+   uv pip install -e .
    ```
 
 3. **Configure the bot**:
-   Edit the created `.env` file with your tokens:
+   Create a `.env` file from the template:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` with your tokens:
    ```
    TELEGRAM_TOKEN=your_telegram_token
    ADMIN_USER_ID=your_telegram_user_id
@@ -66,7 +71,7 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
 
 4. **Run the bot**:
    ```bash
-   make run
+   uv run python run.py
    ```
 
 ## Docker Deployment
@@ -94,191 +99,18 @@ For containerized deployment, you can use Docker and Docker Compose.
 
 3. **Build and run**:
    ```bash
-   # Development environment
-   make docker-dev
-   
-   # Production environment
-   make docker-prod
+   # Start the bot in development mode
+   docker-compose -f docker-compose.dev.yml up -d
    ```
 
 4. **Check logs**:
    ```bash
-   make docker-logs
+   docker-compose -f docker-compose.dev.yml logs -f videograbber-bot
    ```
 
-### Docker Commands
+### Additional Docker Options
 
-```bash
-# Start development environment
-make docker-dev
-
-# Start production environment
-make docker-prod
-
-# Build Docker image
-make docker-build
-
-# View logs
-make docker-logs
-
-# Check container status
-make docker-status
-
-# Stop containers
-make docker-stop
-
-# Clean up Docker resources
-make docker-clean
-```
-
-### Production Deployment
-
-For production deployment, use the production compose file:
-
-```bash
-# Copy environment file
-cp .env.example .env
-# Edit .env with production values
-
-# Deploy with production configuration
-docker-compose -f docker-compose.prod.yml up -d
-
-# Monitor logs
-docker-compose -f docker-compose.prod.yml logs -f videograbber-bot
-
-# Alternative: Use deployment script
-./deploy.sh prod start
-./deploy.sh prod logs
-```
-
-### Deployment Script
-
-The project includes a convenient deployment script (`deploy.sh`) for managing Docker containers:
-
-```bash
-# Development environment
-./deploy.sh dev build      # Build image
-./deploy.sh dev start      # Start services
-./deploy.sh dev stop       # Stop services
-./deploy.sh dev restart    # Restart services
-./deploy.sh dev logs       # View logs
-./deploy.sh dev status     # Check status
-
-# Production environment
-./deploy.sh prod build     # Build image
-./deploy.sh prod start     # Start services
-./deploy.sh prod stop      # Stop services
-./deploy.sh prod restart   # Restart services
-./deploy.sh prod logs      # View logs
-./deploy.sh prod status    # Check status
-```
-
-The production configuration includes:
-- Enhanced resource limits
-- Better logging configuration
-- Host volume mounts for persistent data
-- Optimized health checks
-
-### Data Persistence
-
-Docker volumes are used to persist bot data:
-- `bot_data`: Contains database and downloaded files
-- `bot_logs`: Contains application logs
-
-To backup data:
-```bash
-# Create backup of bot data
-docker run --rm -v videograbberbot_bot_data:/data -v $(pwd):/backup ubuntu tar czf /backup/bot_data_backup.tar.gz -C /data .
-
-# Restore from backup
-docker run --rm -v videograbberbot_bot_data:/data -v $(pwd):/backup ubuntu tar xzf /backup/bot_data_backup.tar.gz -C /data
-```
-
-## Development
-
-### Setup
-
-```bash
-# Initialize development environment
-make init-dev
-
-# Check dependencies
-make deps-check
-```
-
-### Available Commands
-
-All development tasks are available through Makefile. Run `make help` to see all available commands:
-
-```bash
-# Project initialization
-make init          # Initialize project after cloning
-make init-dev      # Initialize with dev dependencies
-
-# Running
-make run           # Run the bot
-
-# Testing  
-make tests         # Run all tests with coverage
-make test          # Run specific test (e.g., make test test_config.py)
-
-# Code quality
-make format        # Format code with ruff
-make lint          # Lint code with ruff  
-make lint-wps      # Lint with wemake-python-styleguide
-make lint-all      # Run all linting tools
-make mypy          # Type checking
-make check         # Run all checks (format, lint, type check)
-
-# Docker
-make docker-dev    # Start development environment
-make docker-prod   # Start production environment
-make docker-build  # Build Docker image
-make docker-logs   # View logs
-make docker-status # Check status
-make docker-stop   # Stop containers
-make docker-clean  # Clean up
-
-# Utilities
-make clean         # Clean temporary files
-make deps-check    # Check dependencies
-make help          # Show all available commands
-```
-
-## Project Structure
-
-```
-VideoGrabberBot/
-├── bot/                    # Main bot code
-│   ├── handlers/           # Telegram message handlers
-│   ├── services/           # Core functionality
-│   ├── telegram_api/       # Telegram API client
-│   └── utils/              # Utility functions
-├── tests/                  # Test suite
-│   └── integration/        # Integration tests
-├── data/                   # Database and temp files
-├── Dockerfile              # Container image definition
-├── docker-compose.dev.yml  # Development container orchestration
-├── docker-compose.prod.yml # Production container orchestration
-├── .dockerignore           # Files to exclude from Docker context
-├── .env.example            # Environment variables template
-├── deploy.sh               # Deployment automation script
-├── .flake8                 # wemake-python-styleguide configuration
-├── Makefile                # Development workflow commands
-└── CLAUDE.md               # Development guidelines
-```
-
-## Code Quality
-
-This project uses multiple tools to ensure high code quality:
-
-- **Type Checking**: Static type checking with mypy
-- **Linting**: 
-  - Primary linter: Ruff for fast checking and auto-fixes
-  - Secondary linter: wemake-python-styleguide for strict enforcement of best practices
-  - The tools work together - Ruff handles most linting and formatting, while wemake-python-styleguide adds stricter checks
-- **Formatting**: Automatic code formatting with Ruff
-- **Testing**: Comprehensive test suite with pytest
+For advanced Docker usage, production deployment, and detailed commands, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Technologies
 
@@ -287,13 +119,12 @@ This project uses multiple tools to ensure high code quality:
 - [aiosqlite](https://aiosqlite.omnilib.dev/) - Async SQLite database
 - [loguru](https://loguru.readthedocs.io/) - Advanced logging
 - [uv](https://github.com/astral-sh/uv) - Fast Python package installer and resolver
-- [ruff](https://github.com/astral-sh/ruff) - Fast Python linter and formatter
-- [wemake-python-styleguide](https://github.com/wemake-services/wemake-python-styleguide) - The strictest and most opinionated Python linter
+
+## Development
+
+Interested in contributing? Check out [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding guidelines, and contribution workflow.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contributing
-
-This is a personal educational project, but suggestions and improvements are welcome. Please feel free to open an issue or submit a pull request.
