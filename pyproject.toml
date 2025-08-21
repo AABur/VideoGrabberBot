@@ -22,6 +22,8 @@ dev = [
     "pytest-mock>=3.14.0",
     "pytest-xdist>=3.5.0",             # Parallel test execution
     "pytest-timeout>=2.2.0",           # Test timeouts
+    "pytest-sugar>=1.0.0",             # Better test output with colors and progress
+    "pytest-profiling>=1.7.0",         # Performance profiling for tests
     "ruff>=0.11.2",
     "wemake-python-styleguide>=1.1.0",
 ]
@@ -43,21 +45,34 @@ python_functions = ["test_*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
+# Test logging configuration
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Minimum pytest version required
+minversion = "8.3.0"
+
 # Improve test execution and reporting
 # (Note: xvs option was renamed for clarity)
 addopts = [
     "--strict-markers",  # Ensure all markers are registered
     "--strict-config",   # Ensure no unknown config options
     "--no-header",       # Reduce clutter in output
-    "--tb=native",       # Better traceback format
+    "--tb=short",        # Shorter traceback format
     "--showlocals",      # Show local variables in tracebacks
     "--doctest-modules", # Test doctests in modules
+    "-ra",               # Show summary of all results (skipped, failed, etc.)
+    "--durations=5",     # Show 5 slowest tests
 ]
 
 # Define markers for better organization
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "unit: marks tests as unit tests",
+    "smoke: marks tests as smoke tests for quick validation",
     "formats: formats module tests",
     "storage: storage module tests",
     "queue: queue module tests",
