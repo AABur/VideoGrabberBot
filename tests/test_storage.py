@@ -1,7 +1,5 @@
 """Tests for the storage module."""
 
-from unittest.mock import patch
-
 from bot.services.storage import (
     URL_STORAGE,
     clear_url,
@@ -142,23 +140,24 @@ class TestStorageBasics:
 class TestStorageAdvanced:
     """Test advanced storage scenarios."""
 
-    def test_uuid_collision_handling(self):
+    def test_uuid_collision_handling(self, mocker):
         """Test handling of UUID collisions."""
         # Mock uuid to always return the same value
         test_uuid = "12345678"
-        with patch("uuid.uuid4", return_value=test_uuid):
-            # First store should succeed
-            url1 = "https://example.com/test1"
-            url_id1 = store_url(url1)
-            assert url_id1 == test_uuid[:8]
-            assert get_url(url_id1) == url1
+        mocker.patch("uuid.uuid4", return_value=test_uuid)
+        
+        # First store should succeed
+        url1 = "https://example.com/test1"
+        url_id1 = store_url(url1)
+        assert url_id1 == test_uuid[:8]
+        assert get_url(url_id1) == url1
 
-            # Second store with same uuid should generate a different ID
-            # In real implementation, this would need collision handling
-            url2 = "https://example.com/test2"
-            url_id2 = store_url(url2)
-            assert url_id2 == test_uuid[:8]  # Since we're mocking uuid
-            assert get_url(url_id2) == url2  # Latest value overwrites
+        # Second store with same uuid should generate a different ID
+        # In real implementation, this would need collision handling
+        url2 = "https://example.com/test2"
+        url_id2 = store_url(url2)
+        assert url_id2 == test_uuid[:8]  # Since we're mocking uuid
+        assert get_url(url_id2) == url2  # Latest value overwrites
 
     def test_storage_direct_access(self):
         """Test direct access to URL_STORAGE (for internal code)."""

@@ -65,6 +65,8 @@ addopts = [
     "--doctest-modules", # Test doctests in modules
     "-ra",               # Show summary of all results (skipped, failed, etc.)
     "--durations=5",     # Show 5 slowest tests
+    "-nauto",            # Auto parallel execution with pytest-xdist
+    "--dist=loadscope",  # Distribute tests by module/class for better isolation
 ]
 
 # Define markers for better organization
@@ -199,3 +201,8 @@ exclude = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["bot"]
+
+[dependency-groups]
+dev = [
+    "pytest-xdist>=3.6.1",
+]

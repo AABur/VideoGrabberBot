@@ -877,6 +877,11 @@ dev = [
     { name = "wemake-python-styleguide" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest-xdist" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "aiogram", specifier = ">=3.19.0" },
@@ -897,6 +902,9 @@ requires-dist = [
     { name = "yt-dlp", specifier = ">=2025.3.27" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest-xdist", specifier = ">=3.6.1" }]
 
 [[package]]
 name = "wemake-python-styleguide"

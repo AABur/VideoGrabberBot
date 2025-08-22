@@ -1,7 +1,6 @@
 """Tests for the logging module."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from loguru import logger
@@ -152,15 +151,15 @@ async def test_notify_admin_success(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_notify_admin_error_level(monkeypatch):
+async def test_notify_admin_error_level(mocker, monkeypatch):
     """Test that error-level notifications use logger.error."""
     # Create mock bot and logger
-    mock_bot = AsyncMock()
+    mock_bot = mocker.AsyncMock()
     mock_logger = LoggerMock()
 
     # Apply mock
     monkeypatch.setattr(logger, "error", mock_logger.error)
-    monkeypatch.setattr(logger, "log", MagicMock())
+    monkeypatch.setattr(logger, "log", mocker.MagicMock())
 
     # Call the function with ERROR level
     await notify_admin(mock_bot, "Error message", level="ERROR")

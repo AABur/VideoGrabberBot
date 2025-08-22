@@ -1,7 +1,6 @@
 """Tests for the configuration module."""
 
 import os
-from unittest.mock import patch
 
 
 def test_config_paths():
@@ -96,9 +95,11 @@ def test_admin_id_validation():
     assert ADMIN_USER_ID > 0
 
 
-@patch.dict(os.environ, {"TELEGRAM_TOKEN": "mock_token", "ADMIN_USER_ID": "123456"})
-def test_env_variables():
+def test_env_variables(mocker):
     """Test environment variables are correctly used."""
+    # Mock environment variables
+    mocker.patch.dict(os.environ, {"TELEGRAM_TOKEN": "mock_token", "ADMIN_USER_ID": "123456"})
+    
     # We can't easily reload the config module, but we can test
     # that getenv works as expected with our patched environment
     assert os.getenv("TELEGRAM_TOKEN") == "mock_token"

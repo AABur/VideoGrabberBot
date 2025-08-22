@@ -1,20 +1,18 @@
 # tests/test_queue.py
 """Tests for download queue."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from bot.services.queue import DownloadQueue, DownloadTask
 
 
 @pytest.mark.asyncio
-async def test_queue_add_task():
+async def test_queue_add_task(mocker):
     """Test adding tasks to the queue."""
     queue = DownloadQueue()
 
     # Mock _process_queue to prevent actual execution
-    queue._process_queue = AsyncMock()
+    queue._process_queue = mocker.AsyncMock()
     # Add a task
     task = DownloadTask(chat_id=123, url="https://example.com", format_string="test_format")
     position = await queue.add_task(task)
@@ -34,82 +32,82 @@ async def test_queue_add_task():
 
 
 @pytest.mark.asyncio
-async def test_queue_processing():
+async def test_queue_processing(mocker):
     """Test queue processing."""
     queue = DownloadQueue()
 
     # Create mock bot
-    mock_bot = AsyncMock()
+    mock_bot = mocker.AsyncMock()
 
     # Mock download function
-    with patch("bot.services.downloader.download_youtube_video", AsyncMock()) as mock_download:
-        # Add tasks
-        task1 = DownloadTask(
-            chat_id=123,
-            url="https://example.com/1",
-            format_string="test_format",
-            additional_data={"bot": mock_bot},
-        )
+    mock_download = mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock())
+    
+    # Add tasks
+    task1 = DownloadTask(
+        chat_id=123,
+        url="https://example.com/1",
+        format_string="test_format",
+        additional_data={"bot": mock_bot},
+    )
 
-        task2 = DownloadTask(
-            chat_id=456,
-            url="https://example.com/2",
-            format_string="test_format",
-            additional_data={"bot": mock_bot},
-        )
+    task2 = DownloadTask(
+        chat_id=456,
+        url="https://example.com/2",
+        format_string="test_format",
+        additional_data={"bot": mock_bot},
+    )
 
-        await queue.add_task(task1)
-        await queue.add_task(task2)
+    await queue.add_task(task1)
+    await queue.add_task(task2)
 
-        # Process the queue
-        await queue._process_queue()
+    # Process the queue
+    await queue._process_queue()
 
-        # Both tasks should have been processed
-        assert mock_download.call_count == 2
+    # Both tasks should have been processed
+    assert mock_download.call_count == 2
 
-        # Queue should be empty
-        assert queue.queue.empty()
-        assert not queue.is_processing
+    # Queue should be empty
+    assert queue.queue.empty()
+    assert not queue.is_processing
 
 
 @pytest.mark.asyncio
-async def test_queue_error_handling():
+async def test_queue_error_handling(mocker):
     """Test queue handles errors properly."""
     queue = DownloadQueue()
 
     # Create mock bot
-    mock_bot = AsyncMock()
+    mock_bot = mocker.AsyncMock()
 
     # Mock download function to raise an exception
-    with (
-        patch(
-            "bot.services.downloader.download_youtube_video",
-            AsyncMock(side_effect=Exception("Test error")),
-        ) as mock_download,
-        patch("bot.services.queue.logger.error", MagicMock()) as mock_logger_error,
-    ):
-        # Add a task
-        task = DownloadTask(
-            chat_id=123,
-            url="https://example.com",
-            format_string="test_format",
-            additional_data={"bot": mock_bot},
-        )
+    mock_download = mocker.patch(
+        "bot.services.downloader.download_youtube_video",
+        mocker.AsyncMock(side_effect=Exception("Test error")),
+    )
+    mock_logger_error = mocker.patch("bot.services.queue.logger.error", mocker.MagicMock())
+    
+    # Add a task
+    task = DownloadTask(
+        chat_id=123,
+        url="https://example.com",
+        format_string="test_format",
+        additional_data={"bot": mock_bot},
+    )
 
-        await queue.add_task(task)
+    await queue.add_task(task)
 
-        # Process the queue
-        await queue._process_queue()
+    # Process the queue
+    await queue._process_queue()
 
-        # Function should have been called
-        mock_download.assert_called_once()
+    # Function should have been called
+    mock_download.assert_called_once()
 
-        # Error should have been logged
-        mock_logger_error.assert_called_once()
+    # Error should have been logged
+    mock_logger_error.assert_called_once()
 
-        # Queue should be empty despite the error
-        assert queue.queue.empty()
-        assert not queue.is_processing
+    # Queue should be empty despite the error
+    assert queue.queue.empty()
+    assert not queue.is_processing
 
 
 @pytest.mark.asyncio
@@ -181,30 +179,31 @@ async def test_get_queue_position_empty_queue():
 
 
 @pytest.mark.asyncio
-async def test_process_queue_missing_bot():
+async def test_process_queue_missing_bot(mocker):
     """Test queue processing when bot is missing in task data."""
     queue = DownloadQueue()
 
     # Mock logger
-    with patch("bot.services.queue.logger.error") as mock_logger_error:
-        # Add task without bot
-        task = DownloadTask(
-            chat_id=123,
-            url="https://example.com",
-            format_string="test_format",
-            additional_data={},  # No bot instance
-        )
+    mock_logger_error = mocker.patch("bot.services.queue.logger.error")
+    
+    # Add task without bot
+    task = DownloadTask(
+        chat_id=123,
+        url="https://example.com",
+        format_string="test_format",
+        additional_data={},  # No bot instance
+    )
 
-        # Add directly to queue
-        queue.queue.put_nowait(task)
+    # Add directly to queue
+    queue.queue.put_nowait(task)
 
-        # Process the queue
-        await queue._process_queue()
+    # Process the queue
+    await queue._process_queue()
 
-        # Should log error about missing bot
-        mock_logger_error.assert_called_once()
-        assert "Bot instance not provided" in mock_logger_error.call_args[0][0]
+    # Should log error about missing bot
+    mock_logger_error.assert_called_once()
+    assert "Bot instance not provided" in mock_logger_error.call_args[0][0]
 
-        # Queue should be empty
-        assert queue.queue.empty()
-        assert not queue.is_processing
+    # Queue should be empty
+    assert queue.queue.empty()
+    assert not queue.is_processing
