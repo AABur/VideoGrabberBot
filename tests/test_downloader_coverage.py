@@ -1,5 +1,6 @@
 """Additional tests for downloader module to improve coverage."""
 
+import asyncio
 import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,6 +16,8 @@ from bot.services.downloader import (
     _validate_file_size,
     _sync_download_video_file,
     _cleanup_temp_directory,
+    _download_video_file,
+    _handle_download_error,
 )
 
 
@@ -198,5 +201,124 @@ class TestCleanupTempDirectory:
             # Should have logged the error
             mock_logger.assert_called_once()
             assert "Failed to clean up temporary directory" in mock_logger.call_args[0][0]
+
+
+class TestDownloadVideoFileTimeout:
+    """Test download video file timeout scenarios."""
+
+    @pytest.mark.asyncio
+    async def test_download_video_file_timeout(self, tmp_path):
+        """Test download timeout error handling."""
+        url = "http://test.url"
+        ydl_opts = {"format": "best"}
+        temp_path = tmp_path
+        
+        with patch("bot.services.downloader.config") as mock_config, \
+             patch("asyncio.wait_for", side_effect=asyncio.TimeoutError()):
+            
+            mock_config.DOWNLOAD_TIMEOUT = 30
+            
+            with pytest.raises(NetworkError, match="Download timed out after 30 seconds"):
+                await _download_video_file(url, ydl_opts, temp_path)
+
+
+class TestHandleDownloadError:
+    """Test download error handling functionality."""
+
+    @pytest.mark.asyncio
+    async def test_handle_video_not_found_error(self, mocker):
+        """Test handling VideoNotFoundError."""
+        bot = mocker.AsyncMock()
+        chat_id = 12345
+        url = "http://test.url"
+        error = VideoNotFoundError("Video not found", context={"url": url})
+        
+        mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
+        
+        await _handle_download_error(bot, chat_id, url, error)
+        
+        # Check user message was sent (function calls send_message twice - once for user, once for admin)
+        assert bot.send_message.call_count == 2
+        # First call should be to the user
+        user_call_args = bot.send_message.call_args_list[0]
+        assert user_call_args[0][0] == chat_id
+        assert "Video Not Found" in user_call_args[0][1]
+
+    @pytest.mark.asyncio
+    async def test_handle_video_too_large_error(self, mocker):
+        """Test handling VideoTooLargeError."""
+        bot = mocker.AsyncMock()
+        chat_id = 12345
+        url = "http://test.url"
+        error = VideoTooLargeError("File too large", context={"url": url})
+        
+        mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
+        
+        await _handle_download_error(bot, chat_id, url, error)
+        
+        # Check user message was sent (function calls send_message twice - once for user, once for admin)
+        assert bot.send_message.call_count == 2
+        # First call should be to the user
+        user_call_args = bot.send_message.call_args_list[0]
+        assert user_call_args[0][0] == chat_id
+        assert "File Too Large" in user_call_args[0][1]
+
+    @pytest.mark.asyncio
+    async def test_handle_unsupported_format_error(self, mocker):
+        """Test handling UnsupportedFormatError."""
+        bot = mocker.AsyncMock()
+        chat_id = 12345
+        url = "http://test.url"
+        error = UnsupportedFormatError("Format not supported", context={"url": url})
+        
+        mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
+        
+        await _handle_download_error(bot, chat_id, url, error)
+        
+        # Check user message was sent (function calls send_message twice - once for user, once for admin)
+        assert bot.send_message.call_count == 2
+        # First call should be to the user
+        user_call_args = bot.send_message.call_args_list[0]
+        assert user_call_args[0][0] == chat_id
+        assert "Unsupported Format" in user_call_args[0][1]
+
+    @pytest.mark.asyncio
+    async def test_handle_network_error(self, mocker):
+        """Test handling NetworkError."""
+        bot = mocker.AsyncMock()
+        chat_id = 12345
+        url = "http://test.url"
+        error = NetworkError("Network failed", context={"url": url})
+        
+        mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
+        
+        await _handle_download_error(bot, chat_id, url, error)
+        
+        # Check user message was sent (function calls send_message twice - once for user, once for admin)
+        assert bot.send_message.call_count == 2
+        # First call should be to the user
+        user_call_args = bot.send_message.call_args_list[0]
+        assert user_call_args[0][0] == chat_id
+        assert "Network Error" in user_call_args[0][1]
+
+    @pytest.mark.asyncio
+    async def test_handle_unexpected_error(self, mocker):
+        """Test handling unexpected error types."""
+        bot = mocker.AsyncMock()
+        chat_id = 12345
+        url = "http://test.url"
+        error = Exception("Unexpected error")
+        
+        mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
+        
+        await _handle_download_error(bot, chat_id, url, error)
+        
+        # Check user message was sent (function calls send_message twice - once for user, once for admin)
+        assert bot.send_message.call_count == 2
+        # First call should be to the user
+        user_call_args = bot.send_message.call_args_list[0]
+        assert user_call_args[0][0] == chat_id
+        assert "Download Failed" in user_call_args[0][1]
+        assert "unexpected error" in user_call_args[0][1]
 
 
