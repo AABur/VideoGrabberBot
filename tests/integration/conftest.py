@@ -152,27 +152,111 @@ async def reset_queue():
 
 
 @pytest_asyncio.fixture
-async def integration_setup(mocker, temp_db, mock_bot, authorized_user, reset_queue):
-    """Setup for integration tests with all components initialized."""
-    # To prevent actual downloads, we'll mock the needed functions
+async def mock_download_system(mocker):
+    """Mock the entire download system with common patterns."""
+    return {
+        "download_video": mocker.patch(
+            "bot.services.downloader.download_youtube_video", 
+            mocker.AsyncMock()
+        ),
+        "store_url": mocker.patch(
+            "bot.handlers.download.store_url", 
+            return_value="test_url_id"
+        ),
+        "get_url": mocker.patch(
+            "bot.handlers.download.get_url",
+            return_value="https://www.youtube.com/watch?v=test_video"
+        ),
+        "is_youtube_url": mocker.patch(
+            "bot.handlers.download.is_youtube_url", 
+            return_value=True
+        ),
+    }
 
-    # Mock the key components used by the download workflow
-    mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock())
-    mocker.patch("bot.handlers.download.is_youtube_url", return_value=True)
-    mocker.patch(
-        "bot.services.formats.get_available_formats",
-        return_value={
-            "video:SD": {
-                "label": "SD (480p)",
-                "format": "best[height<=480]",
-                "type": "video",
-            },
-            "video:HD": {
-                "label": "HD (720p)",
-                "format": "best[height<=720]",
-                "type": "video",
-            },
+
+@pytest_asyncio.fixture
+async def mock_format_system(mocker):
+    """Mock the format system with standard format configurations."""
+    standard_format = {
+        "label": "HD (720p)",
+        "format": "best[height<=720]",
+        "type": "video",
+    }
+    
+    available_formats = {
+        "video:SD": {
+            "label": "SD (480p)", 
+            "format": "best[height<=480]",
+            "type": "video",
         },
-    )
+        "video:HD": {
+            "label": "HD (720p)",
+            "format": "best[height<=720]", 
+            "type": "video",
+        },
+    }
+    
+    return {
+        "get_format_by_id": mocker.patch(
+            "bot.services.formats.get_format_by_id",
+            return_value=standard_format
+        ),
+        "get_available_formats": mocker.patch(
+            "bot.services.formats.get_available_formats",
+            return_value=available_formats
+        ),
+    }
 
+
+@pytest_asyncio.fixture 
+async def mock_telegram_system(mocker, mock_bot):
+    """Mock the Telegram API system."""
+    return {
+        "get_bot": mocker.patch(
+            "bot.telegram_api.client.get_bot",
+            return_value=mock_bot
+        ),
+    }
+
+
+@pytest_asyncio.fixture
+async def mock_command_system(mocker):
+    """Mock the command system with common patterns."""
+    return {
+        "create_invite": mocker.patch(
+            "bot.handlers.commands.create_invite",
+            mocker.AsyncMock(return_value="test_invite")
+        ),
+        "add_user_success": mocker.patch(
+            "bot.handlers.commands.add_user",
+            mocker.AsyncMock(return_value=True)
+        ),
+    }
+
+
+@pytest_asyncio.fixture
+async def mock_error_system(mocker):
+    """Mock the error handling system."""
+    return {
+        "notify_admin": mocker.patch(
+            "bot.utils.logging.notify_admin",
+            mocker.AsyncMock()
+        ),
+    }
+
+
+@pytest_asyncio.fixture
+async def mock_complete_system(mock_download_system, mock_format_system, mock_telegram_system):
+    """Composite fixture combining the most commonly used mocks."""
+    return {
+        "download": mock_download_system,
+        "format": mock_format_system, 
+        "telegram": mock_telegram_system,
+    }
+
+
+@pytest_asyncio.fixture
+async def integration_setup(mocker, temp_db, mock_bot, authorized_user, reset_queue, mock_complete_system):
+    """Setup for integration tests with all components initialized."""
+    # The mocking is now handled by mock_complete_system fixture
     yield {"bot": mock_bot, "user": authorized_user, "db_path": temp_db}

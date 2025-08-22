@@ -31,7 +31,7 @@ class MockDownloadWithError:
 
 
 @pytest.mark.asyncio
-async def test_download_error_handling(integration_setup, mock_message, mock_callback_query, mocker):
+async def test_download_error_handling(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
     """Test error handling during download process."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_error_video"
@@ -54,21 +54,14 @@ async def test_download_error_handling(integration_setup, mock_message, mock_cal
     # Setup the mock bot
     mock_bot = integration_setup["bot"]
 
-    # Simulate the download process directly without process_url
-    mocker.patch(
-        "bot.handlers.download.get_url",
-        return_value="https://www.youtube.com/watch?v=test_error_video",
-    )
-    mocker.patch(
-        "bot.services.formats.get_format_by_id",
-        return_value={
-            "label": "SD (480p)",
-            "format": "test-format",
-            "type": "video",
-        },
-    )
-    mocker.patch("bot.services.downloader.download_youtube_video", download_error)
-    mocker.patch("bot.telegram_api.client.get_bot", return_value=mock_bot)
+    # Configure the existing mocks for this error test
+    mock_complete_system["download"]["get_url"].return_value = "https://www.youtube.com/watch?v=test_error_video"
+    mock_complete_system["format"]["get_format_by_id"].return_value = {
+        "label": "SD (480p)",
+        "format": "test-format",
+        "type": "video",
+    }
+    mock_complete_system["download"]["download_video"].side_effect = DownloadError("Test download error")
 
     # Process format selection (this adds task to queue)
     await process_format_selection(mock_callback_query)
@@ -87,14 +80,14 @@ async def test_download_error_handling(integration_setup, mock_message, mock_cal
     assert not download_queue.is_processing
 
     # Verify download error was raised and called with expected arguments
-    download_error.assert_called_once()
+    mock_complete_system["download"]["download_video"].assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_multiple_download_failures(integration_setup, mock_bot, mocker):
+async def test_multiple_download_failures(integration_setup, mock_bot, mock_download_system, mocker):
     """Test handling of multiple download failures using direct queue manipulation."""
-    # Create download error for testing
-    download_error = mocker.AsyncMock(side_effect=DownloadError("Test error"))
+    # Configure download system to fail
+    mock_download_system["download_video"].side_effect = DownloadError("Test error")
 
     # Create two tasks directly
     task1 = DownloadTask(
@@ -120,8 +113,7 @@ async def test_multiple_download_failures(integration_setup, mock_bot, mocker):
     # Verify both tasks are in queue
     assert download_queue.queue.qsize() == 2
 
-    # Process the queue with both failing tasks
-    mocker.patch("bot.services.downloader.download_youtube_video", download_error)
+    # The download system is already configured to fail
     await download_queue._process_queue()
 
     # Verify queue is empty after error handling
@@ -131,18 +123,15 @@ async def test_multiple_download_failures(integration_setup, mock_bot, mocker):
     assert not download_queue.is_processing
 
     # Verify download was attempted twice
-    assert download_error.call_count == 2
+    assert mock_download_system["download_video"].call_count == 2
 
 
 @pytest.mark.asyncio
-async def test_admin_notification_on_error(integration_setup, mock_bot, mocker):
+async def test_admin_notification_on_error(integration_setup, mock_bot, mock_error_system, mocker):
     """Test that admin is notified on critical errors."""
 
-    # Mock notify_admin function to track calls
-    notify_admin_mock = mocker.AsyncMock()
-
     # Create mock download with error that handles admin notification
-    mock_download_with_error = MockDownloadWithError(notify_admin_mock)
+    mock_download_with_error = MockDownloadWithError(mock_error_system["notify_admin"])
 
     # Create a task directly
     task = DownloadTask(
@@ -164,7 +153,6 @@ async def test_admin_notification_on_error(integration_setup, mock_bot, mocker):
         "bot.services.downloader.download_youtube_video",
         mock_download_with_error,
     )
-    mocker.patch("bot.utils.logging.notify_admin", notify_admin_mock)
 
     await download_queue._process_queue()
 
@@ -178,7 +166,7 @@ async def test_admin_notification_on_error(integration_setup, mock_bot, mocker):
     mock_bot.send_message.assert_called_once()
 
     # Verify admin was notified
-    notify_admin_mock.assert_called_once()
+    mock_error_system["notify_admin"].assert_called_once()
 
     # Check that the task was cleared
     assert download_queue.current_task is None

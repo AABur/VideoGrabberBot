@@ -8,13 +8,10 @@ from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
-async def test_full_download_workflow(integration_setup, mock_message, mock_callback_query, mocker):
+async def test_full_download_workflow(integration_setup, mock_message, mock_callback_query, mock_complete_system):
     """Test the full download workflow from URL to completed download."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_video"
-
-    # Mock the store_url function to return a predictable ID
-    mocker.patch("bot.handlers.download.store_url", return_value="test_url_id")
     # Process URL
     await process_url(mock_message)
 
@@ -37,11 +34,7 @@ async def test_full_download_workflow(integration_setup, mock_message, mock_call
     # Setup callback query with the selected format
     mock_callback_query.data = callback_data
 
-    # Mock get_url to return our test URL
-    mocker.patch(
-        "bot.handlers.download.get_url",
-        return_value="https://www.youtube.com/watch?v=test_video",
-    )
+    # Use the mocked get_url from the fixture
     # Process format selection
     await process_format_selection(mock_callback_query)
 
@@ -59,8 +52,7 @@ async def test_full_download_workflow(integration_setup, mock_message, mock_call
 
     # Process the download queue manually since we're in test mode
 
-    # Mock the download task processing
-    mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock())
+    # Download task processing is already mocked by the fixture
     await download_queue._process_queue()
 
     # Verify queue is now empty (task was processed)
@@ -73,7 +65,7 @@ async def test_full_download_workflow(integration_setup, mock_message, mock_call
 
 
 @pytest.mark.asyncio
-async def test_download_workflow_with_queue(integration_setup, mock_message, mock_callback_query, mocker):
+async def test_download_workflow_with_queue(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
     """Test multiple downloads being queued and processed in order."""
     # This test verifies that multiple downloads can be processed sequentially
     # Start with empty queue
@@ -82,23 +74,6 @@ async def test_download_workflow_with_queue(integration_setup, mock_message, moc
     # Use mock bot instance to avoid real API calls
     mock_bot = integration_setup["bot"]
     mock_bot.edit_message_text = mocker.AsyncMock()
-
-    # Patch appropriate functions
-    mocker.patch("bot.telegram_api.client.get_bot", return_value=mock_bot)
-    mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock())
-    mocker.patch(
-        "bot.handlers.download.get_url",
-        return_value="https://www.youtube.com/watch?v=test_video",
-    )
-    mocker.patch("bot.handlers.download.store_url", return_value="test_url_id")
-    mocker.patch(
-        "bot.services.formats.get_format_by_id",
-        return_value={
-            "label": "HD (720p)",
-            "format": "best[height<=720]",
-            "type": "video",
-        },
-    )
 
     # Add first task to queue (directly, bypassing process_format_selection)
     task1 = DownloadTask(
@@ -137,13 +112,13 @@ async def test_download_workflow_with_queue(integration_setup, mock_message, moc
 
 
 @pytest.mark.asyncio
-async def test_download_workflow_non_youtube_url(integration_setup, mock_message, mocker):
+async def test_download_workflow_non_youtube_url(integration_setup, mock_message, mock_download_system, mocker):
     """Test handling of non-YouTube URLs."""
     # Setup message with non-YouTube URL
     mock_message.text = "https://example.com/video"
 
     # Override is_youtube_url to return False for this test
-    mocker.patch("bot.handlers.download.is_youtube_url", return_value=False)
+    mock_download_system["is_youtube_url"].return_value = False
     # Process URL
     await process_url(mock_message)
 
@@ -178,13 +153,13 @@ async def test_download_workflow_unauthorized_user(integration_setup, mock_messa
 
 
 @pytest.mark.asyncio
-async def test_queue_notification_message(integration_setup, mock_message, mock_callback_query, mocker):
+async def test_queue_notification_message(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
     """Test notification messages for queued downloads."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_video_queued"
 
-    # Mock the store_url function to return a predictable ID
-    mocker.patch("bot.handlers.download.store_url", return_value="test_queue_url_id")
+    # Update store_url mock to return specific ID for this test
+    mock_complete_system["download"]["store_url"].return_value = "test_queue_url_id"
     # Process URL
     await process_url(mock_message)
 
@@ -198,19 +173,7 @@ async def test_queue_notification_message(integration_setup, mock_message, mock_
     mock_bot = integration_setup["bot"]
 
     # Set up mocks to simulate active queue processing
-    mocker.patch(
-        "bot.handlers.download.get_url",
-        return_value="https://www.youtube.com/watch?v=test_video_queued",
-    )
-    mocker.patch(
-        "bot.services.formats.get_format_by_id",
-        return_value={
-            "label": "HD (720p)",
-            "format": "best[height<=720]",
-            "type": "video",
-        },
-    )
-    mocker.patch("bot.telegram_api.client.get_bot", return_value=mock_bot)
+    mock_complete_system["download"]["get_url"].return_value = "https://www.youtube.com/watch?v=test_video_queued"
     # Force download_queue.is_processing to return True
     mocker.patch("bot.services.queue.download_queue.is_processing", True)
     # Force is_user_in_queue to return False to test notification message

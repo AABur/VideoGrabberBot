@@ -13,7 +13,7 @@ from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
-async def test_command_interaction_flow(integration_setup, mock_message, authorized_user, mocker):
+async def test_command_interaction_flow(integration_setup, mock_message, authorized_user, mock_command_system):
     """Test the flow of a user interacting with multiple commands."""
     # User starts bot interaction with /start
     mock_message.text = "/start"
@@ -36,12 +36,6 @@ async def test_command_interaction_flow(integration_setup, mock_message, authori
 
     # User generates an invite link
     mock_message.text = "/invite"
-
-    # Mock to create a predictable invite code
-    mocker.patch(
-        "bot.handlers.commands.create_invite",
-        mocker.AsyncMock(return_value="test_invite"),
-    )
     await command_invite(mock_message)
 
     # Verify invite link was generated
@@ -52,7 +46,7 @@ async def test_command_interaction_flow(integration_setup, mock_message, authori
 
 
 @pytest.mark.asyncio
-async def test_admin_user_commands(integration_setup, mock_message, mocker):
+async def test_admin_user_commands(integration_setup, mock_message, mock_command_system):
     """Test admin-specific commands."""
     # Set up message as coming from admin user
     from bot.config import ADMIN_USER_ID
@@ -61,8 +55,6 @@ async def test_admin_user_commands(integration_setup, mock_message, mocker):
 
     # Admin adds a new user
     mock_message.text = "/adduser 987654321"
-
-    mocker.patch("bot.handlers.commands.add_user", mocker.AsyncMock(return_value=True))
     await command_adduser(mock_message)
 
     # Verify confirmation message
@@ -73,8 +65,9 @@ async def test_admin_user_commands(integration_setup, mock_message, mocker):
 
     # Try adding a user that already exists
     mock_message.text = "/adduser 987654321"
-
-    mocker.patch("bot.handlers.commands.add_user", mocker.AsyncMock(return_value=False))
+    
+    # Configure the mock to return False for duplicate user
+    mock_command_system["add_user_success"].return_value = False
     await command_adduser(mock_message)
 
     # Verify message about existing user
@@ -128,16 +121,10 @@ async def test_cancel_command_integration(integration_setup, mock_message, autho
 
 
 @pytest.mark.asyncio
-async def test_invite_workflow(integration_setup, mock_message, mock_bot, mocker):
+async def test_invite_workflow(integration_setup, mock_message, mock_bot, mock_command_system):
     """Test the full invite workflow - creating and using an invite."""
     # Admin/authorized user creates an invite
     mock_message.text = "/invite"
-
-    # Mock invite creation
-    mocker.patch(
-        "bot.handlers.commands.create_invite",
-        mocker.AsyncMock(return_value="test_invite"),
-    )
     await command_invite(mock_message)
 
     # Verify invite was created and contains the invite code
@@ -147,10 +134,11 @@ async def test_invite_workflow(integration_setup, mock_message, mock_bot, mocker
 
     # Now we can test that an authorized user gets proper welcome message
     # Create a new message for clarity
-    user_message = mocker.MagicMock()
+    from unittest.mock import AsyncMock, MagicMock
+    user_message = MagicMock()
     user_message.from_user = mock_message.from_user  # Already authorized
     user_message.text = "/start"
-    user_message.answer = mocker.AsyncMock()
+    user_message.answer = AsyncMock()
 
     # Just send a start command
     await command_start(user_message)
