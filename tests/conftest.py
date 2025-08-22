@@ -6,7 +6,6 @@ proper isolation and consistent behavior of tests regardless of execution order.
 
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -207,7 +206,7 @@ def clear_format_cache():
 
 
 @pytest.fixture
-def mock_config():
+def mock_config(mocker):
     """Mock configuration variables for testing.
 
     This provides a controlled environment for tests by mocking
@@ -226,21 +225,20 @@ def mock_config():
         "DB_PATH": "memory:test_db",  # Use in-memory DB for isolation
     }
 
-    # Create a context manager that patches multiple config variables
-    with (
-        patch("bot.config.TELEGRAM_TOKEN", test_config["TELEGRAM_TOKEN"]),
-        patch("bot.config.ADMIN_USER_ID", test_config["ADMIN_USER_ID"]),
-        patch("bot.config.MAX_QUEUE_SIZE", test_config["MAX_QUEUE_SIZE"]),
-        patch("bot.config.DOWNLOAD_TIMEOUT", test_config["DOWNLOAD_TIMEOUT"]),
-        patch("bot.config.MAX_FILESIZE", test_config["MAX_FILESIZE"]),
-        patch("bot.config.TEMP_DIR", test_config["TEMP_DIR"]),
-        patch("bot.config.DB_PATH", test_config["DB_PATH"]),
-    ):
-        yield test_config
+    # Create patches for multiple config variables
+    mocker.patch("bot.config.TELEGRAM_TOKEN", test_config["TELEGRAM_TOKEN"])
+    mocker.patch("bot.config.ADMIN_USER_ID", test_config["ADMIN_USER_ID"])
+    mocker.patch("bot.config.MAX_QUEUE_SIZE", test_config["MAX_QUEUE_SIZE"])
+    mocker.patch("bot.config.DOWNLOAD_TIMEOUT", test_config["DOWNLOAD_TIMEOUT"])
+    mocker.patch("bot.config.MAX_FILESIZE", test_config["MAX_FILESIZE"])
+    mocker.patch("bot.config.TEMP_DIR", test_config["TEMP_DIR"])
+    mocker.patch("bot.config.DB_PATH", test_config["DB_PATH"])
+
+    yield test_config
 
 
 @pytest.fixture
-def mock_telegram_user(user_id: int = 12345):
+def mock_telegram_user(mocker, user_id: int = 12345):
     """Create a mock Telegram user.
 
     Args:
@@ -251,7 +249,7 @@ def mock_telegram_user(user_id: int = 12345):
     """
     from aiogram.types import User
 
-    user = MagicMock(spec=User)
+    user = mocker.MagicMock(spec=User)
     user.id = user_id
     user.username = f"test_user_{user_id}"
     user.first_name = "Test"
@@ -261,7 +259,7 @@ def mock_telegram_user(user_id: int = 12345):
 
 
 @pytest.fixture
-def mock_telegram_message(mock_telegram_user):
+def mock_telegram_message(mocker, mock_telegram_user):
     """Create a mock Telegram message.
 
     Args:
@@ -272,40 +270,40 @@ def mock_telegram_message(mock_telegram_user):
     """
     from aiogram.types import Message
 
-    message = MagicMock(spec=Message)
+    message = mocker.MagicMock(spec=Message)
     message.from_user = mock_telegram_user
     message.chat.id = mock_telegram_user.id
     message.text = "Test message"
-    message.answer = AsyncMock()
-    message.reply = AsyncMock()
+    message.answer = mocker.AsyncMock()
+    message.reply = mocker.AsyncMock()
 
     return message
 
 
 @pytest.fixture
-def authorized_user_mock():
+def authorized_user_mock(mocker):
     """Mock the user authorization check to return True.
 
     This fixture patches the is_user_authorized function to always return True.
     """
-    with patch(
+    mocker.patch(
         "bot.handlers.download.is_user_authorized",
-        AsyncMock(return_value=True),
-    ):
-        yield
+        mocker.AsyncMock(return_value=True),
+    )
+    yield
 
 
 @pytest.fixture
-def unauthorized_user_mock():
+def unauthorized_user_mock(mocker):
     """Mock the user authorization check to return False.
 
     This fixture patches the is_user_authorized function to always return False.
     """
-    with patch(
+    mocker.patch(
         "bot.handlers.download.is_user_authorized",
-        AsyncMock(return_value=False),
-    ):
-        yield
+        mocker.AsyncMock(return_value=False),
+    )
+    yield
 
 
 @pytest.fixture
