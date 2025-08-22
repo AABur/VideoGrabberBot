@@ -6,7 +6,6 @@ They use real database connections to ensure the security logic works correctly.
 
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
@@ -21,7 +20,7 @@ from bot.utils.db import (
 
 
 @pytest_asyncio.fixture
-async def secure_test_db():
+async def secure_test_db(mocker):
     """Create a real temporary database for security testing.
     
     This fixture creates a real database instead of mocking to ensure
@@ -31,10 +30,10 @@ async def secure_test_db():
         temp_db_path = Path(temp_dir) / "security_test.db"
         
         # Patch the DB_PATH in the db module to use our test database
-        with patch("bot.utils.db.DB_PATH", temp_db_path):
-            # Initialize the real database
-            await init_db()
-            yield temp_db_path
+        mocker.patch("bot.utils.db.DB_PATH", temp_db_path)
+        # Initialize the real database
+        await init_db()
+        yield temp_db_path
 
 
 @pytest.mark.asyncio
@@ -87,19 +86,19 @@ async def test_deactivated_user_not_authorized(secure_test_db):
 
 
 @pytest.mark.asyncio
-async def test_admin_user_authorization(secure_test_db):
+async def test_admin_user_authorization(secure_test_db, mocker):
     """Test admin user authorization logic."""
     # Test with the actual admin user ID from config
-    with patch("bot.config.ADMIN_USER_ID", 12345):
-        # Admin should be authorized even without being in users table
-        # This tests the actual authorization logic
-        admin_id = 12345
-        
-        # Add admin to database to test normal flow
-        await add_user(admin_id, "admin", admin_id)
-        
-        is_authorized = await is_user_authorized(admin_id)
-        assert is_authorized is True
+    mocker.patch("bot.config.ADMIN_USER_ID", 12345)
+    # Admin should be authorized even without being in users table
+    # This tests the actual authorization logic
+    admin_id = 12345
+    
+    # Add admin to database to test normal flow
+    await add_user(admin_id, "admin", admin_id)
+    
+    is_authorized = await is_user_authorized(admin_id)
+    assert is_authorized is True
 
 
 @pytest.mark.asyncio
@@ -133,13 +132,13 @@ async def test_invite_system_authorization_flow(secure_test_db):
 
 
 @pytest.mark.asyncio
-async def test_database_error_handling(secure_test_db):
+async def test_database_error_handling(secure_test_db, mocker):
     """Test authorization behavior when database errors occur."""
     # Test with invalid database path to simulate database error
-    with patch("bot.utils.db.DB_PATH", "/invalid/path/database.db"):
-        # Should return False (fail secure) when database error occurs
-        is_authorized = await is_user_authorized(123456789)
-        assert is_authorized is False
+    mocker.patch("bot.utils.db.DB_PATH", "/invalid/path/database.db")
+    # Should return False (fail secure) when database error occurs
+    is_authorized = await is_user_authorized(123456789)
+    assert is_authorized is False
 
 
 @pytest.mark.asyncio

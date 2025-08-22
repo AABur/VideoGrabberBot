@@ -1,7 +1,5 @@
 """Integration tests for the download workflow."""
 
-from unittest.mock import AsyncMock, patch
-
 import pytest
 from aiogram.types import InlineKeyboardMarkup
 
@@ -10,72 +8,72 @@ from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
-async def test_full_download_workflow(integration_setup, mock_message, mock_callback_query):
+async def test_full_download_workflow(integration_setup, mock_message, mock_callback_query, mocker):
     """Test the full download workflow from URL to completed download."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_video"
 
     # Mock the store_url function to return a predictable ID
-    with patch("bot.handlers.download.store_url", return_value="test_url_id"):
-        # Process URL
-        await process_url(mock_message)
+    mocker.patch("bot.handlers.download.store_url", return_value="test_url_id")
+    # Process URL
+    await process_url(mock_message)
 
-        # Verify format selection keyboard was sent
-        mock_message.answer.assert_called_once()
-        args, kwargs = mock_message.answer.call_args
-        assert "Choose Download Format" in args[0]
-        assert "reply_markup" in kwargs
+    # Verify format selection keyboard was sent
+    mock_message.answer.assert_called_once()
+    args, kwargs = mock_message.answer.call_args
+    assert "Choose Download Format" in args[0]
+    assert "reply_markup" in kwargs
 
-        # Extract the keyboard and verify options
-        markup = kwargs["reply_markup"]
-        assert isinstance(markup, InlineKeyboardMarkup)
-        assert len(markup.inline_keyboard) > 0
+    # Extract the keyboard and verify options
+    markup = kwargs["reply_markup"]
+    assert isinstance(markup, InlineKeyboardMarkup)
+    assert len(markup.inline_keyboard) > 0
 
-        # Simulate user selecting a format (e.g., HD)
-        first_button = markup.inline_keyboard[0][0]
-        callback_data = first_button.callback_data
-        assert callback_data.startswith("fmt:")
+    # Simulate user selecting a format (e.g., HD)
+    first_button = markup.inline_keyboard[0][0]
+    callback_data = first_button.callback_data
+    assert callback_data.startswith("fmt:")
 
-        # Setup callback query with the selected format
-        mock_callback_query.data = callback_data
+    # Setup callback query with the selected format
+    mock_callback_query.data = callback_data
 
-        # Mock get_url to return our test URL
-        with patch(
-            "bot.handlers.download.get_url",
-            return_value="https://www.youtube.com/watch?v=test_video",
-        ):
-            # Process format selection
-            await process_format_selection(mock_callback_query)
+    # Mock get_url to return our test URL
+    mocker.patch(
+        "bot.handlers.download.get_url",
+        return_value="https://www.youtube.com/watch?v=test_video",
+    )
+    # Process format selection
+    await process_format_selection(mock_callback_query)
 
-            # Verify callback was answered
-            mock_callback_query.answer.assert_called_once()
+    # Verify callback was answered
+    mock_callback_query.answer.assert_called_once()
 
-            # Verify message was edited to show download status
-            mock_callback_query.message.edit_text.assert_called_once()
-            edit_call_args = mock_callback_query.message.edit_text.call_args
-            edit_args = edit_call_args[0][0]
-            assert "Download" in edit_args
+    # Verify message was edited to show download status
+    mock_callback_query.message.edit_text.assert_called_once()
+    edit_call_args = mock_callback_query.message.edit_text.call_args
+    edit_args = edit_call_args[0][0]
+    assert "Download" in edit_args
 
-            # Verify task was added to queue
-            assert not download_queue.queue.empty()
+    # Verify task was added to queue
+    assert not download_queue.queue.empty()
 
-            # Process the download queue manually since we're in test mode
+    # Process the download queue manually since we're in test mode
 
-            # Mock the download task processing
-            with patch("bot.services.downloader.download_youtube_video", AsyncMock()):
-                await download_queue._process_queue()
+    # Mock the download task processing
+    mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock())
+    await download_queue._process_queue()
 
-                # Verify queue is now empty (task was processed)
-                assert download_queue.queue.empty()
+    # Verify queue is now empty (task was processed)
+    assert download_queue.queue.empty()
 
-                # In real scenario, the bot would have sent a document
-                # Since we mocked the download function, we just verify
-                # that the queue processing completed successfully
-                assert not download_queue.is_processing
+    # In real scenario, the bot would have sent a document
+    # Since we mocked the download function, we just verify
+    # that the queue processing completed successfully
+    assert not download_queue.is_processing
 
 
 @pytest.mark.asyncio
-async def test_download_workflow_with_queue(integration_setup, mock_message, mock_callback_query):
+async def test_download_workflow_with_queue(integration_setup, mock_message, mock_callback_query, mocker):
     """Test multiple downloads being queued and processed in order."""
     # This test verifies that multiple downloads can be processed sequentially
     # Start with empty queue
@@ -83,81 +81,80 @@ async def test_download_workflow_with_queue(integration_setup, mock_message, moc
 
     # Use mock bot instance to avoid real API calls
     mock_bot = integration_setup["bot"]
-    mock_bot.edit_message_text = AsyncMock()
+    mock_bot.edit_message_text = mocker.AsyncMock()
 
     # Patch appropriate functions
-    with (
-        patch("bot.telegram_api.client.get_bot", return_value=mock_bot),
-        patch("bot.services.downloader.download_youtube_video", AsyncMock()),
-        patch(
-            "bot.handlers.download.get_url",
-            return_value="https://www.youtube.com/watch?v=test_video",
-        ),
-        patch("bot.handlers.download.store_url", return_value="test_url_id"),
-        patch(
-            "bot.services.formats.get_format_by_id",
-            return_value={
-                "label": "HD (720p)",
-                "format": "best[height<=720]",
-                "type": "video",
-            },
-        ),
-    ):
-        # Add first task to queue (directly, bypassing process_format_selection)
-        task1 = DownloadTask(
-            chat_id=123456,
-            url="https://www.youtube.com/watch?v=test_video1",
-            format_string="best[height<=720]",
-            status_message_id=100,
-            additional_data={"bot": mock_bot},
-        )
+    mocker.patch("bot.telegram_api.client.get_bot", return_value=mock_bot)
+    mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock())
+    mocker.patch(
+        "bot.handlers.download.get_url",
+        return_value="https://www.youtube.com/watch?v=test_video",
+    )
+    mocker.patch("bot.handlers.download.store_url", return_value="test_url_id")
+    mocker.patch(
+        "bot.services.formats.get_format_by_id",
+        return_value={
+            "label": "HD (720p)",
+            "format": "best[height<=720]",
+            "type": "video",
+        },
+    )
 
-        # Add second task
-        task2 = DownloadTask(
-            chat_id=123456,
-            url="https://www.youtube.com/watch?v=test_video2",
-            format_string="best[height<=720]",
-            status_message_id=101,
-            additional_data={"bot": mock_bot},
-        )
+    # Add first task to queue (directly, bypassing process_format_selection)
+    task1 = DownloadTask(
+        chat_id=123456,
+        url="https://www.youtube.com/watch?v=test_video1",
+        format_string="best[height<=720]",
+        status_message_id=100,
+        additional_data={"bot": mock_bot},
+    )
 
-        # Add tasks to queue
-        position1 = await download_queue.add_task(task1)
-        position2 = await download_queue.add_task(task2)
+    # Add second task
+    task2 = DownloadTask(
+        chat_id=123456,
+        url="https://www.youtube.com/watch?v=test_video2",
+        format_string="best[height<=720]",
+        status_message_id=101,
+        additional_data={"bot": mock_bot},
+    )
 
-        # Verify queue positions
-        assert position1 == 1
-        assert position2 == 2
+    # Add tasks to queue
+    position1 = await download_queue.add_task(task1)
+    position2 = await download_queue.add_task(task2)
 
-        # Verify queue size
-        assert download_queue.queue.qsize() == 2
+    # Verify queue positions
+    assert position1 == 1
+    assert position2 == 2
 
-        # Process tasks
-        await download_queue._process_queue()
+    # Verify queue size
+    assert download_queue.queue.qsize() == 2
 
-        # Verify queue is now empty (both tasks were processed)
-        assert download_queue.queue.empty()
+    # Process tasks
+    await download_queue._process_queue()
+
+    # Verify queue is now empty (both tasks were processed)
+    assert download_queue.queue.empty()
 
 
 @pytest.mark.asyncio
-async def test_download_workflow_non_youtube_url(integration_setup, mock_message):
+async def test_download_workflow_non_youtube_url(integration_setup, mock_message, mocker):
     """Test handling of non-YouTube URLs."""
     # Setup message with non-YouTube URL
     mock_message.text = "https://example.com/video"
 
     # Override is_youtube_url to return False for this test
-    with patch("bot.handlers.download.is_youtube_url", return_value=False):
-        # Process URL
-        await process_url(mock_message)
+    mocker.patch("bot.handlers.download.is_youtube_url", return_value=False)
+    # Process URL
+    await process_url(mock_message)
 
-        # Verify error message was sent
-        mock_message.answer.assert_called_once()
-        args = mock_message.answer.call_args[0][0]
-        assert "Unsupported URL" in args
-        assert "valid YouTube link" in args
+    # Verify error message was sent
+    mock_message.answer.assert_called_once()
+    args = mock_message.answer.call_args[0][0]
+    assert "Unsupported URL" in args
+    assert "valid YouTube link" in args
 
-        # Verify no tasks were added to queue
-        assert download_queue.queue.empty()
+    # Verify no tasks were added to queue
+    assert download_queue.queue.empty()
 
 
 @pytest.mark.asyncio
@@ -181,56 +178,55 @@ async def test_download_workflow_unauthorized_user(integration_setup, mock_messa
 
 
 @pytest.mark.asyncio
-async def test_queue_notification_message(integration_setup, mock_message, mock_callback_query):
+async def test_queue_notification_message(integration_setup, mock_message, mock_callback_query, mocker):
     """Test notification messages for queued downloads."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_video_queued"
 
     # Mock the store_url function to return a predictable ID
-    with patch("bot.handlers.download.store_url", return_value="test_queue_url_id"):
-        # Process URL
-        await process_url(mock_message)
+    mocker.patch("bot.handlers.download.store_url", return_value="test_queue_url_id")
+    # Process URL
+    await process_url(mock_message)
 
-        # Extract the keyboard and verify options
-        _, kwargs = mock_message.answer.call_args
-        markup = kwargs["reply_markup"]
-        callback_data = markup.inline_keyboard[0][0].callback_data
+    # Extract the keyboard and verify options
+    _, kwargs = mock_message.answer.call_args
+    markup = kwargs["reply_markup"]
+    callback_data = markup.inline_keyboard[0][0].callback_data
 
     # Setup callback query with the format data
     mock_callback_query.data = callback_data
     mock_bot = integration_setup["bot"]
 
     # Set up mocks to simulate active queue processing
-    with (
-        patch(
-            "bot.handlers.download.get_url",
-            return_value="https://www.youtube.com/watch?v=test_video_queued",
-        ),
-        patch(
-            "bot.services.formats.get_format_by_id",
-            return_value={
-                "label": "HD (720p)",
-                "format": "best[height<=720]",
-                "type": "video",
-            },
-        ),
-        patch("bot.telegram_api.client.get_bot", return_value=mock_bot),
-        # Force download_queue.is_processing to return True
-        patch("bot.services.queue.download_queue.is_processing", True),
-        # Force is_user_in_queue to return False to test notification message
-        patch(
-            "bot.services.queue.download_queue.is_user_in_queue",
-            return_value=False,
-        ),
-    ):
-        # Process format selection
-        await process_format_selection(mock_callback_query)
+    mocker.patch(
+        "bot.handlers.download.get_url",
+        return_value="https://www.youtube.com/watch?v=test_video_queued",
+    )
+    mocker.patch(
+        "bot.services.formats.get_format_by_id",
+        return_value={
+            "label": "HD (720p)",
+            "format": "best[height<=720]",
+            "type": "video",
+        },
+    )
+    mocker.patch("bot.telegram_api.client.get_bot", return_value=mock_bot)
+    # Force download_queue.is_processing to return True
+    mocker.patch("bot.services.queue.download_queue.is_processing", True)
+    # Force is_user_in_queue to return False to test notification message
+    mocker.patch(
+        "bot.services.queue.download_queue.is_user_in_queue",
+        return_value=False,
+    )
 
-        # Verify callback was answered
-        mock_callback_query.answer.assert_called_once()
+    # Process format selection
+    await process_format_selection(mock_callback_query)
 
-        # Verify message was edited with the notification about queuing
-        edit_call_args = mock_callback_query.message.edit_text.call_args
-        edit_text_args = edit_call_args[0][0]
-        assert "queued" in edit_text_args
-        assert "notified when processing begins" in edit_text_args
+    # Verify callback was answered
+    mock_callback_query.answer.assert_called_once()
+
+    # Verify message was edited with the notification about queuing
+    edit_call_args = mock_callback_query.message.edit_text.call_args
+    edit_text_args = edit_call_args[0][0]
+    assert "queued" in edit_text_args
+    assert "notified when processing begins" in edit_text_args

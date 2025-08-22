@@ -6,7 +6,6 @@ without excessive mocking to ensure security vulnerabilities aren't hidden.
 
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -18,20 +17,20 @@ from bot.utils.db import add_user, init_db
 
 
 @pytest_asyncio.fixture
-async def e2e_test_db():
+async def e2e_test_db(mocker):
     """Create real database for end-to-end testing."""
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_db_path = Path(temp_dir) / "e2e_security_test.db"
         
-        with patch("bot.utils.db.DB_PATH", temp_db_path):
-            await init_db()
-            yield temp_db_path
+        mocker.patch("bot.utils.db.DB_PATH", temp_db_path)
+        await init_db()
+        yield temp_db_path
 
 
 @pytest.fixture
-def mock_authorized_user():
+def mock_authorized_user(mocker):
     """Create a mock user that will be added to real database."""
-    user = MagicMock(spec=User)
+    user = mocker.MagicMock(spec=User)
     user.id = 123456789
     user.username = "authorized_user"
     user.first_name = "Authorized"
@@ -40,9 +39,9 @@ def mock_authorized_user():
 
 
 @pytest.fixture
-def mock_unauthorized_user():
+def mock_unauthorized_user(mocker):
     """Create a mock user that will NOT be added to database."""
-    user = MagicMock(spec=User)
+    user = mocker.MagicMock(spec=User)
     user.id = 999999999
     user.username = "unauthorized_user"
     user.first_name = "Unauthorized"
@@ -51,11 +50,11 @@ def mock_unauthorized_user():
 
 
 @pytest.fixture
-def mock_message():
+def mock_message(mocker):
     """Create mock message with answer method."""
-    message = MagicMock(spec=Message)
-    message.answer = AsyncMock()
-    message.reply = AsyncMock()
+    message = mocker.MagicMock(spec=Message)
+    message.answer = mocker.AsyncMock()
+    message.reply = mocker.AsyncMock()
     return message
 
 
@@ -117,7 +116,7 @@ async def test_e2e_unauthorized_user_download_attempt(
 
 @pytest.mark.asyncio
 async def test_e2e_authorized_user_download_flow(
-    e2e_test_db, mock_authorized_user, mock_message
+    e2e_test_db, mock_authorized_user, mock_message, mocker
 ):
     """Test that authorized users can initiate download flow."""
     # Add user to database (real authorization)
@@ -126,39 +125,37 @@ async def test_e2e_authorized_user_download_flow(
     mock_message.from_user = mock_authorized_user
     mock_message.text = "https://www.youtube.com/watch?v=test_video"
     
-    with patch("bot.handlers.download.store_url", return_value="test_url_id"):
-        # Process URL - should work for authorized user
-        await process_url(mock_message)
-        
-        # Verify format selection was presented (not unauthorized message)
-        mock_message.answer.assert_called_once()
-        call_args = mock_message.answer.call_args
-        message_text = call_args[0][0]
-        assert "Choose Download Format" in message_text
-        assert "not authorized" not in message_text.lower()
+    mocker.patch("bot.handlers.download.store_url", return_value="test_url_id")
+    # Process URL - should work for authorized user
+    await process_url(mock_message)
+    
+    # Verify format selection was presented (not unauthorized message)
+    mock_message.answer.assert_called_once()
+    call_args = mock_message.answer.call_args
+    message_text = call_args[0][0]
+    assert "Choose Download Format" in message_text
+    assert "not authorized" not in message_text.lower()
 
 
 @pytest.mark.asyncio
-async def test_e2e_unauthorized_callback_query(e2e_test_db, mock_unauthorized_user):
+async def test_e2e_unauthorized_callback_query(e2e_test_db, mock_unauthorized_user, mocker):
     """Test that unauthorized users cannot use callback queries."""
-    callback_query = MagicMock(spec=CallbackQuery)
+    callback_query = mocker.MagicMock(spec=CallbackQuery)
     callback_query.from_user = mock_unauthorized_user
     callback_query.data = "fmt:TEST_HD:test_url_id"
-    callback_query.answer = AsyncMock()
-    callback_query.message = MagicMock()
-    callback_query.message.edit_text = AsyncMock()
+    callback_query.answer = mocker.AsyncMock()
+    callback_query.message = mocker.MagicMock()
+    callback_query.message.edit_text = mocker.AsyncMock()
     
     # Mock URL storage and format to ensure callback processes correctly  
-    with (
-        patch("bot.handlers.download.get_url", return_value="https://youtube.com/watch?v=test"),
-        patch("bot.handlers.download.get_format_by_id", return_value={"label": "HD (720p)", "format": "test_format"}),
-        patch("bot.handlers.download.download_queue") as mock_queue,
-    ):
-        mock_queue.add_task = AsyncMock(return_value=1)
-        
-        # SECURITY ISSUE: System currently does NOT check authorization in callback queries!
-        # This is a security vulnerability - unauthorized users can use callbacks
-        await process_format_selection(callback_query)
+    mocker.patch("bot.handlers.download.get_url", return_value="https://youtube.com/watch?v=test")
+    mocker.patch("bot.handlers.download.get_format_by_id", return_value={"label": "HD (720p)", "format": "test_format"})
+    mock_queue = mocker.patch("bot.handlers.download.download_queue")
+    mock_queue.add_task = mocker.AsyncMock(return_value=1)
+    
+    # SECURITY ISSUE: System currently does NOT check authorization in callback queries!
+    # This is a security vulnerability - unauthorized users can use callbacks
+    await process_format_selection(callback_query)
     
     # Should answer callback to prevent loading state
     callback_query.answer.assert_called_once()
@@ -189,10 +186,10 @@ async def test_e2e_admin_only_commands(e2e_test_db, mock_unauthorized_user, mock
 
 
 @pytest.mark.asyncio
-async def test_e2e_invite_system_security(e2e_test_db, mock_message):
+async def test_e2e_invite_system_security(e2e_test_db, mock_message, mocker):
     """Test complete invite system security flow."""
     # Create admin user
-    admin_user = MagicMock(spec=User)
+    admin_user = mocker.MagicMock(spec=User)
     admin_user.id = 987654321
     admin_user.username = "admin"
     
@@ -202,25 +199,25 @@ async def test_e2e_invite_system_security(e2e_test_db, mock_message):
     mock_message.from_user = admin_user
     
     # Mock bot.get_me() and admin configuration
-    mock_bot_me = MagicMock()
+    mock_bot_me = mocker.MagicMock()
     mock_bot_me.username = "test_bot"
-    mock_message.bot.get_me = AsyncMock(return_value=mock_bot_me)
+    mock_message.bot.get_me = mocker.AsyncMock(return_value=mock_bot_me)
     
     # Mock the configuration to recognize this user as admin
-    with patch("bot.handlers.commands.ADMIN_USER_ID", admin_user.id):
-        # Admin creates invite
-        await command_invite(mock_message)
-        
-        # Should succeed for admin
-        mock_message.answer.assert_called()
-        call_args = mock_message.answer.call_args
-        message_text = call_args[0][0]
-        assert "invite" in message_text.lower()
-        assert "not authorized" not in message_text.lower()
+    mocker.patch("bot.handlers.commands.ADMIN_USER_ID", admin_user.id)
+    # Admin creates invite
+    await command_invite(mock_message)
+    
+    # Should succeed for admin
+    mock_message.answer.assert_called()
+    call_args = mock_message.answer.call_args
+    message_text = call_args[0][0]
+    assert "invite" in message_text.lower()
+    assert "not authorized" not in message_text.lower()
 
 
 @pytest.mark.asyncio
-async def test_e2e_session_consistency(e2e_test_db, mock_authorized_user, mock_message):
+async def test_e2e_session_consistency(e2e_test_db, mock_authorized_user, mock_message, mocker):
     """Test that authorization remains consistent across multiple operations."""
     # Add user to database
     await add_user(mock_authorized_user.id, mock_authorized_user.username, mock_authorized_user.id)
@@ -236,8 +233,8 @@ async def test_e2e_session_consistency(e2e_test_db, mock_authorized_user, mock_m
     
     # Second operation - URL processing
     mock_message.text = "https://www.youtube.com/watch?v=test_video"
-    with patch("bot.handlers.download.store_url", return_value="test_url_id"):
-        await process_url(mock_message)
+    mocker.patch("bot.handlers.download.store_url", return_value="test_url_id")
+    await process_url(mock_message)
     
     # Both operations should succeed
     mock_message.answer.assert_called()
@@ -247,7 +244,7 @@ async def test_e2e_session_consistency(e2e_test_db, mock_authorized_user, mock_m
 
 
 @pytest.mark.asyncio
-async def test_e2e_malicious_input_handling(e2e_test_db, mock_authorized_user, mock_message):
+async def test_e2e_malicious_input_handling(e2e_test_db, mock_authorized_user, mock_message, mocker):
     """Test that system handles malicious inputs securely."""
     # Add authorized user
     await add_user(mock_authorized_user.id, mock_authorized_user.username, mock_authorized_user.id)
@@ -281,7 +278,7 @@ async def test_e2e_malicious_input_handling(e2e_test_db, mock_authorized_user, m
 
 
 @pytest.mark.asyncio 
-async def test_e2e_authorization_after_deactivation(e2e_test_db, mock_authorized_user, mock_message):
+async def test_e2e_authorization_after_deactivation(e2e_test_db, mock_authorized_user, mock_message, mocker):
     """Test that deactivated users lose access immediately."""
     from bot.utils.db import deactivate_user
     
