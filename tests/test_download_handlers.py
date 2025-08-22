@@ -310,80 +310,77 @@ async def test_process_format_selection_already_processing(mocker):
 async def test_process_format_selection_invalid_callback_data(mocker):
     """Test format selection with invalid callback data."""
     # Mock from_user
-    mock_from_user = MagicMock()
+    mock_from_user = mocker.MagicMock()
     mock_from_user.id = 123456
 
     # Mock callback query with invalid format (missing parts)
-    mock_callback = MagicMock(spec=CallbackQuery)
+    mock_callback = mocker.MagicMock(spec=CallbackQuery)
     mock_callback.data = "fmt"  # Missing format and URL ID
-    mock_callback.answer = AsyncMock()
+    mock_callback.answer = mocker.AsyncMock()
     mock_callback.from_user = mock_from_user  # Add the missing attribute
 
     # Setup mocks for logger
-    logger_error_mock = MagicMock()
+    logger_error_mock = mocker.MagicMock()
 
-    with (
-        patch("bot.handlers.download.logger.debug"),
-        patch("bot.handlers.download.logger.error", logger_error_mock),
-    ):
-        await process_format_selection(mock_callback)
+    mocker.patch("bot.handlers.download.logger.debug")
+    mocker.patch("bot.handlers.download.logger.error", logger_error_mock)
+    
+    await process_format_selection(mock_callback)
 
-        # Verify logger.error was called
-        logger_error_mock.assert_called_once()
+    # Verify logger.error was called
+    logger_error_mock.assert_called_once()
 
-        # Verify callback was answered with error
-        mock_callback.answer.assert_called_once_with("Invalid format selection")
+    # Verify callback was answered with error
+    mock_callback.answer.assert_called_once_with("Invalid format selection")
 
 
 @pytest.mark.asyncio
-async def test_process_format_selection_url_not_found():
+async def test_process_format_selection_url_not_found(mocker):
     """Test format selection when URL is not found."""
     # Mock from_user
-    mock_from_user = MagicMock()
+    mock_from_user = mocker.MagicMock()
     mock_from_user.id = 123456
 
     # Mock callback query
-    mock_callback = MagicMock(spec=CallbackQuery)
+    mock_callback = mocker.MagicMock(spec=CallbackQuery)
     mock_callback.data = "fmt:HD:url123"
-    mock_callback.answer = AsyncMock()
+    mock_callback.answer = mocker.AsyncMock()
     mock_callback.from_user = mock_from_user  # Add the missing attribute
 
     # Setup mocks
-    with (
-        patch("bot.handlers.download.get_url", return_value=None),
-        patch("bot.handlers.download.logger.debug"),
-        patch("bot.handlers.download.logger.error"),
-    ):
-        await process_format_selection(mock_callback)
+    mocker.patch("bot.handlers.download.get_url", return_value=None)
+    mocker.patch("bot.handlers.download.logger.debug")
+    mocker.patch("bot.handlers.download.logger.error")
+    
+    await process_format_selection(mock_callback)
 
-        # Verify callback was answered with error
-        mock_callback.answer.assert_called_once_with("URL not found or expired")
+    # Verify callback was answered with error
+    mock_callback.answer.assert_called_once_with("URL not found or expired")
 
 
 @pytest.mark.asyncio
-async def test_process_format_selection_format_not_found():
+async def test_process_format_selection_format_not_found(mocker):
     """Test format selection when format is not found."""
     # Mock from_user
-    mock_from_user = MagicMock()
+    mock_from_user = mocker.MagicMock()
     mock_from_user.id = 123456
 
     # Mock callback query
-    mock_callback = MagicMock(spec=CallbackQuery)
+    mock_callback = mocker.MagicMock(spec=CallbackQuery)
     mock_callback.data = "fmt:INVALID:url123"
-    mock_callback.answer = AsyncMock()
+    mock_callback.answer = mocker.AsyncMock()
     mock_callback.from_user = mock_from_user  # Add the missing attribute
 
     # Setup mocks
-    with (
-        patch(
-            "bot.handlers.download.get_url",
-            return_value="https://www.youtube.com/watch?v=test",
-        ),
-        patch("bot.handlers.download.get_format_by_id", return_value=None),
-        patch("bot.handlers.download.logger.debug"),
-        patch("bot.handlers.download.logger.error"),
-    ):
-        await process_format_selection(mock_callback)
+    mocker.patch(
+        "bot.handlers.download.get_url",
+        return_value="https://www.youtube.com/watch?v=test",
+    )
+    mocker.patch("bot.handlers.download.get_format_by_id", return_value=None)
+    mocker.patch("bot.handlers.download.logger.debug")
+    mocker.patch("bot.handlers.download.logger.error")
+    
+    await process_format_selection(mock_callback)
 
-        # Verify callback was answered with error
-        mock_callback.answer.assert_called_once_with("Selected format not found")
+    # Verify callback was answered with error
+    mock_callback.answer.assert_called_once_with("Selected format not found")
