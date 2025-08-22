@@ -105,7 +105,7 @@ async def test_process_url_unauthorized_youtube_user(
         # Should show access restricted message
         mock_message.answer.assert_called_once()
         args = mock_message.answer.call_args[0]
-        assert "Access Restricted" in args[0]
+        assert "Access Denied" in args[0] or "access denied" in args[0].lower()
 
 
 @pytest.mark.asyncio
@@ -143,7 +143,7 @@ async def test_process_url_unauthorized_non_youtube_user(
         # Should show access restricted message (not non-YouTube message)
         mock_message.answer.assert_called_once()
         args = mock_message.answer.call_args[0]
-        assert "Access Restricted" in args[0]
+        assert "Access Denied" in args[0] or "access denied" in args[0].lower()
 
 
 @pytest.mark.asyncio
@@ -157,7 +157,7 @@ async def test_process_format_selection_authorized_user(
     # Create mock callback query
     callback_query = MagicMock(spec=CallbackQuery)
     callback_query.from_user = authorized_user
-    callback_query.data = "fmt:test_url_id:video:HD"
+    callback_query.data = "fmt:test_url_id:video_HD"
     callback_query.answer = AsyncMock()
     callback_query.message = MagicMock()
     callback_query.message.edit_text = AsyncMock()
@@ -189,7 +189,7 @@ async def test_process_format_selection_unauthorized_user(
     # Create mock callback query
     callback_query = MagicMock(spec=CallbackQuery)
     callback_query.from_user = unauthorized_user
-    callback_query.data = "fmt:test_url_id:video:HD"
+    callback_query.data = "fmt:test_url_id:video_HD"
     callback_query.answer = AsyncMock()
     callback_query.message = MagicMock()
     callback_query.message.edit_text = AsyncMock()
@@ -203,7 +203,7 @@ async def test_process_format_selection_unauthorized_user(
         # Should show access restricted message
         callback_query.message.edit_text.assert_called_once()
         args = callback_query.message.edit_text.call_args[0]
-        assert "Access Restricted" in args[0]
+        assert "Access Denied" in args[0] or "access denied" in args[0].lower()
         
         # Should NOT add task to queue
         mock_queue.add_task.assert_not_called()
@@ -244,7 +244,7 @@ async def test_process_format_selection_url_not_found(
     
     callback_query = MagicMock(spec=CallbackQuery)
     callback_query.from_user = authorized_user
-    callback_query.data = "fmt:nonexistent_id:video:HD"
+    callback_query.data = "fmt:nonexistent_id:video_HD"
     callback_query.answer = AsyncMock()
     callback_query.message = MagicMock()
     callback_query.message.edit_text = AsyncMock()
@@ -270,7 +270,7 @@ async def test_process_format_selection_format_not_found(
     
     callback_query = MagicMock(spec=CallbackQuery)
     callback_query.from_user = authorized_user
-    callback_query.data = "fmt:test_url_id:video:UNKNOWN"
+    callback_query.data = "fmt:test_url_id:video_UNKNOWN"
     callback_query.answer = AsyncMock()
     callback_query.message = MagicMock()
     callback_query.message.edit_text = AsyncMock()

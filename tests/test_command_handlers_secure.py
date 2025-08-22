@@ -139,7 +139,7 @@ async def test_cancel_command_authorized_user(secure_command_db, authorized_user
     mock_message.from_user = authorized_user
     
     # Mock queue operations
-    with patch("bot.handlers.commands.download_queue") as mock_queue:
+    with patch("bot.services.queue.download_queue") as mock_queue:
         mock_queue.clear_user_tasks = AsyncMock(return_value=2)
         
         await command_cancel(mock_message)
@@ -155,13 +155,13 @@ async def test_cancel_command_unauthorized_user(secure_command_db, unauthorized_
     # Do not add user to database
     mock_message.from_user = unauthorized_user
     
-    with patch("bot.handlers.commands.download_queue") as mock_queue:
+    with patch("bot.services.queue.download_queue") as mock_queue:
         await command_cancel(mock_message)
         
         # Should not process cancel for unauthorized user
         mock_message.answer.assert_called_once()
         args = mock_message.answer.call_args[0][0]
-        assert "Access Restricted" in args
+        assert "Access Denied" in args or "access denied" in args.lower()
         
         # Queue should not be called
         mock_queue.clear_user_tasks.assert_not_called()
@@ -180,7 +180,11 @@ async def test_invite_command_admin_user(secure_command_db, mock_message):
     
     mock_message.from_user = admin_user
     
-    # Mock admin configuration
+    # Mock admin configuration and bot.get_me()
+    mock_bot_me = MagicMock()
+    mock_bot_me.username = "test_bot"
+    mock_message.bot.get_me = AsyncMock(return_value=mock_bot_me)
+    
     with patch("bot.config.ADMIN_USER_ID", admin_user.id):
         await command_invite(mock_message)
         

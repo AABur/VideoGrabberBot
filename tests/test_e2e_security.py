@@ -73,7 +73,7 @@ async def test_e2e_unauthorized_user_help_command(
     mock_message.answer.assert_called_once()
     call_args = mock_message.answer.call_args
     message_text = call_args[0][0]
-    assert "not authorized" in message_text.lower() or "unauthorized" in message_text.lower()
+    assert "access denied" in message_text.lower() or "permission" in message_text.lower()
 
 
 @pytest.mark.asyncio
@@ -112,7 +112,7 @@ async def test_e2e_unauthorized_user_download_attempt(
     mock_message.answer.assert_called_once()
     call_args = mock_message.answer.call_args
     message_text = call_args[0][0]
-    assert "not authorized" in message_text.lower() or "unauthorized" in message_text.lower()
+    assert "access denied" in message_text.lower() or "permission" in message_text.lower()
 
 
 @pytest.mark.asyncio
@@ -143,7 +143,7 @@ async def test_e2e_unauthorized_callback_query(e2e_test_db, mock_unauthorized_us
     """Test that unauthorized users cannot use callback queries."""
     callback_query = MagicMock(spec=CallbackQuery)
     callback_query.from_user = mock_unauthorized_user
-    callback_query.data = "fmt:test_url_id:video:TEST_HD"
+    callback_query.data = "fmt:test_url_id:video_TEST_HD"
     callback_query.answer = AsyncMock()
     callback_query.message = MagicMock()
     callback_query.message.edit_text = AsyncMock()
@@ -158,7 +158,7 @@ async def test_e2e_unauthorized_callback_query(e2e_test_db, mock_unauthorized_us
     callback_query.message.edit_text.assert_called_once()
     call_args = callback_query.message.edit_text.call_args
     message_text = call_args[0][0]
-    assert "not authorized" in message_text.lower() or "unauthorized" in message_text.lower()
+    assert "access denied" in message_text.lower() or "permission" in message_text.lower()
 
 
 @pytest.mark.asyncio
@@ -190,6 +190,11 @@ async def test_e2e_invite_system_security(e2e_test_db, mock_message):
     await add_user(admin_user.id, admin_user.username, admin_user.id)
     
     mock_message.from_user = admin_user
+    
+    # Mock bot.get_me() and admin configuration
+    mock_bot_me = MagicMock()
+    mock_bot_me.username = "test_bot"
+    mock_message.bot.get_me = AsyncMock(return_value=mock_bot_me)
     
     # Mock the configuration to recognize this user as admin
     with patch("bot.config.ADMIN_USER_ID", admin_user.id):
@@ -293,4 +298,4 @@ async def test_e2e_authorization_after_deactivation(e2e_test_db, mock_authorized
     mock_message.answer.assert_called()
     call_args = mock_message.answer.call_args
     message_text = call_args[0][0]
-    assert "not authorized" in message_text.lower() or "unauthorized" in message_text.lower()
+    assert "access denied" in message_text.lower() or "permission" in message_text.lower()
