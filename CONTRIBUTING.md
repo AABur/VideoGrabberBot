@@ -89,7 +89,11 @@ This project maintains high code quality standards using multiple tools:
   - Primary linter: Ruff for fast checking and auto-fixes
   - Secondary linter: wemake-python-styleguide for strict enforcement of best practices
 - **Formatting**: Automatic code formatting with Ruff
-- **Testing**: Comprehensive test suite with pytest (minimum 85% coverage)
+- **Testing**: Comprehensive test suite with pytest
+  - Minimum 85% coverage requirement
+  - Parallel execution for unit and security tests
+  - Sequential execution for integration tests (prevents race conditions)
+  - All configuration centralized in `pyproject.toml`
 
 ### Development Guidelines
 
@@ -131,7 +135,12 @@ make test test_config.py::test_function_name
 make tests  # Automatically includes coverage
 ```
 
-Test files are located in the `tests/` directory with integration tests in `tests/integration/`.
+The test suite is organized into three categories:
+- `tests/unit/` - Unit tests that mirror the `bot/` directory structure
+- `tests/integration/` - Integration tests for complete workflows
+- `tests/security/` - Security and authorization tests
+
+All tests run in parallel except integration tests, which run sequentially to avoid race conditions with shared state.
 
 ### Docker Development
 
@@ -161,7 +170,13 @@ VideoGrabberBot/
 │   ├── telegram_api/       # Telegram API client
 │   └── utils/              # Utility functions
 ├── tests/                  # Test suite
-│   └── integration/        # Integration tests
+│   ├── integration/        # Integration tests (workflow and error handling)
+│   ├── security/           # Security and authorization tests
+│   └── unit/               # Unit tests (mirrors bot/ structure)
+│       ├── handlers/       # Tests for bot/handlers/
+│       ├── services/       # Tests for bot/services/
+│       ├── telegram_api/   # Tests for bot/telegram_api/
+│       └── utils/          # Tests for bot/utils/
 ├── data/                   # Database and temp files
 ├── Dockerfile              # Container image definition
 ├── docker-compose.dev.yml  # Development container orchestration
@@ -170,6 +185,7 @@ VideoGrabberBot/
 ├── .env.example            # Environment variables template
 ├── deploy.sh               # Deployment automation script
 ├── .flake8                 # wemake-python-styleguide configuration
+├── pyproject.toml          # Project configuration and dependencies
 ├── Makefile                # Development workflow commands
 ├── CLAUDE.md               # Development guidelines
 └── CONTRIBUTING.md         # This file

@@ -66,7 +66,7 @@ The linters work together - Ruff handles most formatting and basic linting, whil
 - When writing new code, run existing tests and create new tests afterward
 - When refactoring code, always run existing tests to verify functionality
 - Maintain minimum test coverage of 85%
-- All testing related documentation and guidelines are maintained in TESTING.md
+- All testing related documentation and guidelines are maintained in CONTRIBUTING.md
 
 ## Documentation
 - Project documentation, installation instructions, and usage examples are maintained in README.md
