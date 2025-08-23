@@ -13,6 +13,7 @@ from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_command_interaction_flow(integration_setup, mock_message, authorized_user, mock_command_system):
     """Test the flow of a user interacting with multiple commands."""
     # User starts bot interaction with /start
@@ -46,6 +47,7 @@ async def test_command_interaction_flow(integration_setup, mock_message, authori
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_admin_user_commands(integration_setup, mock_message, mock_command_system):
     """Test admin-specific commands."""
     # Set up message as coming from admin user
@@ -77,6 +79,7 @@ async def test_admin_user_commands(integration_setup, mock_message, mock_command
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_cancel_command_integration(integration_setup, mock_message, authorized_user):
     """Test the /cancel command with active downloads in the queue."""
     # Set up message
@@ -121,6 +124,7 @@ async def test_cancel_command_integration(integration_setup, mock_message, autho
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_invite_workflow(integration_setup, mock_message, mock_bot, mock_command_system):
     """Test the full invite workflow - creating and using an invite."""
     # Admin/authorized user creates an invite

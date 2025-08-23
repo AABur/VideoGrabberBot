@@ -66,8 +66,11 @@ addopts = [
     "-ra",               # Show summary of all results (skipped, failed, etc.)
     "--durations=5",     # Show 5 slowest tests
     "-nauto",            # Auto parallel execution with pytest-xdist
-    "--dist=loadscope",  # Distribute tests by module/class for better isolation
+    "--dist=loadgroup",  # Distribute by group markers for better test isolation
 ]
+
+# Parallel execution configuration for pytest-xdist  
+# Integration tests run sequentially to avoid race conditions with shared global state
 
 # Define markers for better organization
 markers = [

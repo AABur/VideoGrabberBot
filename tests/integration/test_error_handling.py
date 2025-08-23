@@ -31,6 +31,7 @@ class MockDownloadWithError:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_download_error_handling(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
     """Test error handling during download process."""
     # Setup message with YouTube URL
@@ -84,6 +85,7 @@ async def test_download_error_handling(integration_setup, mock_message, mock_cal
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_multiple_download_failures(integration_setup, mock_bot, mock_download_system, mocker):
     """Test handling of multiple download failures using direct queue manipulation."""
     # Configure download system to fail
@@ -127,6 +129,7 @@ async def test_multiple_download_failures(integration_setup, mock_bot, mock_down
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_admin_notification_on_error(integration_setup, mock_bot, mock_error_system, mocker):
     """Test that admin is notified on critical errors."""
 

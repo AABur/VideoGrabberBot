@@ -8,6 +8,7 @@ from bot.services.queue import DownloadTask, download_queue
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_full_download_workflow(integration_setup, mock_message, mock_callback_query, mock_complete_system):
     """Test the full download workflow from URL to completed download."""
     # Setup message with YouTube URL
@@ -65,6 +66,7 @@ async def test_full_download_workflow(integration_setup, mock_message, mock_call
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_download_workflow_with_queue(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
     """Test multiple downloads being queued and processed in order."""
     # This test verifies that multiple downloads can be processed sequentially
@@ -112,6 +114,7 @@ async def test_download_workflow_with_queue(integration_setup, mock_message, moc
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_download_workflow_non_youtube_url(integration_setup, mock_message, mock_download_system, mocker):
     """Test handling of non-YouTube URLs."""
     # Setup message with non-YouTube URL
@@ -133,6 +136,7 @@ async def test_download_workflow_non_youtube_url(integration_setup, mock_message
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_download_workflow_unauthorized_user(integration_setup, mock_message, unauthorized_user):
     """Test download workflow with unauthorized user."""
     # Setup message with unauthorized user
@@ -153,6 +157,7 @@ async def test_download_workflow_unauthorized_user(integration_setup, mock_messa
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_queue_notification_message(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
     """Test notification messages for queued downloads."""
     # Setup message with YouTube URL

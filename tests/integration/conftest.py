@@ -4,6 +4,7 @@ import asyncio
 import tempfile
 from pathlib import Path
 
+import pytest
 import pytest_asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.types import CallbackQuery, Chat, Message, User
@@ -260,3 +261,21 @@ async def integration_setup(mocker, temp_db, mock_bot, authorized_user, reset_qu
     """Setup for integration tests with all components initialized."""
     # The mocking is now handled by mock_complete_system fixture
     yield {"bot": mock_bot, "user": authorized_user, "db_path": temp_db}
+
+
+def pytest_configure(config):
+    """Configure pytest for integration tests."""
+    # Add xdist group markers to integration tests to avoid parallel execution conflicts
+    config.addinivalue_line(
+        "markers", 
+        "integration: mark test as integration test (runs sequentially to avoid race conditions)"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to group integration tests."""
+    # Add xdist_group marker to all integration tests to run them in same worker
+    for item in items:
+        if item.get_closest_marker("integration"):
+            # Add the xdist_group marker to run all integration tests in same worker
+            item.add_marker(pytest.mark.xdist_group(name="integration"))
