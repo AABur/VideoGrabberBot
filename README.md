@@ -38,7 +38,7 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
 
 - Python 3.11+
 - Telegram Bot API token (from [BotFather](https://t.me/botfather))
-- [uv](https://github.com/astral-sh/uv) - Python package installer and environment manager
+- [uv](https://github.com/astral-sh/uv) package manager
 
 ### Installation
 
@@ -48,22 +48,13 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
    cd VideoGrabberBot
    ```
 
-2. **Set up environment**:
+2. **Initialize the project**:
    ```bash
-   # Install uv if you haven't already
-   # https://github.com/astral-sh/uv
-   
-   # Install dependencies
-   uv pip install -e .
+   make init
    ```
 
 3. **Configure the bot**:
-   Create a `.env` file from the template:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` with your tokens:
+   Edit the `.env` file with your tokens:
    ```
    TELEGRAM_TOKEN=your_telegram_token
    ADMIN_USER_ID=your_telegram_user_id
@@ -71,46 +62,30 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
 
 4. **Run the bot**:
    ```bash
-   uv run python run.py
+   make run
    ```
 
 ## Docker Deployment
 
-For containerized deployment, you can use Docker and Docker Compose.
+If you prefer Docker:
 
-### Prerequisites
-
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-
-### Quick Start with Docker
-
-1. **Clone the repository**:
+1. **Clone and configure**:
    ```bash
    git clone https://github.com/AABur/VideoGrabberBot.git
    cd VideoGrabberBot
-   ```
-
-2. **Configure environment**:
-   ```bash
    cp .env.example .env
-   # Edit .env file with your bot token and admin user ID
+   # Edit .env with your bot tokens
    ```
 
-3. **Build and run**:
+2. **Run with Docker**:
    ```bash
-   # Start the bot in development mode
-   docker-compose -f docker-compose.dev.yml up -d
+   make docker-prod
    ```
 
-4. **Check logs**:
+3. **Stop when needed**:
    ```bash
-   docker-compose -f docker-compose.dev.yml logs -f videograbber-bot
+   make docker-stop
    ```
-
-### Additional Docker Options
-
-For advanced Docker usage, production deployment, and detailed commands, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Technologies
 
