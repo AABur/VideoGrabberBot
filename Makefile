@@ -99,31 +99,35 @@ check: format lint mypy ## Run all checks (format, lint, type check)
 # Docker targets
 docker-dev: ## Start development Docker environment
 	@echo "Starting development Docker environment..."
-	@./deploy.sh dev start
+	@if [ ! -f .env ]; then \
+		echo "Creating .env from .env.docker template..."; \
+		cp .env.docker .env; \
+		echo "Please edit .env with your actual tokens and settings"; \
+	fi
+	@docker compose up -d
 
-docker-prod: ## Start production Docker environment  
+docker-prod: ## Start production Docker environment
 	@echo "Starting production Docker environment..."
-	@./deploy.sh prod start
+	@if [ ! -f .env ]; then \
+		echo "Creating .env from .env.production template..."; \
+		cp .env.production .env; \
+		echo "Please edit .env with your actual tokens and settings"; \
+	fi
+	@docker compose up -d
 
 docker-build: ## Build Docker image
 	@echo "Building Docker image..."
-	@./deploy.sh dev build
+	@docker compose build
 
-docker-logs: ## Show Docker container logs (development)
-	@./deploy.sh dev logs
+docker-logs: ## Show Docker container logs
+	@docker compose logs -f videograbber-bot
 
 docker-status: ## Show Docker containers status
-	@echo "Development environment:"
-	@./deploy.sh dev status
-	@echo ""
-	@echo "Production environment:"
-	@./deploy.sh prod status
+	@docker compose ps
 
-docker-stop: ## Stop Docker containers (both dev and prod)
-	@echo "Stopping development environment..."
-	@./deploy.sh dev stop || true
-	@echo "Stopping production environment..."
-	@./deploy.sh prod stop || true
+docker-stop: ## Stop Docker containers
+	@echo "Stopping Docker containers..."
+	@docker compose down
 
 docker-clean: docker-stop ## Stop containers and clean up
 	@echo "Cleaning up Docker resources..."
