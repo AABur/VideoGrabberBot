@@ -12,7 +12,7 @@ async def test_startup(mocker):
     # Mock the dependencies
     mock_init_db = mocker.patch("bot.main.init_db", mocker.AsyncMock())
     mock_bot = mocker.patch("bot.main.bot", mocker.MagicMock())
-    
+
     # Configure bot.set_my_commands mock
     mock_bot.set_my_commands = mocker.AsyncMock()
 

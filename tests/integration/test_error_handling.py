@@ -32,7 +32,9 @@ class MockDownloadWithError:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_download_error_handling(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
+async def test_download_error_handling(
+    integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker
+):
     """Test error handling during download process."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_error_video"
@@ -50,10 +52,10 @@ async def test_download_error_handling(integration_setup, mock_message, mock_cal
     mock_callback_query.data = callback_data
 
     # Create a download error for testing
-    download_error = mocker.AsyncMock(side_effect=DownloadError("Test download error"))
+    _ = mocker.AsyncMock(side_effect=DownloadError("Test download error"))
 
     # Setup the mock bot
-    mock_bot = integration_setup["bot"]
+    _ = integration_setup["bot"]
 
     # Configure the existing mocks for this error test
     mock_complete_system["download"]["get_url"].return_value = "https://www.youtube.com/watch?v=test_error_video"

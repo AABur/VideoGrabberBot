@@ -67,7 +67,9 @@ async def test_full_download_workflow(integration_setup, mock_message, mock_call
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_download_workflow_with_queue(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
+async def test_download_workflow_with_queue(
+    integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker
+):
     """Test multiple downloads being queued and processed in order."""
     # This test verifies that multiple downloads can be processed sequentially
     # Start with empty queue
@@ -158,7 +160,9 @@ async def test_download_workflow_unauthorized_user(integration_setup, mock_messa
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_queue_notification_message(integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker):
+async def test_queue_notification_message(
+    integration_setup, mock_message, mock_callback_query, mock_complete_system, mocker
+):
     """Test notification messages for queued downloads."""
     # Setup message with YouTube URL
     mock_message.text = "https://www.youtube.com/watch?v=test_video_queued"
@@ -175,7 +179,8 @@ async def test_queue_notification_message(integration_setup, mock_message, mock_
 
     # Setup callback query with the format data
     mock_callback_query.data = callback_data
-    mock_bot = integration_setup["bot"]
+    # Mock bot is included in integration setup
+    _ = integration_setup["bot"]
 
     # Set up mocks to simulate active queue processing
     mock_complete_system["download"]["get_url"].return_value = "https://www.youtube.com/watch?v=test_video_queued"

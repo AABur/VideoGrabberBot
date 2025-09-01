@@ -38,7 +38,7 @@ async def test_process_url_authorized_youtube(mocker):
             ],
     )
     mocker.patch("bot.handlers.download.logger.info")
-    
+
     await process_url(mock_message)
 
     # Verify message was answered
@@ -73,7 +73,7 @@ async def test_process_url_authorized_non_youtube(mocker):
     )
     mocker.patch("bot.handlers.download.is_youtube_url", return_value=False)
     mocker.patch("bot.handlers.download.logger.info")
-    
+
     await process_url(mock_message)
 
     # Verify message was answered
@@ -104,7 +104,7 @@ async def test_process_url_unauthorized(mocker):
         mocker.AsyncMock(return_value=False),
     )
     mocker.patch("bot.handlers.download.logger.info")
-    
+
     await process_url(mock_message)
 
     # Verify message was answered
@@ -152,6 +152,10 @@ async def test_process_format_selection_success(mocker):
 
     # Mock dependencies
     mocker.patch(
+        "bot.handlers.download.is_user_authorized",
+        return_value=True,
+    )
+    mocker.patch(
         "bot.handlers.download.get_format_by_id",
         return_value=mock_format_data,
     )
@@ -164,7 +168,7 @@ async def test_process_format_selection_success(mocker):
     mocker.patch("bot.handlers.download.download_queue", mock_download_queue)
     mocker.patch("bot.handlers.download.logger.debug")
     mocker.patch("bot.handlers.download.logger.info")
-    
+
     await process_format_selection(mock_callback)
 
     # Verify callback was answered
@@ -217,6 +221,10 @@ async def test_process_format_selection_queued(mocker):
 
     # Mock dependencies
     mocker.patch(
+        "bot.handlers.download.is_user_authorized",
+        return_value=True,
+    )
+    mocker.patch(
         "bot.handlers.download.get_format_by_id",
         return_value=mock_format_data,
     )
@@ -229,7 +237,7 @@ async def test_process_format_selection_queued(mocker):
     mocker.patch("bot.handlers.download.download_queue", mock_download_queue)
     mocker.patch("bot.handlers.download.logger.debug")
     mocker.patch("bot.handlers.download.logger.info")
-    
+
     await process_format_selection(mock_callback)
 
     # Verify callback was answered
@@ -285,6 +293,10 @@ async def test_process_format_selection_already_processing(mocker):
 
     # Mock dependencies
     mocker.patch(
+        "bot.handlers.download.is_user_authorized",
+        return_value=True,
+    )
+    mocker.patch(
         "bot.handlers.download.get_format_by_id",
         return_value=mock_format_data,
     )
@@ -297,7 +309,7 @@ async def test_process_format_selection_already_processing(mocker):
     mocker.patch("bot.handlers.download.download_queue", mock_download_queue)
     mocker.patch("bot.handlers.download.logger.debug")
     mocker.patch("bot.handlers.download.logger.info")
-    
+
     await process_format_selection(mock_callback)
 
     # The edited text should include queue notification
@@ -322,9 +334,10 @@ async def test_process_format_selection_invalid_callback_data(mocker):
     # Setup mocks for logger
     logger_error_mock = mocker.MagicMock()
 
+    mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
     mocker.patch("bot.handlers.download.logger.debug")
     mocker.patch("bot.handlers.download.logger.error", logger_error_mock)
-    
+
     await process_format_selection(mock_callback)
 
     # Verify logger.error was called
@@ -348,10 +361,11 @@ async def test_process_format_selection_url_not_found(mocker):
     mock_callback.from_user = mock_from_user  # Add the missing attribute
 
     # Setup mocks
+    mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
     mocker.patch("bot.handlers.download.get_url", return_value=None)
     mocker.patch("bot.handlers.download.logger.debug")
     mocker.patch("bot.handlers.download.logger.error")
-    
+
     await process_format_selection(mock_callback)
 
     # Verify callback was answered with error
@@ -372,6 +386,7 @@ async def test_process_format_selection_format_not_found(mocker):
     mock_callback.from_user = mock_from_user  # Add the missing attribute
 
     # Setup mocks
+    mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
     mocker.patch(
         "bot.handlers.download.get_url",
         return_value="https://www.youtube.com/watch?v=test",
@@ -379,7 +394,7 @@ async def test_process_format_selection_format_not_found(mocker):
     mocker.patch("bot.handlers.download.get_format_by_id", return_value=None)
     mocker.patch("bot.handlers.download.logger.debug")
     mocker.patch("bot.handlers.download.logger.error")
-    
+
     await process_format_selection(mock_callback)
 
     # Verify callback was answered with error

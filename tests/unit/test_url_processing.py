@@ -144,6 +144,7 @@ class TestFormatSelectionHandler:
         mock_callback_query.data = "fmt:missing_parts"  # Only 2 parts, needs at least 3
 
         # Execute
+        mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
         mock_logger = mocker.patch("bot.handlers.download.logger.error")
         await process_format_selection(mock_callback_query)
 
@@ -155,7 +156,7 @@ class TestFormatSelectionHandler:
         mock_callback_query.answer.assert_called_once_with("Invalid format selection")
 
     @pytest.mark.asyncio
-    async def test_invalid_callback_data_wrong_prefix(self, mock_callback_query):
+    async def test_invalid_callback_data_wrong_prefix(self, mock_callback_query, mocker):
         """Test handling of invalid callback data with wrong prefix."""
         # Setup invalid callback data (wrong prefix)
         mock_callback_query.data = "wrong:video:HD:12345"  # Starts with 'wrong' not 'fmt'
@@ -163,6 +164,7 @@ class TestFormatSelectionHandler:
         # Execute
         # This would be filtered by the router before reaching our handler
         # For test, we just verify it doesn't throw errors
+        mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
         await process_format_selection(mock_callback_query)
 
     @pytest.mark.asyncio
@@ -172,6 +174,7 @@ class TestFormatSelectionHandler:
         mock_callback_query.data = "fmt:video:HD:nonexistent_id"
 
         # Execute with URL not found
+        mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
         mocker.patch("bot.handlers.download.get_url", return_value=None)
         await process_format_selection(mock_callback_query)
 
@@ -185,6 +188,7 @@ class TestFormatSelectionHandler:
         mock_callback_query.data = "fmt:invalid:format:test_id"
 
         # Execute with format not found
+        mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
         mocker.patch(
             "bot.handlers.download.get_url",
             return_value="https://example.com",
@@ -210,6 +214,7 @@ class TestFormatSelectionHandler:
         status_message = mocker.MagicMock()
         mock_callback_query.message.edit_text.return_value = status_message
 
+        mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
         mocker.patch("bot.handlers.download.get_url", return_value=test_url)
         mocker.patch(
             "bot.handlers.download.get_format_by_id",
@@ -259,6 +264,7 @@ class TestFormatSelectionHandler:
         mock_bot = mocker.MagicMock()
         mock_bot.edit_message_text = mocker.AsyncMock()
 
+        mocker.patch("bot.handlers.download.is_user_authorized", return_value=True)
         mocker.patch("bot.handlers.download.get_url", return_value=test_url)
         mocker.patch(
             "bot.handlers.download.get_format_by_id",

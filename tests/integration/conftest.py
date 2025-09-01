@@ -157,11 +157,11 @@ async def mock_download_system(mocker):
     """Mock the entire download system with common patterns."""
     return {
         "download_video": mocker.patch(
-            "bot.services.downloader.download_youtube_video", 
+            "bot.services.downloader.download_youtube_video",
             mocker.AsyncMock()
         ),
         "store_url": mocker.patch(
-            "bot.handlers.download.store_url", 
+            "bot.handlers.download.store_url",
             return_value="test_url_id"
         ),
         "get_url": mocker.patch(
@@ -169,7 +169,7 @@ async def mock_download_system(mocker):
             return_value="https://www.youtube.com/watch?v=test_video"
         ),
         "is_youtube_url": mocker.patch(
-            "bot.handlers.download.is_youtube_url", 
+            "bot.handlers.download.is_youtube_url",
             return_value=True
         ),
     }
@@ -183,20 +183,20 @@ async def mock_format_system(mocker):
         "format": "best[height<=720]",
         "type": "video",
     }
-    
+
     available_formats = {
         "video:SD": {
-            "label": "SD (480p)", 
+            "label": "SD (480p)",
             "format": "best[height<=480]",
             "type": "video",
         },
         "video:HD": {
             "label": "HD (720p)",
-            "format": "best[height<=720]", 
+            "format": "best[height<=720]",
             "type": "video",
         },
     }
-    
+
     return {
         "get_format_by_id": mocker.patch(
             "bot.services.formats.get_format_by_id",
@@ -209,7 +209,7 @@ async def mock_format_system(mocker):
     }
 
 
-@pytest_asyncio.fixture 
+@pytest_asyncio.fixture
 async def mock_telegram_system(mocker, mock_bot):
     """Mock the Telegram API system."""
     return {
@@ -251,7 +251,7 @@ async def mock_complete_system(mock_download_system, mock_format_system, mock_te
     """Composite fixture combining the most commonly used mocks."""
     return {
         "download": mock_download_system,
-        "format": mock_format_system, 
+        "format": mock_format_system,
         "telegram": mock_telegram_system,
     }
 
@@ -267,7 +267,7 @@ def pytest_configure(config):
     """Configure pytest for integration tests."""
     # Add xdist group markers to integration tests to avoid parallel execution conflicts
     config.addinivalue_line(
-        "markers", 
+        "markers",
         "integration: mark test as integration test (runs sequentially to avoid race conditions)"
     )
 

@@ -41,7 +41,7 @@ async def test_queue_processing(mocker):
 
     # Mock download function
     mock_download = mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock())
-    
+
     # Add tasks
     task1 = DownloadTask(
         chat_id=123,
@@ -85,7 +85,7 @@ async def test_queue_error_handling(mocker):
         mocker.AsyncMock(side_effect=Exception("Test error")),
     )
     mock_logger_error = mocker.patch("bot.services.queue.logger.error", mocker.MagicMock())
-    
+
     # Add a task
     task = DownloadTask(
         chat_id=123,
@@ -185,7 +185,7 @@ async def test_process_queue_missing_bot(mocker):
 
     # Mock logger
     mock_logger_error = mocker.patch("bot.services.queue.logger.error")
-    
+
     # Add task without bot
     task = DownloadTask(
         chat_id=123,

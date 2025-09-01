@@ -268,14 +268,14 @@ class TestFileSizeCheck:
         # Create a test file
         test_file = tmp_path / "test_video.mp4"
         test_file.write_bytes(b"test content")
-        
+
         # Mock config with small max file size
         mock_config = mocker.patch("bot.services.downloader.config")
         mock_config.MAX_FILE_SIZE = 10  # Very small limit
-        
+
         with pytest.raises(VideoTooLargeError, match="File size .* exceeds limit"):
             _validate_file_size(1024 * 1024, "http://test.url", test_file)  # 1MB file
-            
+
         # File should be deleted
         assert not test_file.exists()
 
@@ -283,7 +283,7 @@ class TestFileSizeCheck:
         """Test file size check when file is too large but no file exists."""
         mock_config = mocker.patch("bot.services.downloader.config")
         mock_config.MAX_FILE_SIZE = 10  # Very small limit
-        
+
         with pytest.raises(VideoTooLargeError, match="File size .* exceeds limit"):
             _validate_file_size(1024 * 1024, "http://test.url", None)
 
@@ -291,13 +291,13 @@ class TestFileSizeCheck:
         """Test file size check when file is within limit."""
         test_file = tmp_path / "test_video.mp4"
         test_file.write_bytes(b"test content")
-        
+
         mock_config = mocker.patch("bot.services.downloader.config")
         mock_config.MAX_FILE_SIZE = 1024 * 1024 * 100  # 100MB limit
-        
+
         # Should not raise exception
         _validate_file_size(1024, "http://test.url", test_file)
-        
+
         # File should still exist
         assert test_file.exists()
 
@@ -310,13 +310,13 @@ class TestSyncDownloadVideoFile:
         url = "http://test.url"
         ydl_opts = {"format": "best"}
         temp_path = tmp_path
-        
+
         mock_ydl = mocker.MagicMock()
         mock_ydl.extract_info.side_effect = yt_dlp.utils.DownloadError("Video not found or not available")
-        
+
         mock_ydl_class = mocker.patch("yt_dlp.YoutubeDL")
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
-        
+
         with pytest.raises(VideoNotFoundError, match="Video not found or unavailable"):
             _sync_download_video_file(url, ydl_opts, temp_path)
 
@@ -325,13 +325,13 @@ class TestSyncDownloadVideoFile:
         url = "http://test.url"
         ydl_opts = {"format": "best"}
         temp_path = tmp_path
-        
+
         mock_ydl = mocker.MagicMock()
         mock_ydl.extract_info.side_effect = yt_dlp.utils.DownloadError("Unsupported URL or format")
-        
+
         mock_ydl_class = mocker.patch("yt_dlp.YoutubeDL")
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
-        
+
         with pytest.raises(UnsupportedFormatError, match="Video format not supported"):
             _sync_download_video_file(url, ydl_opts, temp_path)
 
@@ -340,13 +340,13 @@ class TestSyncDownloadVideoFile:
         url = "http://test.url"
         ydl_opts = {"format": "best"}
         temp_path = tmp_path
-        
+
         mock_ydl = mocker.MagicMock()
         mock_ydl.extract_info.side_effect = yt_dlp.utils.DownloadError("Connection failed")
-        
+
         mock_ydl_class = mocker.patch("yt_dlp.YoutubeDL")
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
-        
+
         with pytest.raises(NetworkError, match="Network error during video info extraction"):
             _sync_download_video_file(url, ydl_opts, temp_path)
 
@@ -355,22 +355,22 @@ class TestSyncDownloadVideoFile:
         url = "http://test.url"
         ydl_opts = {"format": "best"}
         temp_path = tmp_path
-        
+
         # Create test file
         test_file = temp_path / "test_video.mp4"
         test_file.write_bytes(b"test content")
-        
+
         mock_ydl = mocker.MagicMock()
         mock_ydl.extract_info.return_value = {"filesize": 1024 * 1024 * 100}  # Large file
         mock_ydl.download.return_value = None
-        
+
         mock_ydl_class = mocker.patch("yt_dlp.YoutubeDL")
         mock_config = mocker.patch("bot.services.downloader.config")
         mocker.patch("pathlib.Path.glob", return_value=[test_file])
-        
+
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
         mock_config.MAX_FILE_SIZE = 10  # Very small limit
-        
+
         with pytest.raises(VideoTooLargeError):
             _sync_download_video_file(url, ydl_opts, temp_path)
 
@@ -379,17 +379,17 @@ class TestSyncDownloadVideoFile:
         url = "http://test.url"
         ydl_opts = {"format": "best"}
         temp_path = tmp_path
-        
+
         mock_ydl = mocker.MagicMock()
         mock_ydl.extract_info.return_value = {"filesize": 1024}
         mock_ydl.download.side_effect = yt_dlp.utils.DownloadError("Network error during download")
-        
+
         mock_ydl_class = mocker.patch("yt_dlp.YoutubeDL")
         mock_config = mocker.patch("bot.services.downloader.config")
-        
+
         mock_ydl_class.return_value.__enter__.return_value = mock_ydl
         mock_config.MAX_FILE_SIZE = 1024 * 1024  # 1MB limit
-        
+
         with pytest.raises(NetworkError, match="Network error during video download"):
             _sync_download_video_file(url, ydl_opts, temp_path)
 
@@ -400,43 +400,43 @@ class TestCleanupTempDirectory:
     def test_cleanup_temp_directory_success(self, tmp_path):
         """Test successful cleanup of temporary directory."""
         temp_dir = str(tmp_path / "test_temp")
-        
+
         # Create the directory first
         import os
         os.makedirs(temp_dir, exist_ok=True)
-        
+
         # Add a file to make sure directory is not empty
         test_file = Path(temp_dir) / "test_file.txt"
         test_file.write_text("test content")
-        
+
         # Cleanup should not raise exception
         _cleanup_temp_directory(temp_dir)
-        
+
         # Directory should no longer exist
         assert not os.path.exists(temp_dir)
 
     def test_cleanup_temp_directory_not_exists(self):
         """Test cleanup of non-existent directory."""
         temp_dir = "/non/existent/directory"
-        
+
         # Should not raise exception
         _cleanup_temp_directory(temp_dir)
 
     def test_cleanup_temp_directory_failure(self, tmp_path, mocker):
         """Test cleanup failure handling."""
         temp_dir = str(tmp_path / "test_temp")
-        
+
         # Create the directory
         import os
         os.makedirs(temp_dir, exist_ok=True)
-        
+
         mocker.patch("os.path.exists", return_value=True)
         mocker.patch("shutil.rmtree", side_effect=PermissionError("Permission denied"))
         mock_logger = mocker.patch("bot.services.downloader.logger.error")
-        
+
         # Should not raise exception but log error
         _cleanup_temp_directory(temp_dir)
-        
+
         # Should have logged the error
         mock_logger.assert_called_once()
         assert "Failed to clean up temporary directory" in mock_logger.call_args[0][0]
@@ -451,19 +451,19 @@ class TestDownloadVideoFileTimeout:
         url = "http://test.url"
         ydl_opts = {"format": "best"}
         temp_path = tmp_path
-        
+
         mock_config = mocker.patch("bot.services.downloader.config")
         mock_config.DOWNLOAD_TIMEOUT = 30
-        
+
         # Mock the entire function to avoid thread pool issues
-        mock_sync_func = mocker.patch("bot.services.downloader._sync_download_video_file")
-        
+        _ = mocker.patch("bot.services.downloader._sync_download_video_file")
+
         # Make asyncio.wait_for raise TimeoutError
         async def mock_wait_for(coro, timeout):
             raise asyncio.TimeoutError()
-        
+
         mocker.patch("asyncio.wait_for", side_effect=mock_wait_for)
-        
+
         with pytest.raises(NetworkError, match="Download timed out after 30 seconds"):
             await _download_video_file(url, ydl_opts, temp_path)
 
@@ -478,11 +478,11 @@ class TestHandleDownloadError:
         chat_id = 12345
         url = "http://test.url"
         error = VideoNotFoundError("Video not found", context={"url": url})
-        
+
         mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
-        
+
         await _handle_download_error(bot, chat_id, url, error)
-        
+
         # Check user message was sent (function calls send_message twice - once for user, once for admin)
         assert bot.send_message.call_count == 2
         # First call should be to the user
@@ -497,11 +497,11 @@ class TestHandleDownloadError:
         chat_id = 12345
         url = "http://test.url"
         error = VideoTooLargeError("File too large", context={"url": url})
-        
+
         mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
-        
+
         await _handle_download_error(bot, chat_id, url, error)
-        
+
         # Check user message was sent (function calls send_message twice - once for user, once for admin)
         assert bot.send_message.call_count == 2
         # First call should be to the user
@@ -516,11 +516,11 @@ class TestHandleDownloadError:
         chat_id = 12345
         url = "http://test.url"
         error = UnsupportedFormatError("Format not supported", context={"url": url})
-        
+
         mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
-        
+
         await _handle_download_error(bot, chat_id, url, error)
-        
+
         # Check user message was sent (function calls send_message twice - once for user, once for admin)
         assert bot.send_message.call_count == 2
         # First call should be to the user
@@ -535,11 +535,11 @@ class TestHandleDownloadError:
         chat_id = 12345
         url = "http://test.url"
         error = NetworkError("Network failed", context={"url": url})
-        
+
         mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
-        
+
         await _handle_download_error(bot, chat_id, url, error)
-        
+
         # Check user message was sent (function calls send_message twice - once for user, once for admin)
         assert bot.send_message.call_count == 2
         # First call should be to the user
@@ -554,11 +554,11 @@ class TestHandleDownloadError:
         chat_id = 12345
         url = "http://test.url"
         error = Exception("Unexpected error")
-        
+
         mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock())
-        
+
         await _handle_download_error(bot, chat_id, url, error)
-        
+
         # Check user message was sent (function calls send_message twice - once for user, once for admin)
         assert bot.send_message.call_count == 2
         # First call should be to the user

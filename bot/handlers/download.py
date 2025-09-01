@@ -175,6 +175,11 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     """
     user_id = callback.from_user.id
 
+    # Check if user is authorized
+    if not await is_user_authorized(user_id):
+        await callback.answer("⛔ Access Denied")
+        return
+
     # Validate callback data
     parsed_data = await _validate_callback_data(callback)
     if not parsed_data:

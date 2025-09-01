@@ -145,7 +145,7 @@ class TestStorageAdvanced:
         # Mock uuid to always return the same value
         test_uuid = "12345678"
         mocker.patch("uuid.uuid4", return_value=test_uuid)
-        
+
         # First store should succeed
         url1 = "https://example.com/test1"
         url_id1 = store_url(url1)

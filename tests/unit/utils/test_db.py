@@ -130,7 +130,7 @@ async def test_invite_create_and_exceptions(mocker):
     # Normal case with mock
     mock_connect = mocker.patch("aiosqlite.connect")
     mocker.patch("uuid.uuid4", return_value="test-uuid")
-    
+
     # Configure mock connection and cursor
     mock_cursor = mocker.AsyncMock()
     mock_conn = mocker.AsyncMock()
@@ -157,7 +157,7 @@ async def test_use_invite_and_exceptions(mocker):
     """Test using invites and exception handling."""
     # First mock - invite exists
     mock_connect = mocker.patch("aiosqlite.connect")
-    
+
     # Configure mock
     mock_cursor = mocker.AsyncMock()
     mock_cursor.fetchone.return_value = ["test-invite-id"]  # Invite exists
@@ -169,7 +169,7 @@ async def test_use_invite_and_exceptions(mocker):
 
     # Also mock add_user to avoid db operations
     mocker.patch("bot.utils.db.add_user", mocker.AsyncMock(return_value=True))
-    
+
     # Test use invite
     success = await use_invite("test-invite-id", 123456789)
     assert success is True

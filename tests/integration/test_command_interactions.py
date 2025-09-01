@@ -67,7 +67,7 @@ async def test_admin_user_commands(integration_setup, mock_message, mock_command
 
     # Try adding a user that already exists
     mock_message.text = "/adduser 987654321"
-    
+
     # Configure the mock to return False for duplicate user
     mock_command_system["add_user_success"].return_value = False
     await command_adduser(mock_message)
