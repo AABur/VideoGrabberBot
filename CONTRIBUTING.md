@@ -142,6 +142,23 @@ The test suite is organized into three categories:
 
 All tests run in parallel except integration tests, which run sequentially to avoid race conditions with shared state.
 
+### Security Testing
+
+```bash
+# Run security tests specifically
+make test tests/security/
+
+# Run all security-related tests
+make test tests/security/ tests/unit/handlers/test_download.py
+```
+
+**Security Testing Guidelines:**
+- All new handlers must include both authorized and unauthorized test cases
+- Use real database in security tests, not mocks, for accurate authorization validation
+- Test for authorization bypass attempts, especially in callback handlers
+- Each security test should verify both success and failure scenarios
+- Security vulnerabilities should be documented in commit messages
+
 ### Docker Development
 
 The project includes comprehensive Docker support:
@@ -162,13 +179,22 @@ make docker-clean   # Clean up Docker resources
 
 ## Project Structure
 
+### Module Dependencies
+```
+bot/
+├── handlers/ (depends on services/, utils/)
+├── services/ (depends on utils/)
+├── utils/ (no internal dependencies)
+└── telegram_api/ (isolated)
+```
+
 ```
 VideoGrabberBot/
 ├── bot/                    # Main bot code
-│   ├── handlers/           # Telegram message handlers
-│   ├── services/           # Core functionality
+│   ├── handlers/           # Telegram message and callback handlers with authorization
+│   ├── services/           # Core business logic (downloader, queue, formats, storage)
 │   ├── telegram_api/       # Telegram API client
-│   └── utils/              # Utility functions
+│   └── utils/              # Database operations, logging, configuration utilities
 ├── tests/                  # Test suite
 │   ├── integration/        # Integration tests (workflow and error handling)
 │   ├── security/           # Security and authorization tests

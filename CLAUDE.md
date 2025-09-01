@@ -34,7 +34,7 @@
 - **Error handling**: Use try/except with specific exceptions, log errors with loguru
 - **Docstrings**: Google style docstrings for all modules, classes, and functions
 - **Async**: Use async/await for I/O bound operations (DB, network)
-- **Formatting**: 4 spaces indentation, max 79 char line length, one empty line at end of file
+- **Formatting**: 4 spaces indentation, max 120 char line length, one empty line at end of file
 - **File Structure**: Each file should have one and only one blank line at the end
 - **Logging**: Use loguru with appropriate levels (debug, info, error)
 - **Language**: Always use English for ALL code, comments, and docstrings
@@ -90,12 +90,19 @@ This section contains rules and guidelines for working with Claude on this proje
      - `#rule: [rule content]` — for adding a new rule
      - `#reminder: [content]` — for important reminders
 
+### Working Agreement
+
+- Change one axis at a time: either code or tests — never both in the same step
+- Tests mirror modules: one module → one test file to keep navigation simple
+- Do not alter unrelated code to satisfy tests; document behavioral changes
+- Discuss and plan any refactor that intentionally breaks tests before implementation
+
 ### Project-Specific Rules
 
 1. **Version Control**:
    - All changes to project files must be saved to git after developer confirmation
    - Do not commit changes automatically without explicit approval
-   - Don't add "Generated with Claude Code" or "Co-Authored-By: Claude" to commit messages
+   - Use conventional commit format without Claude attribution
    - Do not include "Test plan" sections in PR descriptions
 
 2. **Code Generation Rules**:
@@ -107,6 +114,21 @@ This section contains rules and guidelines for working with Claude on this proje
    - If unable to fix a linting error after 3 attempts, stop and discuss the problem with the developer
    - If fixing code requires modifying tests, stop and explain the situation to the developer
 
-3. **Rule Management**:
+3. **Security Guidelines**:
+   - All user inputs must pass through authorization checks
+   - Both URL processing and callback handling require authorization validation
+   - Never expose sensitive information in logs or error messages
+   - Database queries should use parameterized statements to prevent SQL injection
+   - Test for authorization bypass attempts in callback handlers
+
+4. **Project Module Overview**:
+   - `bot/handlers/`: Telegram message and callback handlers with authorization
+   - `bot/services/`: Core business logic (downloader, queue, formats, storage)
+   - `bot/utils/`: Database operations, logging, configuration utilities
+   - `tests/unit/`: Mirror structure of bot/ directory
+   - `tests/integration/`: End-to-end workflow tests
+   - `tests/security/`: Authorization and security validation tests
+
+5. **Rule Management**:
    - All rules must be added to CLAUDE.md
    - Before adding a new rule, check for duplicates or contradictions
