@@ -254,6 +254,17 @@ data/                  # Data directory (created automatically)
 - No sensitive user data is collected or stored
 - Rate limiting is handled by Telegram's Bot API
 
+### Authorization System
+- All user interactions require authorization validation
+- Authorization checks implemented in both URL processing and callback handling
+- Prevents bypass attacks through direct callback manipulation
+
+### Recent Security Improvements
+- Fixed callback query authorization bypass vulnerability (January 2025)
+- Added comprehensive security test coverage (43 security tests)
+- Implemented defense-in-depth for all user-facing endpoints
+- All handlers now validate user authorization before processing
+
 ## Limitations
 
 - Maximum file size: 2GB (Telegram Bot API limitation)
