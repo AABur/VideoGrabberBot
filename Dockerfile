@@ -15,17 +15,11 @@ RUN pip install --no-cache-dir uv
 # Set working directory
 WORKDIR /app
 
-# Copy dependency files first for better layer caching
-COPY pyproject.toml uv.lock ./
-
-# Install dependencies based on pyproject.toml
-RUN uv pip install --system --no-cache-dir "aiogram>=3.19.0" "aiosqlite>=0.21.0" "loguru>=0.7.3" "python-dotenv>=1.1.0" "yt-dlp>=2025.3.27"
-
 # Copy source code
 COPY . .
 
-# Install the package itself
-RUN uv pip install --system --no-cache-dir -e . --no-deps
+# Install dependencies and the package from pyproject.toml
+RUN uv pip install --system --no-cache-dir -e .
 
 # Create directories for data and set permissions
 RUN mkdir -p /app/data /app/data/temp /app/logs && \
