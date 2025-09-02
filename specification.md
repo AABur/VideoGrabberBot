@@ -12,19 +12,20 @@ VideoGrabberBot allows users to download videos and audio from YouTube by sendin
 
 - **YouTube Integration**:
   - Process standard YouTube URLs (youtube.com, youtu.be, m.youtube.com, youtube-nocookie.com)
-  - Extract video information using yt-dlp
+  - Extract video metadata and available formats
   - Support for both short and long videos (up to Telegram's file size limit of 2GB)
 
 ### 2. Format Selection System
 
-- **Video Formats**:
-  - SD (480p): `best[height<=480]` format parameter
-  - HD (720p): `best[height<=720]` format parameter
-  - Full HD (1080p): `best[height<=1080]` format parameter
-  - Original: `best` format parameter (maximum available quality)
+- **Video Quality Options**:
+  - Standard Definition (480p resolution)
+  - High Definition (720p resolution) 
+  - Full High Definition (1080p resolution)
+  - Original Quality (maximum available resolution)
 
-- **Audio Format**:
-  - MP3 (320kbps): `bestaudio/best` format parameter
+- **Audio Extraction**:
+  - High-quality audio extraction (320kbps equivalent)
+  - Audio-only download option
 
 - **Selection Interface**:
   - Present format options via Telegram's InlineKeyboard
@@ -39,7 +40,7 @@ VideoGrabberBot allows users to download videos and audio from YouTube by sendin
   - Direct user addition by admin (using /adduser command)
 
 - **Persistent User Storage**:
-  - Store authorized users in SQLite database
+  - Store authorized users in persistent database
   - Track invitation creation and usage
 
 ### 4. Download Queue Management
@@ -71,25 +72,25 @@ VideoGrabberBot allows users to download videos and audio from YouTube by sendin
 ### Core Components
 
 1. **Bot Framework Layer**:
-   - Uses aiogram for Telegram Bot API interactions
-   - Event-driven architecture with router system
+   - Telegram Bot API integration framework
+   - Event-driven architecture with message routing
    - Asynchronous message handling
 
 2. **Handler Layer**:
-   - Command handlers (`commands.py`)
-   - Download URL processor (`download.py`)
-   - Callback query processor for format selection
+   - Command processing system
+   - URL processing and validation
+   - User interaction callback handlers
 
 3. **Service Layer**:
-   - Download service (`downloader.py`): Interface to yt-dlp
-   - Format service (`formats.py`): Format option management
-   - Queue service (`queue.py`): Download task queue
-   - Storage service (`storage.py`): Temporary URL storage
+   - Video download service: Interface to external video downloading library
+   - Format management service: Quality and format option handling
+   - Task queue service: Download request processing queue
+   - Temporary storage service: Short-term URL and file storage
 
 4. **Data Layer**:
-   - Database utilities (`db.py`)
-   - SQLite storage for users and invites
-   - Temporary file storage for downloads
+   - Database abstraction and utilities
+   - Persistent storage for user authorization and invitations
+   - Temporary file system management
 
 5. **Utility Layer**:
    - Logging configuration
@@ -111,45 +112,52 @@ User -> Telegram -> Bot Framework -> Handlers -> Services -> External APIs
 4. Handler displays format options via InlineKeyboard
 5. User selects a format, triggering a callback
 6. Handler adds download task to queue
-7. Queue processor executes download via yt-dlp
+7. Queue processor executes download via video extraction service
 8. Downloaded file is sent back to user via Telegram
 
-## Database Schema
+## Data Model
 
-### Users Table
+### User Entity
 
-```sql
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY,       -- Telegram user ID
-    username TEXT,                -- Telegram username
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    added_by INTEGER,             -- ID of user who added this user
-    is_active BOOLEAN DEFAULT TRUE
-)
-```
+**Purpose**: Store authorized users and track access permissions
 
-### Invites Table
+**Attributes**:
+- User identifier (unique, matches Telegram user ID)
+- Username (for display purposes)
+- Authorization timestamp
+- Reference to authorizing user (who added this user)
+- Active status flag
 
-```sql
-CREATE TABLE IF NOT EXISTS invites (
-    id TEXT PRIMARY KEY,          -- Unique invite code
-    created_by INTEGER,           -- ID of user who created the invite
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    used_by INTEGER,              -- ID of user who used the invite
-    used_at TIMESTAMP,            -- When the invite was used
-    is_active BOOLEAN DEFAULT TRUE
-)
-```
+### Invitation Entity
 
-### Settings Table
+**Purpose**: Manage access control through invitation system
 
-```sql
-CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY,
-    value TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-```
+**Attributes**:
+- Unique invitation code
+- Creator reference (who created the invite)
+- Creation timestamp
+- Usage information (who used it, when)
+- Active status flag
+
+**Relationships**:
+- Creator: User who generated the invitation
+- Used by: User who redeemed the invitation (if any)
+
+### Configuration Entity
+
+**Purpose**: Store system settings and configuration
+
+**Attributes**:
+- Setting key (unique identifier)
+- Setting value (flexible data storage)
+- Last update timestamp
+
+### Entity Relationships
+
+- Users can create multiple Invitations
+- Each Invitation can be used by at most one User
+- Users have a hierarchical relationship (added_by references another User)
+- Configuration settings are independent key-value pairs
 
 ## Implementation Details
 
@@ -159,14 +167,14 @@ CREATE TABLE IF NOT EXISTS settings (
    - Verify URL is from supported platform (YouTube)
    - Check for valid video ID format
 
-2. **Format Extraction**:
-   - Parse available formats using yt-dlp
+2. **Format Analysis**:
+   - Parse available formats using video extraction library
    - Filter and group formats based on resolution/quality
    - Present simplified options to user
 
 3. **Download Execution**:
    - Create temporary directory for download
-   - Configure yt-dlp with selected format parameter
+   - Configure video extraction service with selected format
    - Monitor download progress
    - Verify downloaded file integrity
 
@@ -194,24 +202,21 @@ CREATE TABLE IF NOT EXISTS settings (
 
 ## Environment Requirements
 
-### Runtime Dependencies
+### Runtime Requirements
 
-- Python 3.11+
-- aiogram 3.19.0+
-- yt-dlp 2025.3.27+
-- aiosqlite 0.21.0+
-- loguru 0.7.3+
-- python-dotenv 1.1.0+
+- **Programming Language**: Support for asynchronous programming, strong networking capabilities
+- **Telegram Bot API Integration**: Framework or library for Telegram Bot API interactions
+- **Video Download Capability**: Library supporting YouTube video extraction and download
+- **Database Support**: Persistent storage system with async operations support
+- **Logging System**: Structured logging with multiple output formats
+- **Configuration Management**: Environment variable handling and configuration
 
-### Development Dependencies
+### Development Requirements
 
-- mypy 1.15.0+
-- pytest 8.3.5+
-- pytest-asyncio 0.26.0+
-- pytest-cov 5.0.0+
-- pytest-mock 3.14.0+
-- ruff 0.11.2+
-- wemake-python-styleguide 1.1.0+
+- **Type System**: Static type checking capability
+- **Testing Framework**: Async-compatible testing with mocking and coverage support
+- **Code Quality Tools**: Linting, formatting, and style checking tools
+- **Development Workflow**: Package management and dependency resolution
 
 ### Configuration
 
@@ -219,40 +224,78 @@ Required environment variables:
 - `TELEGRAM_TOKEN`: Bot API token from BotFather
 - `ADMIN_USER_ID`: Telegram user ID of the administrator
 
-### File System Structure
+### Storage Structure
 
-```
-data/                  # Data directory (created automatically)
-├── bot.db             # SQLite database
-└── temp/              # Temporary download directory
-```
+**Data Directory**:
+- **Database Files**: Persistent storage for user authorization and configuration
+- **Temporary Storage**: Short-term storage for download/upload operations
+- **Log Files**: System operation logs and audit trails
 
-## Deployment Guidance
+**Storage Requirements**:
+- Persistent data must survive system restarts
+- Temporary files can be cleared on startup
+- Adequate space for concurrent download operations
 
-### Direct Deployment
+## Deployment Requirements
 
-1. Clone the repository
-2. Install Python 3.11+
-3. Install uv package manager
-4. Set up environment with `uv venv` and activate
-5. Install dependencies with `uv pip install -e .`
-6. For development: `uv pip install -e ".[dev]"`
-7. Create .env file with required configuration
-8. Run with `uv run python run.py`
+### System Requirements
 
-### Hosting Requirements
+**Compute Resources**:
+- CPU: Sufficient for concurrent video processing and file I/O operations
+- Memory: Adequate for handling multiple concurrent download requests
+- Storage: Space for temporary file storage during download/upload process
 
-- Adequate disk space for temporary download files
-- Internet connectivity with access to YouTube
-- Sufficient bandwidth for file uploads to Telegram
+**Network Requirements**:
+- Stable internet connection with adequate bandwidth for video downloads
+- Access to Telegram Bot API endpoints
+- Access to YouTube and other supported video platforms
+
+**Runtime Environment**:
+- Support for asynchronous programming execution
+- File system access for temporary storage
+- Environment variable configuration support
+- Process management capabilities
+
+### Deployment Process
+
+**Preparation Steps**:
+1. Obtain source code from repository
+2. Install required runtime environment and dependencies
+3. Configure system environment variables
+4. Initialize persistent data storage
+5. Set up temporary file storage directories
+
+**Configuration Requirements**:
+- Bot API token (from Telegram BotFather)
+- Administrator user identification
+- Storage location configuration
+- Optional: Logging level and output settings
+
+**Startup Process**:
+- Initialize database and verify connectivity
+- Establish Telegram Bot API connection
+- Start message handling and queue processing systems
+- Begin health monitoring and logging
 
 ## Security Considerations
 
-- Bot token is stored in .env file (not in source control)
-- Access control prevents unauthorized usage
-- Temporary files are cleaned up after sending
-- No sensitive user data is collected or stored
-- Rate limiting is handled by Telegram's Bot API
+### Data Protection
+- API credentials stored securely outside source control
+- Temporary files automatically cleaned after processing
+- Minimal user data collection (only authorization information)
+- No sensitive personal information stored or transmitted
+
+### Access Control
+- Multi-layer authorization system prevents unauthorized usage
+- All user interactions require authorization validation
+- Administrative functions restricted to designated admin users
+- Invitation system provides controlled access expansion
+
+### Network Security
+- Rate limiting handled by external API providers
+- Secure communication with Telegram Bot API
+- No direct user data transmission to third parties
+- Error messages sanitized to prevent information disclosure
 
 ### Authorization System
 - All user interactions require authorization validation
