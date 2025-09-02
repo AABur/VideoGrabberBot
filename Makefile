@@ -1,4 +1,4 @@
-.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-dev docker-prod docker-build docker-logs docker-status docker-stop docker-clean
+.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-up docker-build docker-logs docker-status docker-stop docker-clean
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -97,21 +97,12 @@ clean: ## Clean temporary files and cache
 check: format lint mypy ## Run all checks (format, lint, type check)
 
 # Docker targets
-docker-dev: ## Start development Docker environment
-	@echo "Starting development Docker environment..."
+docker-up: ## Start Docker environment
+	@echo "Starting Docker environment..."
 	@if [ ! -f .env ]; then \
-		echo "Creating .env from .env.docker template..."; \
-		cp .env.docker .env; \
-		echo "Please edit .env with your actual tokens and settings"; \
-	fi
-	@docker compose up -d
-
-docker-prod: ## Start production Docker environment
-	@echo "Starting production Docker environment..."
-	@if [ ! -f .env ]; then \
-		echo "Creating .env from .env.production template..."; \
-		cp .env.production .env; \
-		echo "Please edit .env with your actual tokens and settings"; \
+		echo "Creating .env from .env.example template..."; \
+		cp .env.example .env; \
+		echo "Please edit .env with your actual tokens"; \
 	fi
 	@docker compose up -d
 

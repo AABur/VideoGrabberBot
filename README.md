@@ -67,7 +67,7 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
 
 ## Docker Deployment
 
-### Quick Start with Docker
+If you prefer Docker:
 
 1. **Clone and configure**:
    ```bash
@@ -75,31 +75,16 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
    cd VideoGrabberBot
    ```
 
-2. **For development**:
+2. **Run with Docker**:
    ```bash
-   make docker-dev
+   make docker-up
    ```
-   This will create a `.env` file from `.env.docker` template. Edit it with your tokens.
+   This will create a `.env` file from `.env.example` template. Edit it with your tokens.
 
-3. **For production**:
-   ```bash
-   make docker-prod
-   ```
-   This will create a `.env` file from `.env.production` template. Edit it with your tokens.
-
-4. **Stop when needed**:
+3. **Stop when needed**:
    ```bash
    make docker-stop
    ```
-
-### Docker Configuration
-
-The project uses a single `docker-compose.yml` file with environment-based configuration:
-
-- **Development**: Lower resource limits, local logging
-- **Production**: Higher resource limits, structured logging with rotation
-
-Configuration is controlled through environment variables in the `.env` file.
 
 ## Technologies
 

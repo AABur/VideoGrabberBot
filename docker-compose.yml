@@ -3,66 +3,28 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ${CONTAINER_NAME:-videograbber-bot}
-    restart: ${RESTART_POLICY:-unless-stopped}
+    container_name: videograbber-bot
+    restart: unless-stopped
     
     environment:
-      # Bot configuration
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
       - ADMIN_USER_ID=${ADMIN_USER_ID}
-      
-      # Database configuration
       - DB_PATH=/app/data/bot.db
       - DATA_DIR=/app/data
       - TEMP_DIR=/app/data/temp
-      
-      # Optional: Log level
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - PYTHONUNBUFFERED=1
     
     volumes:
-      # Persistent data storage
-      - ${DATA_VOLUME:-bot_data}:/app/data
-      - ${LOGS_VOLUME:-bot_logs}:/app/logs
+      - bot_data:/app/data
+      - bot_logs:/app/logs
     
-    networks:
-      - bot_network
-    
-    # Resource limits (configurable via environment variables)
-    deploy:
-      resources:
-        limits:
-          memory: ${MEMORY_LIMIT:-1G}
-          cpus: ${CPU_LIMIT:-0.5}
-        reservations:
-          memory: ${MEMORY_RESERVATION:-256M}
-          cpus: ${CPU_RESERVATION:-0.1}
-    
-    # Health check (configurable via environment variables)
     healthcheck:
       test: ["CMD", "python", "-c", "import sys; sys.path.append('/app'); import bot.config; print('OK')"]
-      interval: ${HEALTHCHECK_INTERVAL:-30s}
-      timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-      retries: ${HEALTHCHECK_RETRIES:-3}
-      start_period: ${HEALTHCHECK_START_PERIOD:-10s}
-    
-    # Logging configuration (enabled in production)
-    logging:
-      driver: ${LOGGING_DRIVER:-local}
-      options:
-        max-size: ${LOG_MAX_SIZE:-10m}
-        max-file: ${LOG_MAX_FILES:-3}
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   bot_data:
-    driver: local
   bot_logs:
-    driver: local
-  bot_data_prod:
-    driver: local
-  bot_logs_prod:
-    driver: local
-
-networks:
-  bot_network:
-    driver: bridge
