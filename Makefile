@@ -1,4 +1,4 @@
-.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-up docker-build docker-logs docker-status docker-stop docker-clean
+.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-start docker-build docker-logs docker-status docker-stop docker-clean
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -97,7 +97,7 @@ clean: ## Clean temporary files and cache
 check: format lint mypy ## Run all checks (format, lint, type check)
 
 # Docker targets
-docker-up: ## Start Docker environment
+docker-start: ## Start Docker environment
 	@echo "Starting Docker environment..."
 	@if [ ! -f .env ]; then \
 		echo "Creating .env from .env.example template..."; \

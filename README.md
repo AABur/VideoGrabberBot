@@ -77,7 +77,7 @@ If you prefer Docker:
 
 2. **Run with Docker**:
    ```bash
-   make docker-up
+   make docker-start
    ```
    This will create a `.env` file from `.env.example` template. Edit it with your tokens.
 

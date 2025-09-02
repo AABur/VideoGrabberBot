@@ -67,7 +67,7 @@ make mypy          # Type checking
 make check         # Run all checks (format, lint, type check)
 
 # Docker development
-make docker-up     # Start Docker environment
+make docker-start  # Start Docker environment
 make docker-build  # Build Docker image
 make docker-logs   # View logs
 make docker-status # Check status
@@ -164,7 +164,7 @@ The project includes simple Docker support:
 
 ```bash
 # Docker environment
-make docker-up      # Start Docker container
+make docker-start   # Start Docker container
 make docker-logs    # View logs
 make docker-status  # Check container status
 
