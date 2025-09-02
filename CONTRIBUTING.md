@@ -67,8 +67,7 @@ make mypy          # Type checking
 make check         # Run all checks (format, lint, type check)
 
 # Docker development
-make docker-dev    # Start development environment
-make docker-prod   # Start production environment
+make docker-up     # Start Docker environment
 make docker-build  # Build Docker image
 make docker-logs   # View logs
 make docker-status # Check status
@@ -161,19 +160,16 @@ make test tests/security/ tests/unit/handlers/test_download.py
 
 ### Docker Development
 
-The project includes comprehensive Docker support:
+The project includes simple Docker support:
 
 ```bash
-# Development environment
-make docker-dev     # Start development containers
+# Docker environment
+make docker-up      # Start Docker container
 make docker-logs    # View logs
 make docker-status  # Check container status
 
-# Production testing
-make docker-prod    # Start production containers
-
 # Cleanup
-make docker-stop    # Stop all containers
+make docker-stop    # Stop container
 make docker-clean   # Clean up Docker resources
 ```
 
@@ -205,11 +201,9 @@ VideoGrabberBot/
 │       └── utils/          # Tests for bot/utils/
 ├── data/                   # Database and temp files
 ├── Dockerfile              # Container image definition
-├── docker-compose.dev.yml  # Development container orchestration
-├── docker-compose.prod.yml # Production container orchestration
+├── docker-compose.yml      # Container orchestration
 ├── .dockerignore           # Files to exclude from Docker context
 ├── .env.example            # Environment variables template
-├── deploy.sh               # Deployment automation script
 ├── .flake8                 # wemake-python-styleguide configuration
 ├── pyproject.toml          # Project configuration and dependencies
 ├── Makefile                # Development workflow commands
