@@ -1,4 +1,4 @@
-.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-start docker-build docker-logs docker-status docker-stop docker-clean
+.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-start docker-build docker-logs docker-status docker-stop docker-clean nas-bootstrap nas-status nas-logs nas-restart nas-stop nas-push
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -123,3 +123,22 @@ docker-stop: ## Stop Docker containers
 docker-clean: docker-stop ## Stop containers and clean up
 	@echo "Cleaning up Docker resources..."
 	@docker system prune -f
+
+# NAS deploy helpers
+nas-bootstrap: ## Bootstrap NAS autodeploy (creates bare repo, installs hook, sets remote)
+	@bash scripts/nas_bootstrap.sh
+
+nas-push: ## Push main branch to NAS (deploy)
+	@git push nas main:main || git push_nas
+
+nas-status: ## Show NAS service status (docker compose ps)
+	@bash scripts/nas_exec.sh -- 'docker compose ps'
+
+nas-logs: ## Tail NAS bot logs
+	@bash scripts/nas_exec.sh -- 'docker compose logs -f --tail=200 videograbber-bot'
+
+nas-restart: ## Restart NAS bot service
+	@bash scripts/nas_exec.sh -- 'docker compose restart videograbber-bot'
+
+nas-stop: ## Stop NAS bot service
+	@bash scripts/nas_exec.sh -- 'docker compose stop videograbber-bot'
