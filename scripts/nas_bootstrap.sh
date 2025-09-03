@@ -56,6 +56,11 @@ fi
 echo "[nas-bootstrap] Ensuring directories exist: $APP_DIR, $GIT_DIR"
 ssh "$SSH_TARGET" "mkdir -p '$APP_DIR' '$GIT_DIR' && chown -R \"\$(id -un)\":\"\$(id -gn)\" '$APP_DIR' '$GIT_DIR' || true"
 
+echo "[nas-bootstrap] Checking Docker/Compose on NAS"
+ssh "$SSH_TARGET" "docker --version >/dev/null && (docker compose version >/dev/null 2>&1 || docker-compose --version >/dev/null 2>&1)" || {
+  echo "[nas-bootstrap] WARNING: Docker or Compose is not available on NAS. Hook will fail until installed." >&2
+}
+
 echo "[nas-bootstrap] Initializing bare repo at $GIT_DIR (if missing)"
 ssh "$SSH_TARGET" "test -d '$GIT_DIR/refs' || git init --bare '$GIT_DIR'"
 
