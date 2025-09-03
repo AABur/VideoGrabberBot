@@ -139,6 +139,7 @@ async def test_invite_workflow(integration_setup, mock_message, mock_bot, mock_c
     # Now we can test that an authorized user gets proper welcome message
     # Create a new message for clarity
     from unittest.mock import AsyncMock, MagicMock
+
     user_message = MagicMock()
     user_message.from_user = mock_message.from_user  # Already authorized
     user_message.text = "/start"

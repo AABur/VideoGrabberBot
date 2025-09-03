@@ -191,6 +191,7 @@ async def test_authorization_with_real_config(secure_test_db):
     # Get real admin ID from config (if available)
     try:
         from bot.config import ADMIN_USER_ID
+
         admin_id = ADMIN_USER_ID
     except (ImportError, AttributeError):
         # Fallback for testing

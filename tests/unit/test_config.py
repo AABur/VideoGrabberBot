@@ -188,13 +188,16 @@ class TestConfigValidation:
         _ = Config()
 
         # Mock valid environment
-        mocker.patch.dict(os.environ, {
-            "TELEGRAM_TOKEN": "valid_token",
-            "ADMIN_USER_ID": "123456",
-            "LOG_LEVEL": "INFO",
-            "MAX_FILE_SIZE": "50",
-            "DOWNLOAD_TIMEOUT": "300"
-        })
+        mocker.patch.dict(
+            os.environ,
+            {
+                "TELEGRAM_TOKEN": "valid_token",
+                "ADMIN_USER_ID": "123456",
+                "LOG_LEVEL": "INFO",
+                "MAX_FILE_SIZE": "50",
+                "DOWNLOAD_TIMEOUT": "300",
+            },
+        )
         # Create a new config with mocked values
         test_config = Config()
         test_config.LOG_LEVEL = "INFO"

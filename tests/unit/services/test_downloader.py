@@ -403,6 +403,7 @@ class TestCleanupTempDirectory:
 
         # Create the directory first
         import os
+
         os.makedirs(temp_dir, exist_ok=True)
 
         # Add a file to make sure directory is not empty
@@ -428,6 +429,7 @@ class TestCleanupTempDirectory:
 
         # Create the directory
         import os
+
         os.makedirs(temp_dir, exist_ok=True)
 
         mocker.patch("os.path.exists", return_value=True)

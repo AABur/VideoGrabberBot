@@ -57,9 +57,7 @@ def mock_message(mocker):
 
 
 @pytest.mark.asyncio
-async def test_process_url_authorized_youtube_user(
-    secure_download_db, authorized_user, mock_message, mocker
-):
+async def test_process_url_authorized_youtube_user(secure_download_db, authorized_user, mock_message, mocker):
     """Test processing YouTube URL with real authorized user."""
     # Add user to database (real authorization)
     await add_user(authorized_user.id, authorized_user.username, authorized_user.id)
@@ -88,9 +86,7 @@ async def test_process_url_authorized_youtube_user(
 
 
 @pytest.mark.asyncio
-async def test_process_url_unauthorized_youtube_user(
-    secure_download_db, unauthorized_user, mock_message, mocker
-):
+async def test_process_url_unauthorized_youtube_user(secure_download_db, unauthorized_user, mock_message, mocker):
     """Test processing YouTube URL with real unauthorized user."""
     # Do NOT add user to database
     mock_message.from_user = unauthorized_user
@@ -106,9 +102,7 @@ async def test_process_url_unauthorized_youtube_user(
 
 
 @pytest.mark.asyncio
-async def test_process_url_authorized_non_youtube_user(
-    secure_download_db, authorized_user, mock_message, mocker
-):
+async def test_process_url_authorized_non_youtube_user(secure_download_db, authorized_user, mock_message, mocker):
     """Test processing non-YouTube URL with real authorized user."""
     # Add user to database
     await add_user(authorized_user.id, authorized_user.username, authorized_user.id)
@@ -126,9 +120,7 @@ async def test_process_url_authorized_non_youtube_user(
 
 
 @pytest.mark.asyncio
-async def test_process_url_unauthorized_non_youtube_user(
-    secure_download_db, unauthorized_user, mock_message, mocker
-):
+async def test_process_url_unauthorized_non_youtube_user(secure_download_db, unauthorized_user, mock_message, mocker):
     """Test processing non-YouTube URL with real unauthorized user."""
     # Do NOT add user to database
     mock_message.from_user = unauthorized_user
@@ -144,9 +136,7 @@ async def test_process_url_unauthorized_non_youtube_user(
 
 
 @pytest.mark.asyncio
-async def test_process_format_selection_authorized_user(
-    secure_download_db, authorized_user, mocker
-):
+async def test_process_format_selection_authorized_user(secure_download_db, authorized_user, mocker):
     """Test format selection with real authorized user."""
     # Add user to database
     await add_user(authorized_user.id, authorized_user.username, authorized_user.id)
@@ -175,9 +165,7 @@ async def test_process_format_selection_authorized_user(
 
 
 @pytest.mark.asyncio
-async def test_process_format_selection_unauthorized_user(
-    secure_download_db, unauthorized_user, mocker
-):
+async def test_process_format_selection_unauthorized_user(secure_download_db, unauthorized_user, mocker):
     """Test format selection with real unauthorized user."""
     # Do NOT add user to database
 
@@ -208,9 +196,7 @@ async def test_process_format_selection_unauthorized_user(
 
 
 @pytest.mark.asyncio
-async def test_process_format_selection_invalid_callback_data(
-    secure_download_db, authorized_user, mocker
-):
+async def test_process_format_selection_invalid_callback_data(secure_download_db, authorized_user, mocker):
     """Test format selection with invalid callback data."""
     # Add user to database
     await add_user(authorized_user.id, authorized_user.username, authorized_user.id)
@@ -231,9 +217,7 @@ async def test_process_format_selection_invalid_callback_data(
 
 
 @pytest.mark.asyncio
-async def test_process_format_selection_url_not_found(
-    secure_download_db, authorized_user, mocker
-):
+async def test_process_format_selection_url_not_found(secure_download_db, authorized_user, mocker):
     """Test format selection when URL is not found in storage."""
     # Add user to database
     await add_user(authorized_user.id, authorized_user.username, authorized_user.id)
@@ -255,9 +239,7 @@ async def test_process_format_selection_url_not_found(
 
 
 @pytest.mark.asyncio
-async def test_process_format_selection_format_not_found(
-    secure_download_db, authorized_user, mocker
-):
+async def test_process_format_selection_format_not_found(secure_download_db, authorized_user, mocker):
     """Test format selection when format is not found."""
     # Add user to database
     await add_user(authorized_user.id, authorized_user.username, authorized_user.id)
@@ -280,9 +262,7 @@ async def test_process_format_selection_format_not_found(
 
 
 @pytest.mark.asyncio
-async def test_download_authorization_after_deactivation(
-    secure_download_db, authorized_user, mock_message, mocker
-):
+async def test_download_authorization_after_deactivation(secure_download_db, authorized_user, mock_message, mocker):
     """Test that deactivated users lose download access immediately."""
     from bot.utils.db import deactivate_user
 

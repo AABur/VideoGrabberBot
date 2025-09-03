@@ -156,22 +156,12 @@ async def reset_queue():
 async def mock_download_system(mocker):
     """Mock the entire download system with common patterns."""
     return {
-        "download_video": mocker.patch(
-            "bot.services.downloader.download_youtube_video",
-            mocker.AsyncMock()
-        ),
-        "store_url": mocker.patch(
-            "bot.handlers.download.store_url",
-            return_value="test_url_id"
-        ),
+        "download_video": mocker.patch("bot.services.downloader.download_youtube_video", mocker.AsyncMock()),
+        "store_url": mocker.patch("bot.handlers.download.store_url", return_value="test_url_id"),
         "get_url": mocker.patch(
-            "bot.handlers.download.get_url",
-            return_value="https://www.youtube.com/watch?v=test_video"
+            "bot.handlers.download.get_url", return_value="https://www.youtube.com/watch?v=test_video"
         ),
-        "is_youtube_url": mocker.patch(
-            "bot.handlers.download.is_youtube_url",
-            return_value=True
-        ),
+        "is_youtube_url": mocker.patch("bot.handlers.download.is_youtube_url", return_value=True),
     }
 
 
@@ -198,13 +188,9 @@ async def mock_format_system(mocker):
     }
 
     return {
-        "get_format_by_id": mocker.patch(
-            "bot.services.formats.get_format_by_id",
-            return_value=standard_format
-        ),
+        "get_format_by_id": mocker.patch("bot.services.formats.get_format_by_id", return_value=standard_format),
         "get_available_formats": mocker.patch(
-            "bot.services.formats.get_available_formats",
-            return_value=available_formats
+            "bot.services.formats.get_available_formats", return_value=available_formats
         ),
     }
 
@@ -213,10 +199,7 @@ async def mock_format_system(mocker):
 async def mock_telegram_system(mocker, mock_bot):
     """Mock the Telegram API system."""
     return {
-        "get_bot": mocker.patch(
-            "bot.telegram_api.client.get_bot",
-            return_value=mock_bot
-        ),
+        "get_bot": mocker.patch("bot.telegram_api.client.get_bot", return_value=mock_bot),
     }
 
 
@@ -225,13 +208,9 @@ async def mock_command_system(mocker):
     """Mock the command system with common patterns."""
     return {
         "create_invite": mocker.patch(
-            "bot.handlers.commands.create_invite",
-            mocker.AsyncMock(return_value="test_invite")
+            "bot.handlers.commands.create_invite", mocker.AsyncMock(return_value="test_invite")
         ),
-        "add_user_success": mocker.patch(
-            "bot.handlers.commands.add_user",
-            mocker.AsyncMock(return_value=True)
-        ),
+        "add_user_success": mocker.patch("bot.handlers.commands.add_user", mocker.AsyncMock(return_value=True)),
     }
 
 
@@ -239,10 +218,7 @@ async def mock_command_system(mocker):
 async def mock_error_system(mocker):
     """Mock the error handling system."""
     return {
-        "notify_admin": mocker.patch(
-            "bot.utils.logging.notify_admin",
-            mocker.AsyncMock()
-        ),
+        "notify_admin": mocker.patch("bot.utils.logging.notify_admin", mocker.AsyncMock()),
     }
 
 
@@ -267,8 +243,7 @@ def pytest_configure(config):
     """Configure pytest for integration tests."""
     # Add xdist group markers to integration tests to avoid parallel execution conflicts
     config.addinivalue_line(
-        "markers",
-        "integration: mark test as integration test (runs sequentially to avoid race conditions)"
+        "markers", "integration: mark test as integration test (runs sequentially to avoid race conditions)"
     )
 
 

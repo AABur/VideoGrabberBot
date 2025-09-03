@@ -1,6 +1,5 @@
 """Tests for download handlers."""
 
-
 import pytest
 from aiogram import Bot
 from aiogram.types import CallbackQuery, Message, User
@@ -32,10 +31,10 @@ async def test_process_url_authorized_youtube(mocker):
         "bot.handlers.download.get_format_options",
         return_value=[
             ("SD", "SD (480p)"),
-                ("HD", "HD (720p)"),
-                ("FHD", "Full HD (1080p)"),
-                ("ORIGINAL", "Original"),
-            ],
+            ("HD", "HD (720p)"),
+            ("FHD", "Full HD (1080p)"),
+            ("ORIGINAL", "Original"),
+        ],
     )
     mocker.patch("bot.handlers.download.logger.info")
 

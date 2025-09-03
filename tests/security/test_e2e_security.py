@@ -59,9 +59,7 @@ def mock_message(mocker):
 
 
 @pytest.mark.asyncio
-async def test_e2e_unauthorized_user_help_command(
-    e2e_test_db, mock_unauthorized_user, mock_message
-):
+async def test_e2e_unauthorized_user_help_command(e2e_test_db, mock_unauthorized_user, mock_message):
     """Test that unauthorized users cannot access help command."""
     mock_message.from_user = mock_unauthorized_user
 
@@ -76,9 +74,7 @@ async def test_e2e_unauthorized_user_help_command(
 
 
 @pytest.mark.asyncio
-async def test_e2e_authorized_user_help_command(
-    e2e_test_db, mock_authorized_user, mock_message
-):
+async def test_e2e_authorized_user_help_command(e2e_test_db, mock_authorized_user, mock_message):
     """Test that authorized users can access help command."""
     # First add user to database (real authorization)
     await add_user(mock_authorized_user.id, mock_authorized_user.username, mock_authorized_user.id)
@@ -97,9 +93,7 @@ async def test_e2e_authorized_user_help_command(
 
 
 @pytest.mark.asyncio
-async def test_e2e_unauthorized_user_download_attempt(
-    e2e_test_db, mock_unauthorized_user, mock_message
-):
+async def test_e2e_unauthorized_user_download_attempt(e2e_test_db, mock_unauthorized_user, mock_message):
     """Test that unauthorized users cannot download videos."""
     mock_message.from_user = mock_unauthorized_user
     mock_message.text = "https://www.youtube.com/watch?v=test_video"
@@ -115,9 +109,7 @@ async def test_e2e_unauthorized_user_download_attempt(
 
 
 @pytest.mark.asyncio
-async def test_e2e_authorized_user_download_flow(
-    e2e_test_db, mock_authorized_user, mock_message, mocker
-):
+async def test_e2e_authorized_user_download_flow(e2e_test_db, mock_authorized_user, mock_message, mocker):
     """Test that authorized users can initiate download flow."""
     # Add user to database (real authorization)
     await add_user(mock_authorized_user.id, mock_authorized_user.username, mock_authorized_user.id)
@@ -179,8 +171,9 @@ async def test_e2e_admin_only_commands(e2e_test_db, mock_unauthorized_user, mock
     mock_message.answer.assert_called_once()
     call_args = mock_message.answer.call_args
     message_text = call_args[0][0]
-    assert ("admin" in message_text.lower() and "only" in message_text.lower()) or \
-           "not authorized" in message_text.lower()
+    assert (
+        "admin" in message_text.lower() and "only" in message_text.lower()
+    ) or "not authorized" in message_text.lower()
 
 
 @pytest.mark.asyncio
@@ -255,7 +248,7 @@ async def test_e2e_malicious_input_handling(e2e_test_db, mock_authorized_user, m
         "file:///etc/passwd",
         "' OR '1'='1'; DROP TABLE users; --",
         "../../../etc/passwd",
-        "https://evil.com/malware.exe"
+        "https://evil.com/malware.exe",
     ]
 
     for malicious_url in malicious_urls:
