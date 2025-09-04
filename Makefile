@@ -1,4 +1,4 @@
-.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-start docker-build docker-logs docker-status docker-stop docker-clean nas-bootstrap nas-status nas-logs nas-restart nas-stop nas-push
+.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean docker-start docker-build docker-logs docker-status docker-stop docker-clean nas-init nas-bootstrap nas-status nas-logs nas-restart nas-stop nas-push nas-backup nas-clean nas-info
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -125,6 +125,22 @@ docker-clean: docker-stop ## Stop containers and clean up
 	@docker system prune -f
 
 # NAS deploy helpers
+nas-init: ## Initialize NAS deployment (check requirements, setup SSH, bootstrap)
+	@echo "Initializing NAS deployment..."
+	@echo "1. Checking SSH configuration..."
+	@if ! ssh nas 'echo "SSH connection OK"' 2>/dev/null; then \
+		echo "SSH connection failed. Please configure SSH access first:"; \
+		echo "Add to ~/.ssh/config:"; \
+		echo "Host nas"; \
+		echo "    HostName AAB_UAE"; \
+		echo "    User dockeruser"; \
+		echo "    IdentityFile ~/.ssh/id_ed25519"; \
+		exit 1; \
+	fi
+	@echo "2. Running bootstrap setup..."
+	@bash scripts/nas_bootstrap.sh
+	@echo "3. NAS deployment initialization complete!"
+
 nas-bootstrap: ## Bootstrap NAS autodeploy (creates bare repo, installs hook, sets remote)
 	@bash scripts/nas_bootstrap.sh
 
@@ -142,3 +158,28 @@ nas-restart: ## Restart NAS bot service
 
 nas-stop: ## Stop NAS bot service
 	@bash scripts/nas_exec.sh -- 'docker compose stop videograbber-bot'
+
+nas-backup: ## Create backup of NAS deployment
+	@echo "Creating backup of NAS deployment..."
+	@bash scripts/nas_exec.sh -- 'tar -czf /tmp/videograbber-backup-$(date +%Y%m%d-%H%M%S).tar.gz .'
+	@echo "Downloading backup to local machine..."
+	@scp nas:/tmp/videograbber-backup-*.tar.gz ./backups/ 2>/dev/null || mkdir -p backups && scp nas:/tmp/videograbber-backup-*.tar.gz ./backups/
+	@bash scripts/nas_exec.sh -- 'rm -f /tmp/videograbber-backup-*.tar.gz'
+	@echo "Backup completed and stored in ./backups/"
+
+nas-clean: ## Clean old Docker images and containers on NAS
+	@echo "Cleaning up Docker resources on NAS..."
+	@bash scripts/nas_exec.sh -- 'docker image prune -f'
+	@bash scripts/nas_exec.sh -- 'docker container prune -f'
+	@bash scripts/nas_exec.sh -- 'docker system prune -f'
+	@echo "Cleanup completed"
+
+nas-info: ## Show NAS deployment information
+	@echo "=== NAS Deployment Information ==="
+	@bash scripts/nas_exec.sh -- 'pwd && ls -la'
+	@echo ""
+	@echo "=== Docker Status ==="
+	@bash scripts/nas_exec.sh -- 'docker compose ps'
+	@echo ""
+	@echo "=== Git Remote ==="
+	@git remote -v | grep nas || echo "NAS remote not configured"

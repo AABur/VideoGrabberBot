@@ -42,5 +42,10 @@ if [[ -z "$CMD" ]]; then
   exit 3
 fi
 
-ssh "$SSH_TARGET" "cd '$APP_DIR' && $CMD"
+echo "[nas-exec] Executing on $SSH_TARGET: $CMD"
+ssh "$SSH_TARGET" "cd '$APP_DIR' && $CMD" || {
+  exit_code=$?
+  echo "[nas-exec] Command failed with exit code $exit_code" >&2
+  exit $exit_code
+}
 

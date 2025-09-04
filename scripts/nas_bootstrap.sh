@@ -57,8 +57,19 @@ echo "[nas-bootstrap] Ensuring directories exist: $APP_DIR, $GIT_DIR"
 ssh "$SSH_TARGET" "mkdir -p '$APP_DIR' '$GIT_DIR' && chown -R \"\$(id -un)\":\"\$(id -gn)\" '$APP_DIR' '$GIT_DIR' || true"
 
 echo "[nas-bootstrap] Checking Docker/Compose on NAS"
-ssh "$SSH_TARGET" "docker --version >/dev/null && (docker compose version >/dev/null 2>&1 || docker-compose --version >/dev/null 2>&1)" || {
-  echo "[nas-bootstrap] WARNING: Docker or Compose is not available on NAS. Hook will fail until installed." >&2
+ssh "$SSH_TARGET" "(/usr/local/bin/docker --version || docker --version) >/dev/null && (/usr/local/bin/docker compose version || docker compose version || docker-compose --version) >/dev/null 2>&1" || {
+  echo "[nas-bootstrap] ERROR: Docker or Compose is not available on NAS." >&2
+  echo "Please install Docker and Docker Compose on your NAS first." >&2
+  echo "For Synology: Install 'Container Manager' package from Package Center." >&2
+  exit 3
+}
+
+echo "[nas-bootstrap] Checking NAS user permissions"
+ssh "$SSH_TARGET" "id | grep -q docker" || {
+  echo "[nas-bootstrap] ERROR: User $NAS_USER is not in docker group." >&2
+  echo "Run on NAS: sudo usermod -aG docker $NAS_USER" >&2
+  echo "Then logout and login again." >&2
+  exit 4
 }
 
 echo "[nas-bootstrap] Initializing bare repo at $GIT_DIR (if missing)"
@@ -75,28 +86,29 @@ if [[ -z "${GIT_DIR_ENV}" || -z "${APP_DIR_ENV}" ]]; then
   exit 1
 fi
 HOOK_PATH="$GIT_DIR_ENV/hooks/post-receive"
-cat >"$HOOK_PATH" <<HOOK
+cat >"$HOOK_PATH" <<'HOOK'
 #!/bin/sh
-set -eu
-BRANCH=$BRANCH
-GIT_DIR="$GIT_DIR_ENV"
-WORK_TREE="$APP_DIR_ENV"
+set -e
+BRANCH=main
+GIT_DIR="/volume1/git/videograbber.git"  
+WORK_TREE="/volume1/docker/videograbber"
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-read oldrev newrev refname
-[ "$refname" = "refs/heads/$BRANCH" ] || exit 0
-echo "[deploy] Checkout $BRANCH -> $WORK_TREE"
-mkdir -p "$WORK_TREE"
-GIT_WORK_TREE="$WORK_TREE" git --git-dir="$GIT_DIR" checkout -f "$BRANCH"
-cd "$WORK_TREE"
-if [ ! -f .env ] && [ -f .env.example ]; then
-  cp .env.example .env
-  echo "[deploy] Created .env from template. Edit secrets in $WORK_TREE/.env"
-fi
-if docker compose version >/dev/null 2>&1; then DC="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then DC="docker-compose"; else echo "[deploy] ERROR: docker compose not found"; exit 1; fi
-echo "[deploy] Build…"; $DC build --pull videograbber-bot
-echo "[deploy] Up…"; $DC up -d --remove-orphans videograbber-bot
-docker image prune -f >/dev/null 2>&1 || true
-echo "[deploy] Done."
+while read oldrev newrev refname; do
+  [ "$refname" = "refs/heads/$BRANCH" ] || continue
+  echo "[deploy] Checkout $BRANCH -> $WORK_TREE"
+  mkdir -p "$WORK_TREE"
+  GIT_WORK_TREE="$WORK_TREE" git --git-dir="$GIT_DIR" checkout -f "$BRANCH"
+  cd "$WORK_TREE"
+  if [ ! -f .env ] && [ -f .env.example ]; then
+    cp .env.example .env
+    echo "[deploy] Created .env from template. Edit secrets in $WORK_TREE/.env"
+  fi
+  if /usr/local/bin/docker compose version >/dev/null 2>&1; then DC="/usr/local/bin/docker compose"; elif docker compose version >/dev/null 2>&1; then DC="docker compose"; elif command -v docker-compose >/dev/null 2>&1; then DC="docker-compose"; else echo "[deploy] ERROR: docker compose not found"; exit 1; fi
+  echo "[deploy] Build…"; $DC build --pull videograbber-bot
+  echo "[deploy] Up…"; $DC up -d --remove-orphans videograbber-bot
+  (/usr/local/bin/docker image prune -f || docker image prune -f) >/dev/null 2>&1 || true
+  echo "[deploy] Done."
+done
 HOOK
 chmod +x "$HOOK_PATH"
 echo "[deploy] Hook installed at $HOOK_PATH"
@@ -109,16 +121,38 @@ else
   git remote add nas "$SSH_TARGET:$GIT_DIR"
 fi
 
-echo "[nas-bootstrap] Adding convenient git alias 'push_nas'"
-git config alias.push_nas 'push nas main:main'
+echo "[nas-bootstrap] Adding convenient git alias 'pushnas'"
+git config alias.pushnas "push nas main:main"
+
+echo "[nas-bootstrap] Verifying setup integrity"
+ssh "$SSH_TARGET" "test -f '$GIT_DIR/hooks/post-receive' && test -x '$GIT_DIR/hooks/post-receive'" || {
+  echo "[nas-bootstrap] ERROR: Post-receive hook is not executable" >&2
+  exit 5
+}
+
+echo "[nas-bootstrap] Testing git remote connectivity"
+git ls-remote nas >/dev/null 2>&1 || {
+  echo "[nas-bootstrap] WARNING: Cannot connect to git remote. Check SSH configuration." >&2
+}
 
 cat <<OUT
-[nas-bootstrap] Bootstrap complete.
-- Remote:    nas -> $SSH_TARGET:$GIT_DIR
+[nas-bootstrap] Bootstrap complete! ✅
+
+Configuration:
+- Remote:    nas -> $SSH_TARGET:$GIT_DIR  
 - Work tree: $APP_DIR
+- Branch:    $BRANCH
 
 Next steps:
-1) First deploy:   git push_nas
-2) Edit secrets:   ssh $SSH_TARGET 'nano $APP_DIR/.env' (once)
-3) Manage:         make nas-status | nas-logs | nas-restart | nas-stop
+1) First deploy:   git push nas $BRANCH:$BRANCH (or: make nas-push)
+2) Edit secrets:   ssh $SSH_TARGET 'nano $APP_DIR/.env' (after first deploy)
+3) Manage service: make nas-status | nas-logs | nas-restart | nas-stop
+
+SSH Configuration (~/.ssh/config):
+Host $NAS_ALIAS
+    HostName $NAS_HOST
+    User $NAS_USER
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
 OUT
