@@ -103,3 +103,4 @@ Interested in contributing? Check out [CONTRIBUTING.md](CONTRIBUTING.md) for dev
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 # Test AutoDeploy
+# Test corrected paths
