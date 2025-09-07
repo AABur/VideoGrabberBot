@@ -90,8 +90,8 @@ cat >"$HOOK_PATH" <<'HOOK'
 #!/bin/sh
 set -e
 BRANCH=main
-GIT_DIR="/volume1/git/videograbber.git"  
-WORK_TREE="/volume1/docker/videograbber"
+GIT_DIR="/volume1/git/videograbberbot.git"  
+WORK_TREE="/volume1/docker/apps/videograbberbot"
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 while read oldrev newrev refname; do
   [ "$refname" = "refs/heads/$BRANCH" ] || continue

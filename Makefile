@@ -148,16 +148,16 @@ nas-push: ## Push main branch to NAS (deploy)
 	@git push nas main:main || git push_nas
 
 nas-status: ## Show NAS service status (docker compose ps)
-	@bash scripts/nas_exec.sh -- 'docker compose ps'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker compose ps'
 
 nas-logs: ## Tail NAS bot logs
-	@bash scripts/nas_exec.sh -- 'docker compose logs -f --tail=200 videograbber-bot'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker compose logs -f --tail=200 videograbber-bot'
 
 nas-restart: ## Restart NAS bot service
-	@bash scripts/nas_exec.sh -- 'docker compose restart videograbber-bot'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker compose restart videograbber-bot'
 
 nas-stop: ## Stop NAS bot service
-	@bash scripts/nas_exec.sh -- 'docker compose stop videograbber-bot'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker compose stop videograbber-bot'
 
 nas-backup: ## Create backup of NAS deployment
 	@echo "Creating backup of NAS deployment..."
@@ -169,9 +169,9 @@ nas-backup: ## Create backup of NAS deployment
 
 nas-clean: ## Clean old Docker images and containers on NAS
 	@echo "Cleaning up Docker resources on NAS..."
-	@bash scripts/nas_exec.sh -- 'docker image prune -f'
-	@bash scripts/nas_exec.sh -- 'docker container prune -f'
-	@bash scripts/nas_exec.sh -- 'docker system prune -f'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker image prune -f'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker container prune -f'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker system prune -f'
 	@echo "Cleanup completed"
 
 nas-info: ## Show NAS deployment information
@@ -179,7 +179,7 @@ nas-info: ## Show NAS deployment information
 	@bash scripts/nas_exec.sh -- 'pwd && ls -la'
 	@echo ""
 	@echo "=== Docker Status ==="
-	@bash scripts/nas_exec.sh -- 'docker compose ps'
+	@bash scripts/nas_exec.sh -- '/usr/local/bin/docker compose ps'
 	@echo ""
 	@echo "=== Git Remote ==="
 	@git remote -v | grep nas || echo "NAS remote not configured"
