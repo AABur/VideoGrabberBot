@@ -177,7 +177,7 @@ async def _send_downloaded_file(
         chat_id,
         document=FSInputFile(file_path),
         caption=f"📥 <b>{video_title}</b>\n\nDownloaded from YouTube",
-        request_timeout=120,  # 2 minutes for large files
+        request_timeout=300,  # 5 minutes for large files
     )
 
     # Update status message
