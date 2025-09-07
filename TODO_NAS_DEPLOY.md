@@ -26,8 +26,8 @@
 - Переменные (уточнить у владельца NAS):
   - NAS_HOST: например, `192.168.1.10` или DNS‑имя.
   - NAS_USER: пользователь деплоя, например `deploy` (член группы `docker`).
-  - APP_DIR: рабочая директория, например `/volume1/apps/videograbber`.
-  - GIT_DIR: bare‑репозиторий, например `/volume1/git/videograbber.git`.
+  - APP_DIR: рабочая директория, например `/volume1/docker/apps/videograbberbot`.
+  - GIT_DIR: bare‑репозиторий, например `/volume1/git/videograbberbot.git`.
 - Проверка существующих пользователей/прав:
   - `ssh NAS_USER@NAS_HOST 'id -u && id && groups'`
   - если нет пользователя `deploy`: создать через DSM или CLI; добавить в группу docker: `sudo usermod -aG docker deploy`
@@ -86,12 +86,12 @@
   - `git push_nas`
 - Заполнить секреты на NAS и запустить заново (только один раз):
   - `ssh nas 'nano $APP_DIR/.env'`
-  - `ssh nas 'cd $APP_DIR && docker compose up -d --build'`
+  - `ssh nas 'cd $APP_DIR && /usr/local/bin/docker compose up -d --build'`
 - Пара утилитарных алиасов (локально):
-  - `alias vps='ssh nas "cd $APP_DIR && docker compose ps"'`
-  - `alias vlog='ssh nas "cd $APP_DIR && docker compose logs -f --tail=200 videograbber-bot"'`
-  - `alias vrestart='ssh nas "cd $APP_DIR && docker compose restart videograbber-bot"'`
-  - `alias vstop='ssh nas "cd $APP_DIR && docker compose stop videograbber-bot"'`
+  - `alias vps='ssh nas "cd $APP_DIR && /usr/local/bin/docker compose ps"'`
+  - `alias vlog='ssh nas "cd $APP_DIR && /usr/local/bin/docker compose logs -f --tail=200 videograbber-bot"'`
+  - `alias vrestart='ssh nas "cd $APP_DIR && /usr/local/bin/docker compose restart videograbber-bot"'`
+  - `alias vstop='ssh nas "cd $APP_DIR && /usr/local/bin/docker compose stop videograbber-bot"'`
 
 
 ## Проверка

@@ -130,7 +130,7 @@ make nas-restart
 NAS_HOST=your_nas_hostname_or_ip
 NAS_USER=deploy
 NAS_ALIAS=nas
-APP_DIR=/volume1/docker/your-app
+APP_DIR=/volume1/docker/apps/your-app
 GIT_DIR=/volume1/git/your-app.git
 BRANCH=main
 ```
@@ -355,12 +355,12 @@ make nas-info
 ```bash
 # Production
 NAS_HOST=nas-prod
-APP_DIR=/volume1/docker/app-prod
+APP_DIR=/volume1/docker/apps/app-prod
 GIT_DIR=/volume1/git/app-prod.git
 
 # Staging  
 NAS_HOST=nas-staging
-APP_DIR=/volume1/docker/app-staging
+APP_DIR=/volume1/docker/apps/app-staging
 GIT_DIR=/volume1/git/app-staging.git
 ```
 
