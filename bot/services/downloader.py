@@ -65,37 +65,20 @@ async def _create_or_update_status_message(
 
 
 def _create_ydl_options(format_string: str, temp_download_path: Path) -> Dict[str, Any]:
-    """Create yt-dlp options dictionary with performance optimizations."""
+    """Create yt-dlp options dictionary with minimal optimizations."""
     return {
         "format": format_string,
-        "outtmpl": {
-            "default": str(temp_download_path / "%(title)s.%(ext)s"),
-            "chapter": "%(title)s - %(section_number)03d %(section_title)s [%(id)s].%(ext)s",
-        },
+        "outtmpl": str(temp_download_path / "%(title)s.%(ext)s"),
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
-        "compat_opts": set(),
-        # Performance optimizations for signature extraction
+        # Only essential optimizations to avoid signature extraction issues
         "http_headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-us,en;q=0.5",
-            "Sec-Fetch-Mode": "navigate",
         },
-        "forceprint": {},
-        "print_to_file": {},
-        # Network performance optimizations
-        "socket_timeout": 60,
-        "retries": 3,
-        "fragment_retries": 5,
-        # Faster extraction
-        "skip_download": False,
-        "writesubtitles": False,
-        "writeautomaticsub": False,
-        "writedescription": False,
-        "writeinfojson": False,
-        "writethumbnail": False,
+        # Shorter timeouts to prevent hanging
+        "socket_timeout": 30,
+        "retries": 2,
     }
 
 
