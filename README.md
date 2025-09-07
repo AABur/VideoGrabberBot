@@ -36,7 +36,7 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
 
 ### Requirements
 
-- Python 3.11+
+- Python 3.13+
 - Telegram Bot API token (from [BotFather](https://t.me/botfather))
 - [uv](https://github.com/astral-sh/uv) package manager
 
@@ -101,6 +101,3 @@ Interested in contributing? Check out [CONTRIBUTING.md](CONTRIBUTING.md) for dev
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-# Test AutoDeploy
-# Test corrected paths

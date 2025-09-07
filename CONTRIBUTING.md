@@ -6,7 +6,7 @@ Thank you for your interest in contributing to VideoGrabberBot! This document pr
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.13+
 - [uv](https://github.com/astral-sh/uv) - Python package installer and environment manager
 - Git
 

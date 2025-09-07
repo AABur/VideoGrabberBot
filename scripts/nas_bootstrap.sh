@@ -89,9 +89,9 @@ HOOK_PATH="$GIT_DIR_ENV/hooks/post-receive"
 cat >"$HOOK_PATH" <<'HOOK'
 #!/bin/sh
 set -e
-BRANCH=main
-GIT_DIR="/volume1/git/videograbberbot.git"  
-WORK_TREE="/volume1/docker/apps/videograbberbot"
+BRANCH=${BRANCH:-main}
+GIT_DIR=${GIT_DIR_ENV}
+WORK_TREE=${APP_DIR_ENV}
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 while read oldrev newrev refname; do
   [ "$refname" = "refs/heads/$BRANCH" ] || continue

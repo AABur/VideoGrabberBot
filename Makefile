@@ -132,9 +132,10 @@ nas-init: ## Initialize NAS deployment (check requirements, setup SSH, bootstrap
 		echo "SSH connection failed. Please configure SSH access first:"; \
 		echo "Add to ~/.ssh/config:"; \
 		echo "Host nas"; \
-		echo "    HostName AAB_UAE"; \
-		echo "    User dockeruser"; \
+		echo "    HostName your_nas_hostname"; \
+		echo "    User your_nas_user"; \
 		echo "    IdentityFile ~/.ssh/id_ed25519"; \
+		echo "Also create .nas_deploy.env from .nas_deploy.env.example"; \
 		exit 1; \
 	fi
 	@echo "2. Running bootstrap setup..."

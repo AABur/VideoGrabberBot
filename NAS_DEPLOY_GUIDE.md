@@ -1,6 +1,6 @@
-# 🚀 Universal NAS Deployment Guide
+# 🚀 NAS Deployment Guide
 
-This guide provides a complete solution for deploying applications on Synology NAS (and similar systems) with automatic Docker container updates via `git push`. Perfect for Python bots, web apps, and other containerized applications.
+This guide provides a complete solution for deploying VideoGrabberBot (and other Docker applications) on Synology NAS with automatic container updates via `git push`.
 
 ## 📋 Overview
 
