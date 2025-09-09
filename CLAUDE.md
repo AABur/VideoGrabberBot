@@ -97,6 +97,23 @@ This section contains rules and guidelines for working with Claude on this proje
 - Do not alter unrelated code to satisfy tests; document behavioral changes
 - Discuss and plan any refactor that intentionally breaks tests before implementation
 
+### CRITICAL RULES (VIOLATION = WORK STOPPAGE)
+
+1. **PROHIBITION ON SIMULTANEOUS CHANGES**:
+   - NEVER change code and tests in the same commit/session
+   - If code breaks tests - STOP and ask for permission
+   - Maximum one axis of changes at a time
+
+2. **PROHIBITION ON AUTONOMOUS ACTIONS**:
+   - NEVER restart bots/services without explicit permission
+   - NEVER deploy without developer confirmation
+   - NEVER make production changes without coordination
+
+3. **MANDATORY STOPS**:
+   - On any code/test conflict - STOP
+   - When needing to change tests - ask permission BEFORE any modifications
+   - When tests fail due to code - mark XFAIL, do NOT fix
+
 ### Project-Specific Rules
 
 1. **Version Control**:

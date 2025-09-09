@@ -10,9 +10,19 @@ from loguru import logger
 from bot.config import DB_PATH
 
 
+def get_db_connection():
+    """Get database connection with timeout settings."""
+    return aiosqlite.connect(DB_PATH, timeout=20.0)
+
+
 async def init_db() -> None:
     """Initialize the database with required tables."""
     async with aiosqlite.connect(DB_PATH) as db:
+        # Enable WAL mode for better concurrency
+        await db.execute("PRAGMA journal_mode=WAL")
+        await db.execute("PRAGMA synchronous=NORMAL")
+        await db.execute("PRAGMA temp_store=memory")
+        await db.execute("PRAGMA mmap_size=268435456")  # 256MB
         # Create users table
         await db.execute(
             """
@@ -83,7 +93,7 @@ async def add_user(
         bool: True if user was added successfully, False if user already exists
     """
     try:
-        async with aiosqlite.connect(DB_PATH) as db:
+        async with get_db_connection() as db:
             # Check if user already exists
             cursor = await db.execute("SELECT id FROM users WHERE id = ?", (user_id,))
             existing_user = await cursor.fetchone()
@@ -123,7 +133,7 @@ async def is_user_authorized(user_id: int) -> bool:
         bool: True if user is authorized, False otherwise
     """
     try:
-        async with aiosqlite.connect(DB_PATH) as db:
+        async with get_db_connection() as db:
             cursor = await db.execute(
                 "SELECT id FROM users WHERE id = ? AND is_active = TRUE",
                 (user_id,),
@@ -152,7 +162,7 @@ async def create_invite(created_by: int) -> Optional[str]:
         return None
 
     try:
-        async with aiosqlite.connect(DB_PATH) as db:
+        async with get_db_connection() as db:
             await db.execute(
                 "INSERT INTO invites (id, created_by) VALUES (?, ?)",
                 (invite_id, created_by),
@@ -177,7 +187,7 @@ async def use_invite(invite_id: str, user_id: int) -> bool:
         bool: True if invite was used successfully, False otherwise
     """
     try:
-        async with aiosqlite.connect(DB_PATH) as db:
+        async with get_db_connection() as db:
             # Check if invite exists and is active
             cursor = await db.execute(
                 "SELECT id FROM invites WHERE id = ? AND is_active = TRUE AND used_by IS NULL",
@@ -196,8 +206,24 @@ async def use_invite(invite_id: str, user_id: int) -> bool:
                 (user_id, now, invite_id),
             )
 
-            # Add user to authorized users
-            await add_user(user_id, added_by=0)  # 0 means added via invite
+            # Add user to authorized users (inline to avoid nested connections)
+            cursor = await db.execute("SELECT id FROM users WHERE id = ?", (user_id,))
+            existing_user = await cursor.fetchone()
+
+            if existing_user:
+                # User exists, update their info
+                await db.execute(
+                    "UPDATE users SET is_active = TRUE WHERE id = ?",
+                    (user_id,),
+                )
+                logger.info(f"Reactivated existing user via invite: {user_id}")
+            else:
+                # Add new user
+                await db.execute(
+                    "INSERT INTO users (id, username, added_by) VALUES (?, ?, ?)",
+                    (user_id, None, 0),  # 0 means added via invite
+                )
+                logger.info(f"Added new user via invite: {user_id}")
 
             await db.commit()
             logger.info(f"Invite {invite_id} used by user {user_id}")
@@ -215,7 +241,7 @@ async def get_all_users() -> List[Dict[str, Any]]:
         List[Dict]: List of user dictionaries
     """
     try:
-        async with aiosqlite.connect(DB_PATH) as db:
+        async with get_db_connection() as db:
             db.row_factory = aiosqlite.Row
             cursor = await db.execute("SELECT id, username, added_at, added_by, is_active FROM users")
             rows = await cursor.fetchall()
@@ -236,7 +262,7 @@ async def deactivate_user(user_id: int) -> bool:
         bool: True if user was deactivated successfully, False otherwise
     """
     try:
-        async with aiosqlite.connect(DB_PATH) as db:
+        async with get_db_connection() as db:
             await db.execute("UPDATE users SET is_active = FALSE WHERE id = ?", (user_id,))
             await db.commit()
             logger.info(f"Deactivated user: {user_id}")

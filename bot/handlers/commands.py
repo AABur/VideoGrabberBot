@@ -6,7 +6,7 @@ from aiogram.types import Message
 from loguru import logger
 
 from bot.config import ADMIN_USER_ID
-from bot.utils.db import add_user, create_invite, is_user_authorized
+from bot.utils.db import add_user, create_invite, is_user_authorized, use_invite
 
 # Create router for command handlers
 router = Router(name="commands_router")
@@ -18,9 +18,39 @@ async def command_start(message: Message) -> None:
     Handle /start command.
 
     Display welcome message and bot instructions.
+    Process invite codes if provided.
     """
     user_id = message.from_user.id
     username = message.from_user.username
+
+    # Check if there's an invite code in the command
+    args = message.text.split(maxsplit=1)
+    invite_code = args[1] if len(args) > 1 else None
+
+    # If there's an invite code, try to use it
+    if invite_code:
+        if await use_invite(invite_code, user_id):
+            await message.answer(
+                "🎉 <b>Welcome!</b>\n\n"
+                "Your invite has been successfully activated! "
+                "You now have access to VideoGrabberBot.\n\n"
+                "I can help you download videos and audio from YouTube.\n\n"
+                "<b>How to use:</b>\n"
+                "1. Send me a YouTube link\n"
+                "2. Choose the format you want to download\n"
+                "3. Wait for the download to complete\n\n"
+                "Use /help to see all available commands."
+            )
+            logger.info(f"User {user_id} (@{username}) successfully used invite: {invite_code}")
+            return
+        else:
+            await message.answer(
+                "❌ <b>Invalid Invite</b>\n\n"
+                "This invite link is either invalid, expired, or has already been used.\n"
+                "Please contact the administrator for a new invite."
+            )
+            logger.warning(f"User {user_id} (@{username}) tried invalid invite: {invite_code}")
+            return
 
     # Check if user is authorized
     if not await is_user_authorized(user_id):
