@@ -24,13 +24,16 @@ A Telegram bot for downloading videos and audio from YouTube with format selecti
 - **Queue System**: Asynchronous download queue for handling multiple requests
 - **Error Handling**: Comprehensive error handling with admin notifications
 - **Modern Architecture**: Built with asyncio, aiogram, and yt-dlp
+- **File Size Limit**: Maximum 50MB per file (Telegram Bot API limitation)
 
 ## How It Works
 
 1. **Send a YouTube link** to the bot
 2. **Choose a format** from the provided options
 3. **Wait for download** to complete
-4. **Receive the file** directly in your Telegram chat
+4. **Receive the file** directly in your Telegram chat (up to 50MB)
+
+**Note**: For videos that exceed 50MB, choose a lower quality format (SD or HD).
 
 ## Quick Start
 

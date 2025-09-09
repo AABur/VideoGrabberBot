@@ -38,7 +38,7 @@ class Config:
         self.DB_PATH = self.DATA_DIR / "bot.db"
 
         # Download configuration
-        self.MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(2 * 1024 * 1024 * 1024)))  # 2GB
+        self.MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(50 * 1024 * 1024)))  # 50MB Bot API limit
         self.DOWNLOAD_TIMEOUT = int(os.getenv("DOWNLOAD_TIMEOUT", "300"))  # 5 minutes
 
         # Queue configuration

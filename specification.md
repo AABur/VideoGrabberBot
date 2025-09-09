@@ -13,7 +13,7 @@ VideoGrabberBot allows users to download videos and audio from YouTube by sendin
 - **YouTube Integration**:
   - Process standard YouTube URLs (youtube.com, youtu.be, m.youtube.com, youtube-nocookie.com)
   - Extract video metadata and available formats
-  - Support for both short and long videos (up to Telegram's file size limit of 2GB)
+  - Support for both short and long videos (up to Bot API's file size limit of 50MB)
 
 ### 2. Format Selection System
 
@@ -310,7 +310,7 @@ Required environment variables:
 
 ## Limitations
 
-- Maximum file size: 2GB (Telegram Bot API limitation)
+- Maximum file size: 50MB (Telegram Bot API limitation)
 - Processing time dependent on video length/quality
 - Queue system handles requests sequentially
 - Single admin user configuration

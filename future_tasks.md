@@ -36,3 +36,35 @@
 - Команда `/status`: показывать состояние (длина очереди, активность воркера, версия yt-dlp).
   Обоснование: быстрая диагностика без просмотра логов.
 
+## Large File Support (>50MB)
+
+### Current limitation:
+- Maximum file size: 50MB due to Telegram Bot API limitation
+- Files exceeding 50MB are blocked with user-friendly notification
+- Users are guided to select lower quality formats (SD/HD) for large videos
+
+### Future options to consider:
+
+1. **Migration to Telethon/Pyrogram (MTProto)**
+   - Support files up to 2GB using MTProto protocol
+   - Pros: Native 2GB support, no additional infrastructure
+   - Cons: Requires complete rewrite of bot logic from aiogram to telethon/pyrogram
+   - Effort: High (complete refactoring)
+
+2. **Local Bot API Server**
+   - Support files up to 2GB with current aiogram framework
+   - Pros: Minimal code changes, keeps existing aiogram logic
+   - Cons: Requires additional server setup and maintenance
+   - Effort: Medium (infrastructure + configuration changes)
+   
+3. **Hybrid approach**
+   - Keep aiogram for commands and small files (<50MB)
+   - Use telethon client for large file uploads only (50MB-2GB)
+   - Pros: Best of both worlds, gradual migration
+   - Cons: Added complexity, two Telegram clients
+   - Effort: Medium-High
+
+### Implementation priority:
+Low - Current 50MB limit covers most use cases for personal NAS deployment.
+Most YouTube videos in SD/HD quality are under 50MB for reasonable duration.
+
