@@ -3,7 +3,7 @@
 import asyncio
 import tempfile
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 
 import pytest
 import yt_dlp
@@ -83,7 +83,7 @@ class MockFileSystemSetup:
             f.write("dummy content")
         return dummy_file
 
-    def setup_common_patches(self, temp_dir: str, files: List[Path] = None) -> None:
+    def setup_common_patches(self, temp_dir: str, files: Optional[List[Path]] = None) -> None:
         """Setup common patches for file system operations."""
         if files is None:
             files = []
@@ -109,7 +109,7 @@ def fs_setup(mocker):
     return MockFileSystemSetup(mocker)
 
 
-def apply_standard_patches(mocker, temp_dir: str, ydl_context: Any, files: List[Path] = None) -> None:
+def apply_standard_patches(mocker, temp_dir: str, ydl_context: Any, files: Optional[List[Path]] = None) -> None:
     """Apply standard patches used across multiple tests."""
     if files is None:
         files = []

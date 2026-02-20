@@ -76,7 +76,10 @@ def _create_ydl_options(format_string: str, temp_download_path: Path) -> Dict[st
         "no_warnings": True,
         # Only essential optimizations to avoid signature extraction issues
         "http_headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+            ),
         },
         # Shorter timeouts to prevent hanging
         "socket_timeout": 30,
@@ -172,10 +175,7 @@ async def _send_downloaded_file(
 
     # Update status message with file info
     await bot.edit_message_text(
-        f"✅ <b>Download completed</b>\n\n"
-        f"File: {file_path.name}\n"
-        f"Size: {file_size_mb:.1f} MB\n\n"
-        f"Now sending file...",
+        f"✅ <b>Download completed</b>\n\nFile: {file_path.name}\nSize: {file_size_mb:.1f} MB\n\nNow sending file...",
         chat_id=chat_id,
         message_id=status_message.message_id,
     )

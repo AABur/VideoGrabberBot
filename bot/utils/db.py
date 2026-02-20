@@ -10,7 +10,7 @@ from loguru import logger
 from bot.config import DB_PATH
 
 
-def get_db_connection():
+def get_db_connection() -> aiosqlite.Connection:
     """Get database connection with timeout settings."""
     return aiosqlite.connect(DB_PATH, timeout=20.0)
 
