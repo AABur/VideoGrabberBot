@@ -175,7 +175,6 @@ async def test_cancel_command_unauthorized(mocker):
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="Test needs message.text mock after invite processing was added to command_start")
 async def test_start_command_authorized(mocker):
     """Test /start command with authorized user."""
     # Mock user
@@ -187,6 +186,7 @@ async def test_start_command_authorized(mocker):
     mock_message = mocker.MagicMock(spec=Message)
     mock_message.answer = mocker.AsyncMock()
     mock_message.from_user = mock_user
+    mock_message.text = "/start"
 
     # Mock is_user_authorized to return True
     mocker.patch(
@@ -206,7 +206,6 @@ async def test_start_command_authorized(mocker):
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="Test needs message.text mock after invite processing was added to command_start")
 async def test_start_command_unauthorized(mocker):
     """Test /start command with unauthorized user."""
     # Mock user
@@ -218,6 +217,7 @@ async def test_start_command_unauthorized(mocker):
     mock_message = mocker.MagicMock(spec=Message)
     mock_message.answer = mocker.AsyncMock()
     mock_message.from_user = mock_user
+    mock_message.text = "/start"
 
     # Mock is_user_authorized to return False
     mocker.patch(
@@ -232,6 +232,36 @@ async def test_start_command_unauthorized(mocker):
     mock_message.answer.assert_called_once()
     args = mock_message.answer.call_args[0][0]
     assert "Access Restricted" in args
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "invite_valid,expected_fragment",
+    [
+        (True, "Welcome"),
+        (False, "Invalid Invite"),
+    ],
+)
+async def test_start_command_with_invite_code(mocker, invite_valid, expected_fragment):
+    """Test /start command with invite code — valid and invalid cases."""
+    mock_user = mocker.MagicMock(spec=User)
+    mock_user.id = 999999
+    mock_user.username = "new_user"
+
+    mock_message = mocker.MagicMock(spec=Message)
+    mock_message.answer = mocker.AsyncMock()
+    mock_message.from_user = mock_user
+    mock_message.text = "/start INVITE123"
+
+    mocker.patch("bot.handlers.commands.use_invite", mocker.AsyncMock(return_value=invite_valid))
+    mocker.patch("bot.handlers.commands.logger.info", mocker.MagicMock())
+    mocker.patch("bot.handlers.commands.logger.warning", mocker.MagicMock())
+
+    await command_start(mock_message)
+
+    mock_message.answer.assert_called_once()
+    args = mock_message.answer.call_args[0][0]
+    assert expected_fragment in args
 
 
 @pytest.mark.asyncio

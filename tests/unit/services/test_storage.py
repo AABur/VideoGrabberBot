@@ -1,5 +1,8 @@
 """Tests for the storage module."""
 
+import time
+
+from bot.config import config
 from bot.services.storage import (
     URL_STORAGE,
     clear_url,
@@ -241,3 +244,48 @@ class TestStorageAdvanced:
             else:
                 assert get_url(url_id) == f"{url_base}{i}"
                 assert get_format(url_id) == f"audio:FORMAT_{i}"
+
+
+class TestStorageInternals:
+    """Test internal storage mechanics: expiry and size limits."""
+
+    def test_cleanup_expired_entries(self):
+        """Test that expired entries are removed during storage operations."""
+        old_url_id = "old12345"
+        old_timestamp = time.time() - (config.TTL_SECONDS + 100)
+        URL_STORAGE[old_url_id] = ("https://expired.com", None, old_timestamp)
+
+        assert old_url_id in URL_STORAGE
+
+        new_url_id = store_url("https://fresh.com")
+
+        assert old_url_id not in URL_STORAGE
+        assert get_url(old_url_id) is None
+        assert get_url(new_url_id) == "https://fresh.com"
+
+    def test_enforce_size_limit(self, mocker):
+        """Test that storage size limit evicts oldest entries."""
+        from bot.services import storage as storage_module
+
+        mocker.patch.object(storage_module.config, "MAX_STORAGE_SIZE", 2)
+
+        # Use a counter so time.time() never exhausts (each call returns increasing value)
+        _counter = [0.0]
+
+        def _make_time() -> float:
+            _counter[0] += 1.0
+            return _counter[0]
+
+        mocker.patch("bot.services.storage.time.time", side_effect=_make_time)
+
+        url_id1 = store_url("https://example.com/1")
+        url_id2 = store_url("https://example.com/2")
+        url_id3 = store_url("https://example.com/3")
+
+        # Adding 4th item triggers _enforce_size_limit (len=3 > MAX=2)
+        url_id4 = store_url("https://example.com/4")
+
+        assert get_url(url_id1) is None
+        assert get_url(url_id2) == "https://example.com/2"
+        assert get_url(url_id3) == "https://example.com/3"
+        assert get_url(url_id4) == "https://example.com/4"
