@@ -208,3 +208,34 @@ async def test_notify_admin_with_kwargs(monkeypatch):
     assert "Test with data" in mock_bot.send_message_text
     assert "user_id: 12345" in mock_bot.send_message_text
     assert "action: test_action" in mock_bot.send_message_text
+
+
+@pytest.mark.asyncio
+async def test_notify_admin_log_failure(mocker, monkeypatch):
+    """Test that failure in _log_admin_message is handled gracefully."""
+    mock_bot = mocker.AsyncMock()
+
+    mocker.patch("bot.utils.logging._log_admin_message", side_effect=Exception("Log failure"))
+    mock_error = mocker.MagicMock()
+    monkeypatch.setattr(logger, "error", mock_error)
+
+    await notify_admin(mock_bot, "Test message")
+
+    mock_bot.send_message.assert_not_called()
+    assert any("Failed to log admin message" in str(call) for call in mock_error.call_args_list)
+
+
+@pytest.mark.asyncio
+async def test_notify_admin_format_failure(mocker, monkeypatch):
+    """Test that failure in _format_admin_message is handled gracefully."""
+    mock_bot = mocker.AsyncMock()
+
+    monkeypatch.setattr(logger, "log", mocker.MagicMock())
+    mocker.patch("bot.utils.logging._format_admin_message", side_effect=Exception("Format failure"))
+    mock_error = mocker.MagicMock()
+    monkeypatch.setattr(logger, "error", mock_error)
+
+    await notify_admin(mock_bot, "Test message", level="INFO")
+
+    mock_bot.send_message.assert_not_called()
+    assert any("Failed to format admin message" in str(call) for call in mock_error.call_args_list)

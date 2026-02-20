@@ -153,40 +153,47 @@ async def test_invite_create_and_exceptions(mocker):
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="Test expects 2 SQL calls but use_invite now does 4 calls after database locking fix")
 async def test_use_invite_and_exceptions(mocker):
     """Test using invites and exception handling."""
-    # First mock - invite exists
+    # Case 1: invite exists, user is new (4 execute calls)
     mock_connect = mocker.patch("aiosqlite.connect")
 
-    # Configure mock
-    mock_cursor = mocker.AsyncMock()
-    mock_cursor.fetchone.return_value = ["test-invite-id"]  # Invite exists
+    invite_cursor = mocker.AsyncMock()
+    invite_cursor.fetchone.return_value = ["test-invite-id"]  # Invite exists
+
+    user_cursor = mocker.AsyncMock()
+    user_cursor.fetchone.return_value = None  # User doesn't exist yet
 
     mock_conn = mocker.AsyncMock()
-    mock_conn.execute = mocker.AsyncMock(return_value=mock_cursor)
+    mock_conn.execute = mocker.AsyncMock(
+        side_effect=[
+            invite_cursor,       # SELECT FROM invites
+            mocker.AsyncMock(),  # UPDATE invites SET used_by ...
+            user_cursor,         # SELECT FROM users
+            mocker.AsyncMock(),  # INSERT INTO users
+        ]
+    )
     mock_conn.__aenter__.return_value = mock_conn
     mock_connect.return_value = mock_conn
 
-    # Also mock add_user to avoid db operations
-    mocker.patch("bot.utils.db.add_user", mocker.AsyncMock(return_value=True))
-
-    # Test use invite
     success = await use_invite("test-invite-id", 123456789)
     assert success is True
-
-    # Verify correct calls
-    assert mock_conn.execute.call_count == 2  # Check and update
+    assert mock_conn.execute.call_count == 4
     mock_conn.commit.assert_called_once()
 
-    # Reset for second case - invite doesn't exist
-    mock_cursor.fetchone.return_value = None  # No invite
-    mock_conn.execute.reset_mock()
-    mock_conn.commit.reset_mock()
+    # Case 2: invite doesn't exist (1 execute call, early return)
+    no_invite_cursor = mocker.AsyncMock()
+    no_invite_cursor.fetchone.return_value = None
 
-    # Test use invite
+    mock_conn2 = mocker.AsyncMock()
+    mock_conn2.execute = mocker.AsyncMock(return_value=no_invite_cursor)
+    mock_conn2.__aenter__.return_value = mock_conn2
+    mock_connect.return_value = mock_conn2
+
     success = await use_invite("invalid-invite", 123456789)
     assert success is False
+    assert mock_conn2.execute.call_count == 1
+    mock_conn2.commit.assert_not_called()
 
     # Exception case
     mocker.patch("aiosqlite.connect", side_effect=Exception("Database error"))

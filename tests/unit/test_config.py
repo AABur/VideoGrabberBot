@@ -74,8 +74,8 @@ def test_max_file_size():
     """Test MAX_FILE_SIZE is correctly set."""
     from bot.config import MAX_FILE_SIZE
 
-    # 2GB in bytes
-    expected_size = 2 * 1024 * 1024 * 1024
+    # 50MB in bytes (Telegram Bot API file size limit)
+    expected_size = 50 * 1024 * 1024
     assert MAX_FILE_SIZE == expected_size
 
 
