@@ -1,7 +1,7 @@
 # Python Project Development Guidelines
 
 ## Environment Setup
-- Python version: >=3.11 (specific version specified in pyproject.toml)
+- Python version: >=3.13 (specific version specified in pyproject.toml)
 - Python version management: Uses `uv` for Python version and dependency management ([Python installation documentation](https://docs.astral.sh/uv/guides/install-python/))
 - Dependencies are managed with `uv` and defined in pyproject.toml ([dependency management documentation](https://docs.astral.sh/uv/guides/projects/#managing-dependencies))
 - Development installation: `uv pip install -e .`

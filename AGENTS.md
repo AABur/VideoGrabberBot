@@ -17,7 +17,7 @@
 - `make docker-start`: run via Docker; `make docker-stop` to stop.
 
 ## Coding Style & Naming Conventions
-- Python 3.11+, 4-space indent, max line length 120, double quotes.
+- Python 3.13+, 4-space indent, max line length 120, double quotes.
 - Tools: Ruff (with isort), wemake-python-styleguide (via flake8), mypy (strict).
 - Naming: modules/files snake_case; functions/methods snake_case; classes PascalCase; constants UPPER_SNAKE.
 - Prefer type hints and small, focused functions; use `loguru` for logging.
