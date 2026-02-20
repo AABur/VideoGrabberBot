@@ -10,7 +10,7 @@ dependencies = [
     "aiosqlite>=0.21.0",
     "loguru>=0.7.3",
     "python-dotenv>=1.1.0",
-    "yt-dlp>=2025.3.27",
+    "yt-dlp>=2026.2.4",
 ]
 
 [project.optional-dependencies]
@@ -207,5 +207,7 @@ known-first-party = ["bot"]
 
 [dependency-groups]
 dev = [
+    "deptry>=0.23.1",
     "pytest-xdist>=3.6.1",
+    "vulture>=2.14",
 ]
