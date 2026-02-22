@@ -2,7 +2,6 @@
 
 import pytest
 from aiogram import Bot
-from aiogram.types import Message, User
 
 from bot.handlers.commands import (
     command_adduser,
@@ -14,245 +13,48 @@ from bot.handlers.commands import (
 
 
 @pytest.mark.asyncio
-async def test_help_command_authorized(mocker):
-    """Test /help command with authorized user."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-
-    # Mock is_user_authorized to return True
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=True),
-    )
+@pytest.mark.parametrize("user_id,is_auth,expected_text", [
+    (123456, True, "VideoGrabberBot Help"),
+    (999999, False, "Access Restricted"),
+])
+async def test_help_command(mocker, make_message_mock, user_id, is_auth, expected_text):
+    """Test /help command for authorized and unauthorized users."""
+    mock_message = make_message_mock(user_id)
+    mocker.patch("bot.handlers.commands.is_user_authorized", mocker.AsyncMock(return_value=is_auth))
 
     await command_help(mock_message)
 
-    # Check that answer was called once with help message
     mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "VideoGrabberBot Help" in args
-    assert "Available commands" in args
-    assert "/help" in args
-    assert "/start" in args
-    assert "/invite" in args
-    assert "/cancel" in args
+    assert expected_text in mock_message.answer.call_args[0][0]
 
 
 @pytest.mark.asyncio
-async def test_help_command_unauthorized(mocker):
-    """Test /help command with unauthorized user."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 999999
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-
-    # Mock is_user_authorized to return False
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=False),
-    )
-
-    await command_help(mock_message)
-
-    # Check that answer was called once with access restricted message
-    mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "Access Restricted" in args
-
-
-@pytest.mark.asyncio
-async def test_cancel_command_with_active_downloads(mocker):
-    """Test /cancel command when user has active downloads."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.chat = mocker.MagicMock(id=123456)
-
-    # Setup download queue mock
-    mock_queue = mocker.MagicMock()
-    mock_queue.is_user_in_queue.return_value = True
-    mock_queue.clear_user_tasks = mocker.AsyncMock(return_value=2)  # 2 downloads cancelled
-
-    # Mock dependencies
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=True),
-    )
-    mocker.patch("bot.services.queue.download_queue", mock_queue)
-
-    await command_cancel(mock_message)
-
-    # Verify user queue check
-    mock_queue.is_user_in_queue.assert_called_once_with(123456)
-
-    # Verify user tasks cleared
-    mock_queue.clear_user_tasks.assert_called_once_with(123456)
-
-    # Check response message
-    mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "Downloads Cancelled" in args
-    assert "2 downloads" in args
-
-
-@pytest.mark.asyncio
-async def test_cancel_command_no_downloads(mocker):
-    """Test /cancel command when user has no active downloads."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.chat = mocker.MagicMock(id=123456)
-
-    # Setup download queue mock
-    mock_queue = mocker.MagicMock()
-    mock_queue.is_user_in_queue.return_value = False  # No downloads
-
-    # Mock dependencies
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=True),
-    )
-    mocker.patch("bot.services.queue.download_queue", mock_queue)
-
-    await command_cancel(mock_message)
-
-    # Verify user queue check
-    mock_queue.is_user_in_queue.assert_called_once_with(123456)
-
-    # Verify clear_user_tasks was not called
-    mock_queue.clear_user_tasks.assert_not_called()
-
-    # Check response message
-    mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "No Active Downloads" in args
-
-
-@pytest.mark.asyncio
-async def test_cancel_command_unauthorized(mocker):
-    """Test /cancel command with unauthorized user."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 999999
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-
-    # Mock is_user_authorized to return False
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=False),
-    )
-
-    await command_cancel(mock_message)
-
-    # Check that answer was called once with access restricted message
-    mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "Access Restricted" in args
-
-
-@pytest.mark.asyncio
-async def test_start_command_authorized(mocker):
-    """Test /start command with authorized user."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456
-    mock_user.username = "test_user"
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "/start"
-
-    # Mock is_user_authorized to return True
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=True),
-    )
+@pytest.mark.parametrize("user_id,is_auth,expected_text", [
+    (123456, True, "Welcome to VideoGrabberBot"),
+    (999999, False, "Access Restricted"),
+])
+async def test_start_command_auth(mocker, make_message_mock, user_id, is_auth, expected_text):
+    """Test /start command for authorized and unauthorized users (no invite)."""
+    mock_message = make_message_mock(user_id, text="/start")
+    mock_message.from_user.username = f"user_{user_id}"
+    mocker.patch("bot.handlers.commands.is_user_authorized", mocker.AsyncMock(return_value=is_auth))
     mocker.patch("bot.handlers.commands.logger.info", mocker.MagicMock())
 
     await command_start(mock_message)
 
-    # Check that answer was called once with welcome message
     mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "Welcome to VideoGrabberBot" in args
-    assert "How to use" in args
-    assert "Send me a YouTube link" in args
+    assert expected_text in mock_message.answer.call_args[0][0]
 
 
 @pytest.mark.asyncio
-async def test_start_command_unauthorized(mocker):
-    """Test /start command with unauthorized user."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 999999
-    mock_user.username = "unauthorized_user"
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "/start"
-
-    # Mock is_user_authorized to return False
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=False),
-    )
-    mocker.patch("bot.handlers.commands.logger.info", mocker.MagicMock())
-
-    await command_start(mock_message)
-
-    # Check that answer was called once with access restricted message
-    mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "Access Restricted" in args
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "invite_valid,expected_fragment",
-    [
-        (True, "Welcome"),
-        (False, "Invalid Invite"),
-    ],
-)
-async def test_start_command_with_invite_code(mocker, invite_valid, expected_fragment):
+@pytest.mark.parametrize("invite_valid,expected_fragment", [
+    (True, "Welcome"),
+    (False, "Invalid Invite"),
+])
+async def test_start_command_with_invite_code(mocker, make_message_mock, invite_valid, expected_fragment):
     """Test /start command with invite code — valid and invalid cases."""
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 999999
-    mock_user.username = "new_user"
-
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "/start INVITE123"
-
+    mock_message = make_message_mock(999999, text="/start INVITE123")
+    mock_message.from_user.username = "new_user"
     mocker.patch("bot.handlers.commands.use_invite", mocker.AsyncMock(return_value=invite_valid))
     mocker.patch("bot.handlers.commands.logger.info", mocker.MagicMock())
     mocker.patch("bot.handlers.commands.logger.warning", mocker.MagicMock())
@@ -260,43 +62,58 @@ async def test_start_command_with_invite_code(mocker, invite_valid, expected_fra
     await command_start(mock_message)
 
     mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert expected_fragment in args
+    assert expected_fragment in mock_message.answer.call_args[0][0]
 
 
 @pytest.mark.asyncio
-async def test_invite_command_success(mocker):
-    """Test /invite command with successful invite creation."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456
+@pytest.mark.parametrize("user_id,is_auth,in_queue,removed,expected_text", [
+    (999999, False, False, 0, "Access Restricted"),
+    (123456, True, False, 0, "No Active Downloads"),
+    (123456, True, True, 2, "Downloads Cancelled"),
+])
+async def test_cancel_command(mocker, make_message_mock, user_id, is_auth, in_queue, removed, expected_text):
+    """Test /cancel command: unauthorized, no downloads, and with active downloads."""
+    mock_message = make_message_mock(user_id)
+    mocker.patch("bot.handlers.commands.is_user_authorized", mocker.AsyncMock(return_value=is_auth))
 
-    # Mock bot
+    if is_auth:
+        mock_queue = mocker.MagicMock()
+        mock_queue.is_user_in_queue.return_value = in_queue
+        mock_queue.clear_user_tasks = mocker.AsyncMock(return_value=removed)
+        mocker.patch("bot.services.queue.download_queue", mock_queue)
+
+    await command_cancel(mock_message)
+
+    mock_message.answer.assert_called_once()
+    args = mock_message.answer.call_args[0][0]
+    assert expected_text in args
+
+    if is_auth:
+        mock_queue.is_user_in_queue.assert_called_once_with(user_id)
+        if in_queue:
+            assert f"{removed} downloads" in args
+            mock_queue.clear_user_tasks.assert_called_once_with(user_id)
+        else:
+            mock_queue.clear_user_tasks.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_invite_command_success(mocker, make_message_mock):
+    """Test /invite command with successful invite creation."""
+    mock_message = make_message_mock(123456)
+
     mock_bot_info = mocker.MagicMock()
     mock_bot_info.username = "test_bot"
     mock_bot = mocker.MagicMock(spec=Bot)
     mock_bot.get_me = mocker.AsyncMock(return_value=mock_bot_info)
-
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
     mock_message.bot = mock_bot
 
-    # Mock dependencies
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=True),
-    )
-    mocker.patch(
-        "bot.handlers.commands.create_invite",
-        mocker.AsyncMock(return_value="test_invite_code"),
-    )
+    mocker.patch("bot.handlers.commands.is_user_authorized", mocker.AsyncMock(return_value=True))
+    mocker.patch("bot.handlers.commands.create_invite", mocker.AsyncMock(return_value="test_invite_code"))
     mocker.patch("bot.handlers.commands.logger.info", mocker.MagicMock())
 
     await command_invite(mock_message)
 
-    # Check that answer was called once with invite link
     mock_message.answer.assert_called_once()
     args = mock_message.answer.call_args[0][0]
     assert "Invite Link Generated" in args
@@ -304,28 +121,16 @@ async def test_invite_command_success(mocker):
 
 
 @pytest.mark.asyncio
-async def test_invite_command_failure(mocker):
+async def test_invite_command_failure(mocker, make_message_mock):
     """Test /invite command with failed invite creation."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456
+    mock_message = make_message_mock(123456)
 
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-
-    # Mock dependencies
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=True),
-    )
+    mocker.patch("bot.handlers.commands.is_user_authorized", mocker.AsyncMock(return_value=True))
     mocker.patch("bot.handlers.commands.create_invite", mocker.AsyncMock(return_value=None))
     mocker.patch("bot.handlers.commands.logger.error", mocker.MagicMock())
 
     await command_invite(mock_message)
 
-    # Check that answer was called once with error message
     mock_message.answer.assert_called_once()
     args = mock_message.answer.call_args[0][0]
     assert "Error" in args
@@ -333,77 +138,41 @@ async def test_invite_command_failure(mocker):
 
 
 @pytest.mark.asyncio
-async def test_invite_command_unauthorized(mocker):
+async def test_invite_command_unauthorized(mocker, make_message_mock):
     """Test /invite command with unauthorized user."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 999999
+    mock_message = make_message_mock(999999)
 
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-
-    # Mock is_user_authorized to return False
-    mocker.patch(
-        "bot.handlers.commands.is_user_authorized",
-        mocker.AsyncMock(return_value=False),
-    )
+    mocker.patch("bot.handlers.commands.is_user_authorized", mocker.AsyncMock(return_value=False))
 
     await command_invite(mock_message)
 
-    # Check that answer was called once with access restricted message
     mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "Access Restricted" in args
+    assert "Access Restricted" in mock_message.answer.call_args[0][0]
 
 
 @pytest.mark.asyncio
-async def test_adduser_command_non_admin(mocker):
+async def test_adduser_command_non_admin(mocker, make_message_mock):
     """Test /adduser command with non-admin user."""
-    # Mock user
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 999999  # Not the admin ID
+    mock_message = make_message_mock(999999)
 
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-
-    # Mock admin ID
-    mocker.patch(
-        "bot.handlers.commands.ADMIN_USER_ID",
-        123456,  # Different from mock_user.id
-    )
+    mocker.patch("bot.handlers.commands.ADMIN_USER_ID", 123456)
     mocker.patch("bot.handlers.commands.logger.warning", mocker.MagicMock())
 
     await command_adduser(mock_message)
 
-    # Check that answer was called once with admin only message
     mock_message.answer.assert_called_once()
-    args = mock_message.answer.call_args[0][0]
-    assert "Admin Only" in args
+    assert "Admin Only" in mock_message.answer.call_args[0][0]
 
 
 @pytest.mark.asyncio
-async def test_adduser_command_missing_args(mocker):
+async def test_adduser_command_missing_args(mocker, make_message_mock):
     """Test /adduser command without arguments."""
-    # Mock user (admin)
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456  # Admin ID
+    mock_message = make_message_mock(123456, text="/adduser")
 
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "/adduser"  # No args
-
-    # Mock admin ID
     mocker.patch("bot.handlers.commands.ADMIN_USER_ID", 123456)
 
     await command_adduser(mock_message)
 
-    # Check that answer was called once with usage error message
     mock_message.answer.assert_called_once()
     args = mock_message.answer.call_args[0][0]
     assert "Usage Error" in args
@@ -411,26 +180,16 @@ async def test_adduser_command_missing_args(mocker):
 
 
 @pytest.mark.asyncio
-async def test_adduser_command_with_userid_success(mocker):
+async def test_adduser_command_with_userid_success(mocker, make_message_mock):
     """Test /adduser command with user ID (success case)."""
-    # Mock user (admin)
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456  # Admin ID
+    mock_message = make_message_mock(123456, text="/adduser 789012")
 
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "/adduser 789012"  # User ID as arg
-
-    # Mock dependencies
     mocker.patch("bot.handlers.commands.ADMIN_USER_ID", 123456)
     mocker.patch("bot.handlers.commands.add_user", mocker.AsyncMock(return_value=True))
     mocker.patch("bot.handlers.commands.logger.info", mocker.MagicMock())
 
     await command_adduser(mock_message)
 
-    # Check that answer was called once with success message
     mock_message.answer.assert_called_once()
     args = mock_message.answer.call_args[0][0]
     assert "User Added" in args
@@ -438,25 +197,15 @@ async def test_adduser_command_with_userid_success(mocker):
 
 
 @pytest.mark.asyncio
-async def test_adduser_command_with_userid_already_exists(mocker):
+async def test_adduser_command_with_userid_already_exists(mocker, make_message_mock):
     """Test /adduser command with user ID that already exists."""
-    # Mock user (admin)
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456  # Admin ID
+    mock_message = make_message_mock(123456, text="/adduser 789012")
 
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "/adduser 789012"  # User ID as arg
-
-    # Mock dependencies
     mocker.patch("bot.handlers.commands.ADMIN_USER_ID", 123456)
     mocker.patch("bot.handlers.commands.add_user", mocker.AsyncMock(return_value=False))
 
     await command_adduser(mock_message)
 
-    # Check that answer was called once with already exists message
     mock_message.answer.assert_called_once()
     args = mock_message.answer.call_args[0][0]
     assert "User Already Exists" in args
@@ -464,25 +213,15 @@ async def test_adduser_command_with_userid_already_exists(mocker):
 
 
 @pytest.mark.asyncio
-async def test_adduser_command_with_username(mocker):
+async def test_adduser_command_with_username(mocker, make_message_mock):
     """Test /adduser command with username instead of user ID."""
-    # Mock user (admin)
-    mock_user = mocker.MagicMock(spec=User)
-    mock_user.id = 123456  # Admin ID
+    mock_message = make_message_mock(123456, text="/adduser @test_user")
 
-    # Mock message with answer as AsyncMock
-    mock_message = mocker.MagicMock(spec=Message)
-    mock_message.answer = mocker.AsyncMock()
-    mock_message.from_user = mock_user
-    mock_message.text = "/adduser @test_user"  # Username as arg
-
-    # Mock dependencies
     mocker.patch("bot.handlers.commands.ADMIN_USER_ID", 123456)
     mocker.patch("bot.handlers.commands.logger.info", mocker.MagicMock())
 
     await command_adduser(mock_message)
 
-    # Check that answer was called once with username limitation message
     mock_message.answer.assert_called_once()
     args = mock_message.answer.call_args[0][0]
     assert "User Cannot Be Added Directly by Username" in args

@@ -54,6 +54,9 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 # Minimum pytest version required
 minversion = "8.3.0"
 
+# Timeout for async tests (seconds)
+timeout = 30
+
 # Improve test execution and reporting
 # (Note: xvs option was renamed for clarity)
 addopts = [

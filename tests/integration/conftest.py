@@ -119,18 +119,9 @@ async def mock_callback_query(mocker, authorized_user, mock_message):
     callback = mocker.MagicMock(spec=CallbackQuery)
     callback.from_user = authorized_user
 
-    # Create a message that can be properly awaited
-    message = mocker.MagicMock(spec=Message)
-    message.from_user = authorized_user
-    message.chat = mocker.MagicMock(spec=Chat, id=authorized_user.id)
-    message.message_id = 101
-    message.bot = mock_message.bot
-
-    # Make edit_text async and set a return value
-    message.edit_text = mocker.AsyncMock(return_value=mocker.MagicMock(message_id=102))
-
-    # Set the message
-    callback.message = message
+    # Reuse mock_message to keep state consistent
+    mock_message.edit_text = mocker.AsyncMock(return_value=mocker.MagicMock(message_id=102))
+    callback.message = mock_message
     callback.answer = mocker.AsyncMock()
 
     return callback

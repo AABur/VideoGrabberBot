@@ -5,12 +5,27 @@ proper isolation and consistent behavior of tests regardless of execution order.
 """
 
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
 
 # Add project root to path to ensure imports work correctly
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
+@pytest_asyncio.fixture
+async def temp_db(monkeypatch):
+    """Create a temporary database for testing."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_db_path = Path(temp_dir) / "test_bot.db"
+        from bot.utils import db as db_module
+        from bot.utils.db import init_db
+
+        monkeypatch.setattr(db_module, "DB_PATH", temp_db_path)
+        await init_db()
+        yield temp_db_path
 
 
 def _clear_format_function_cache(func):
@@ -238,24 +253,23 @@ def mock_config(mocker):
 
 
 @pytest.fixture
-def mock_telegram_user(mocker, user_id: int = 12345):
-    """Create a mock Telegram user.
-
-    Args:
-        user_id: Telegram user ID (defaults to admin user ID)
+def mock_telegram_user(mocker):
+    """Create a mock Telegram user factory.
 
     Returns:
-        Mock User object
+        Factory function that creates mock User objects with a given user_id
     """
     from aiogram.types import User
 
-    user = mocker.MagicMock(spec=User)
-    user.id = user_id
-    user.username = f"test_user_{user_id}"
-    user.first_name = "Test"
-    user.last_name = "User"
+    def _factory(user_id: int = 12345) -> object:
+        user = mocker.MagicMock(spec=User)
+        user.id = user_id
+        user.username = f"test_user_{user_id}"
+        user.first_name = "Test"
+        user.last_name = "User"
+        return user
 
-    return user
+    return _factory
 
 
 @pytest.fixture
@@ -263,16 +277,17 @@ def mock_telegram_message(mocker, mock_telegram_user):
     """Create a mock Telegram message.
 
     Args:
-        mock_telegram_user: Mock user fixture
+        mock_telegram_user: Mock user factory fixture
 
     Returns:
         Mock Message object
     """
     from aiogram.types import Message
 
+    user = mock_telegram_user()
     message = mocker.MagicMock(spec=Message)
-    message.from_user = mock_telegram_user
-    message.chat.id = mock_telegram_user.id
+    message.from_user = user
+    message.chat.id = user.id
     message.text = "Test message"
     message.answer = mocker.AsyncMock()
     message.reply = mocker.AsyncMock()
