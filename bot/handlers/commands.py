@@ -6,6 +6,7 @@ from aiogram.types import Message
 from loguru import logger
 
 from bot.config import ADMIN_USER_ID
+from bot.services.queue import DownloadQueue
 from bot.utils.db import add_user, create_invite, is_user_authorized, use_invite
 
 # Create router for command handlers
@@ -205,11 +206,15 @@ async def command_adduser(message: Message) -> None:
 
 
 @router.message(Command("cancel"))
-async def command_cancel(message: Message) -> None:
+async def command_cancel(message: Message, queue: DownloadQueue) -> None:
     """
     Handle /cancel command.
 
     Cancel all download tasks for the user in the queue.
+
+    Args:
+        message: The incoming message
+        queue: Download queue injected by aiogram DI
     """
     user_id = message.from_user.id
 
@@ -218,16 +223,13 @@ async def command_cancel(message: Message) -> None:
         await message.answer("⚠️ <b>Access Restricted</b>\n\nYou are not authorized to use this bot.")
         return
 
-    # Import here to avoid circular imports
-    from bot.services.queue import download_queue
-
     # Check if user has tasks in queue
-    if not download_queue.is_user_in_queue(message.chat.id):
+    if not queue.is_user_in_queue(message.chat.id):
         await message.answer("ℹ️ <b>No Active Downloads</b>\n\nYou don't have any downloads in the queue to cancel.")
         return
 
     # Clear user tasks
-    removed = await download_queue.clear_user_tasks(message.chat.id)
+    removed = await queue.clear_user_tasks(message.chat.id)
 
     download_word = "download" if removed == 1 else "downloads"
     await message.answer(

@@ -7,6 +7,8 @@ from loguru import logger
 
 from bot.handlers.commands import router as commands_router
 from bot.handlers.download import download_router
+from bot.services.queue import DownloadQueue
+from bot.services.storage import UrlStorage
 from bot.telegram_api.client import bot, dp
 from bot.utils.db import init_db
 
@@ -27,6 +29,12 @@ async def startup() -> None:
 
 async def main() -> None:
     """Start the bot."""
+    queue = DownloadQueue()
+    storage = UrlStorage()
+
+    dp["queue"] = queue
+    dp["storage"] = storage
+
     dp.include_router(commands_router)
     dp.include_router(download_router)
 

@@ -13,7 +13,7 @@ from loguru import logger
 
 from bot.services.downloader import is_youtube_url
 from bot.services.formats import FormatData, get_format_by_id, get_format_options
-from bot.services.queue import DownloadTask, download_queue
+from bot.services.queue import DownloadQueue, DownloadTask
 from bot.services.storage import get_url, store_format, store_url
 from bot.telegram_api.client import get_bot
 from bot.utils.db import is_user_authorized
@@ -166,12 +166,13 @@ async def _get_url_and_format(callback: CallbackQuery, format_id: str, url_id: s
 
 
 @download_router.callback_query(F.data.startswith("fmt:"))
-async def process_format_selection(callback: CallbackQuery) -> None:
+async def process_format_selection(callback: CallbackQuery, queue: DownloadQueue) -> None:
     """
     Process format selection callback.
 
     Args:
         callback: Callback query containing format and URL ID
+        queue: Download queue injected by aiogram DI
     """
     user_id = callback.from_user.id
 
@@ -195,11 +196,16 @@ async def process_format_selection(callback: CallbackQuery) -> None:
     url, format_data = url_format_data
     logger.info(f"User {user_id} selected format: {format_data['label']} for URL: {url}")
 
-    await _process_download_request(callback, format_data, format_id, url, url_id)
+    await _process_download_request(callback, format_data, format_id, url, url_id, queue)
 
 
 async def _process_download_request(
-    callback: CallbackQuery, format_data: FormatData, format_id: str, url: str, url_id: str
+    callback: CallbackQuery,
+    format_data: FormatData,
+    format_id: str,
+    url: str,
+    url_id: str,
+    queue: DownloadQueue,
 ) -> None:
     """Process the download request and add to queue."""
 
@@ -212,8 +218,8 @@ async def _process_download_request(
 
     try:
         # Check queue status
-        is_processing = download_queue.is_processing
-        is_user_in_queue = download_queue.is_user_in_queue(callback.message.chat.id)
+        is_processing = queue.is_processing
+        is_user_in_queue = queue.is_user_in_queue(callback.message.chat.id)
 
         # Build and send status message
         status_text = _build_status_message(format_data, url, is_processing, is_user_in_queue)
@@ -227,7 +233,7 @@ async def _process_download_request(
             status_message_id=status_message.message_id,
             additional_data={"bot": bot, "url_id": url_id},
         )
-        queue_position = await download_queue.add_task(task)
+        queue_position = await queue.add_task(task)
 
         # Update message with queue position if needed
         if queue_position > 1:

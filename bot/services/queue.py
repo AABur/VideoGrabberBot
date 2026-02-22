@@ -201,7 +201,3 @@ class DownloadQueue:
         if not bot:
             logger.error("Bot instance not provided in task data")
         return bot
-
-
-# Global queue instance
-download_queue = DownloadQueue()

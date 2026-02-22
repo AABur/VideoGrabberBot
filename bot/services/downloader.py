@@ -9,13 +9,22 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import yt_dlp
 from aiogram import Bot
 from aiogram.exceptions import TelegramEntityTooLarge
-from aiogram.types import Chat, FSInputFile, Message
+from aiogram.types import Chat, Message  # re-exported for backward compatibility
 from loguru import logger
 
 from bot.config import config
+from bot.services._download_core import (
+    MB_SIZE,
+    TELEGRAM_UPLOAD_LIMIT,
+    _create_ydl_options,
+    _sync_download_video_file,
+)
+from bot.services._file_delivery import (
+    _create_or_update_status_message,
+    _send_downloaded_file,
+)
 from bot.utils.exceptions import (
     DownloadError,
     NetworkError,
@@ -25,9 +34,24 @@ from bot.utils.exceptions import (
 )
 from bot.utils.logging import notify_admin
 
-# Constants
-MB_SIZE = 1024 * 1024  # 1 MB in bytes
-TELEGRAM_UPLOAD_LIMIT = 50 * 1024 * 1024  # 50MB actual limit for Bot API
+__all__ = [
+    "MB_SIZE",
+    "TELEGRAM_UPLOAD_LIMIT",
+    "Chat",
+    "Message",
+    "NetworkError",
+    "UnsupportedFormatError",
+    "VideoNotFoundError",
+    "VideoTooLargeError",
+    "_create_or_update_status_message",
+    "_create_ydl_options",
+    "_download_video_file",
+    "_send_downloaded_file",
+    "_sync_download_video_file",
+    "_validate_file_size",
+    "download_youtube_video",
+    "is_youtube_url",
+]
 
 
 def _validate_file_size(file_size: int, url: str, file_path: Optional[Path] = None) -> None:
@@ -53,100 +77,6 @@ def _validate_file_size(file_size: int, url: str, file_path: Optional[Path] = No
         )
 
 
-async def _create_or_update_status_message(
-    bot: Bot, chat_id: int, url: str, status_message_id: Optional[int]
-) -> Message:
-    """Create or update status message for download."""
-    status_text = f"⏳ <b>Download started</b>\n\nProcessing your request for {url}"
-
-    if status_message_id:
-        await bot.edit_message_text(status_text, chat_id=chat_id, message_id=status_message_id)
-        return Message(message_id=status_message_id, chat=Chat(id=chat_id), bot=bot)
-
-    return await bot.send_message(chat_id, status_text)
-
-
-def _create_ydl_options(format_string: str, temp_download_path: Path) -> Dict[str, Any]:
-    """Create yt-dlp options dictionary with minimal optimizations."""
-    return {
-        "format": format_string,
-        "outtmpl": str(temp_download_path / "%(title)s.%(ext)s"),
-        "noplaylist": True,
-        "quiet": True,
-        "no_warnings": True,
-        # Only essential optimizations to avoid signature extraction issues
-        "http_headers": {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
-            ),
-        },
-        # Shorter timeouts to prevent hanging
-        "socket_timeout": 30,
-        "retries": 2,
-    }
-
-
-def _sync_download_video_file(
-    url: str, ydl_opts: Dict[str, Any], temp_download_path: Path
-) -> tuple[Path, Dict[str, Any]]:
-    """Synchronous download function to be run in thread pool."""
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            logger.debug(f"Extracting info: {url}")
-
-            try:
-                video_info = ydl.extract_info(url, download=False)
-            except yt_dlp.utils.DownloadError as e:
-                error_msg = str(e).lower()
-                if "not available" in error_msg or "video not found" in error_msg:
-                    raise VideoNotFoundError(
-                        "Video not found or unavailable", context={"url": url, "original_error": str(e)}
-                    ) from e
-                if "unsupported url" in error_msg or "unsupported format" in error_msg:
-                    raise UnsupportedFormatError(
-                        "Video format not supported", context={"url": url, "original_error": str(e)}
-                    ) from e
-                raise NetworkError(
-                    "Network error during video info extraction", context={"url": url, "original_error": str(e)}
-                ) from e
-
-            # Check expected file size if available
-            if video_info and video_info.get("filesize"):
-                expected_size = video_info["filesize"]
-                _validate_file_size(expected_size, url)
-
-            logger.debug(f"Starting download with options: {ydl_opts}")
-
-            try:
-                ydl.download([url])
-            except yt_dlp.utils.DownloadError as e:
-                raise NetworkError(
-                    "Network error during video download", context={"url": url, "original_error": str(e)}
-                ) from e
-
-            # Get downloaded file path
-            downloaded_files = list(temp_download_path.glob("*"))
-            if not downloaded_files:
-                raise DownloadError(
-                    "Download completed but no files found", context={"url": url, "temp_path": str(temp_download_path)}
-                )
-
-            file_path = downloaded_files[0]
-            file_size = file_path.stat().st_size
-
-            # Check actual file size
-            _validate_file_size(file_size, url, file_path)
-
-            logger.info(f"Download completed: {file_path} ({file_size} bytes)")
-            return file_path, video_info
-
-    except Exception as e:
-        if isinstance(e, (VideoNotFoundError, UnsupportedFormatError, NetworkError, VideoTooLargeError)):
-            raise
-        raise DownloadError("Unexpected error during download", context={"url": url, "original_error": str(e)}) from e
-
-
 async def _download_video_file(
     url: str, ydl_opts: Dict[str, Any], temp_download_path: Path
 ) -> tuple[Path, Dict[str, Any]]:
@@ -163,83 +93,6 @@ async def _download_video_file(
                 f"Download timed out after {config.DOWNLOAD_TIMEOUT} seconds",
                 context={"url": url, "timeout": config.DOWNLOAD_TIMEOUT},
             ) from e
-
-
-async def _send_downloaded_file(
-    bot: Bot, chat_id: int, file_path: Path, video_info: Dict[str, Any], status_message: Message
-) -> None:
-    """Send downloaded file to user with size validation."""
-    # Check file size
-    file_size = file_path.stat().st_size
-    file_size_mb = file_size / MB_SIZE
-
-    # Update status message with file info
-    await bot.edit_message_text(
-        f"✅ <b>Download completed</b>\n\nFile: {file_path.name}\nSize: {file_size_mb:.1f} MB\n\nNow sending file...",
-        chat_id=chat_id,
-        message_id=status_message.message_id,
-    )
-
-    # Check if file exceeds Telegram limits
-    if file_size > TELEGRAM_UPLOAD_LIMIT:
-        logger.warning(f"File size {file_size_mb:.1f} MB exceeds Telegram limit of 50 MB")
-        await bot.edit_message_text(
-            f"❌ <b>File Too Large</b>\n\n"
-            f"File size: {file_size_mb:.1f} MB\n"
-            f"Telegram limit: 50 MB\n\n"
-            f"Please try a lower quality format (SD or HD) for shorter videos.",
-            chat_id=chat_id,
-            message_id=status_message.message_id,
-        )
-        return
-
-    try:
-        # Send file as document
-        video_title = video_info.get("title", "Video")
-        await bot.send_document(
-            chat_id,
-            document=FSInputFile(file_path),
-            caption=f"📥 <b>{video_title}</b>\n\nDownloaded from YouTube",
-            request_timeout=300,  # 5 minutes for large files
-        )
-
-        # Update status message on success
-        await bot.edit_message_text(
-            "✅ <b>Download completed</b>\n\nFile sent successfully!",
-            chat_id=chat_id,
-            message_id=status_message.message_id,
-        )
-
-        logger.info(f"File sent successfully to chat_id: {chat_id}, size: {file_size_mb:.1f} MB")
-
-    except TelegramEntityTooLarge:
-        # Handle Telegram file size limit exceeded
-        await bot.edit_message_text(
-            f"❌ <b>Upload Failed</b>\n\n"
-            f"File size: {file_size_mb:.1f} MB\n"
-            f"Telegram rejected the upload due to size limits.\n\n"
-            f"Please try a lower quality format (SD or HD).",
-            chat_id=chat_id,
-            message_id=status_message.message_id,
-        )
-        logger.error(f"TelegramEntityTooLarge: {file_size_mb:.1f} MB file rejected for chat {chat_id}")
-
-    except Exception as e:
-        # Handle other upload errors
-        error_msg = str(e)
-        if "Request Entity Too Large" in error_msg or "Entity Too Large" in error_msg:
-            await bot.edit_message_text(
-                f"❌ <b>Upload Failed</b>\n\n"
-                f"File size: {file_size_mb:.1f} MB\n"
-                f"Telegram rejected the upload due to size limits.\n\n"
-                f"Please try a lower quality format.",
-                chat_id=chat_id,
-                message_id=status_message.message_id,
-            )
-            logger.error(f"Upload rejected due to size: {file_size_mb:.1f} MB for chat {chat_id}")
-        else:
-            # Re-raise other errors to be handled by main error handler
-            raise
 
 
 async def _execute_download_process(

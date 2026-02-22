@@ -167,9 +167,9 @@ async def test_use_invite_and_exceptions(mocker):
     mock_conn = mocker.AsyncMock()
     mock_conn.execute = mocker.AsyncMock(
         side_effect=[
-            invite_cursor,       # SELECT FROM invites
+            invite_cursor,  # SELECT FROM invites
             mocker.AsyncMock(),  # UPDATE invites SET used_by ...
-            user_cursor,         # SELECT FROM users
+            user_cursor,  # SELECT FROM users
             mocker.AsyncMock(),  # INSERT INTO users
         ]
     )
